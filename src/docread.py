@@ -21,9 +21,49 @@
 # -------------------------------------------------------------------------
 
 import re
+import sys
+import os
+import os.path
 
 def txt(filename):
     with open(filename) as fh:
-        wds = fh.read().split()
+        wds = fh.read('\W+', fh.read())
     return wds
-        
+
+def dirproblems(dirname,rknown  =r"known.*\.txt",
+                         runknown=r"unknown.*\.txt",ignore=[]):
+    """Loads the directories containing problems"""
+    dirnames=[(x,"{0}/{1}".format(dirname,x)) for x in os.listdir(dirname)  
+                if not x in ignore and
+                   os.path.isdir("{0}/{1}".format(dirname,x))]
+    problems=[]
+    for id,dirname in dirnames:
+        problems.append((id,
+                        dirproblem(dirname,rknown,runknown,ignore)))
+    return problems
+
+def dirproblem(dirname,rknown  =r"known.*\.txt",
+                         runknown=r"unknown.*\.txt",ignore=[]):
+    r_known=re.compile(rknown)
+    r_unknown=re.compile(runknown)
+    known  =["{0}/{1}".format(dirname,x) for x in os.listdir(dirname) 
+                        if not x in ignore and
+                        r_known.match(x)]
+    unknown=["{0}/{1}".format(dirname,x) for x in os.listdir(dirname)
+                        if not x in ignore and
+                        r_unknown.match(x)]
+    return known,unknown
+
+
+def loadanswers(filename):
+    # Loading ingnore if exists
+    r_answer=re.compile(r"[^\w]*(\w*) (Y|N)$")
+    answers={}
+    for line in open(filename):
+        line=line.strip()
+        if len(line)==0:
+            continue
+        m=r_answer.match(line)
+        if m:
+            answers[m.group(1)]=m.group(2)
+    return answers
