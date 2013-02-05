@@ -24,11 +24,13 @@ import re
 import sys
 import os
 import os.path
+from collections import Counter
 
 def txt(filename):
     with open(filename) as fh:
-        wds = fh.read('\W+', fh.read())
-    return wds
+        wds = fh.read().split()
+    doc=Counter(wds)
+    return doc
 
 def dirproblems(dirname,rknown  =r"known.*\.txt",
                          runknown=r"unknown.*\.txt",ignore=[]):

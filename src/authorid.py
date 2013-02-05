@@ -33,8 +33,8 @@ def verbose(MSG):
     if opts.verbose:
         print >> out, MSG
 
-def info(MSG):
-    print >> out, MSG
+def info(*args):
+    print >> out, "".join(args)
 
 # MAIN
 if __name__ == "__main__":
@@ -112,7 +112,8 @@ if __name__ == "__main__":
 
         # Analysing problems
         for id,(ks,uks) in problems:
-            verbose('Analysing problem: {0}'.format(id))
+            info('Analysing problem: {0}'.format(id))
+            info('Answer to unknown: {0}'.format(answers[id]))
 
             # Load unknown
             if len(uks) > 1:
@@ -128,9 +129,8 @@ if __name__ == "__main__":
                 
             verbose('Starting comparison')
             for doc in docs:
-                print >> out, distance.jacard(doc_,doc)
-                print >> out, masi.masi_distance(doc_,doc)
-                print >> out, binary.binary_distance(doc_,doc)
-                print >> out, tanimoto.tanimoto(doc_,doc)
-                print >> out, sorensen.sorensen(doc_,doc)
+                for n,f in distance.distances:
+                    d=f(doc_,doc)
+                    info("{0} distance".format(n).ljust(30),
+                         "{0:0.4f}".format(d))
                         
