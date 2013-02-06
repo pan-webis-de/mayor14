@@ -28,10 +28,11 @@ import os.path
 # Local imports
 import docread
 import distance
+import Weights as W
 
-def verbose(MSG):
+def verbose(*args):
     if opts.verbose:
-        print >> out, MSG
+        print >> out, "".join(args)
 
 def info(*args):
     print >> out, "".join(args)
@@ -56,6 +57,12 @@ if __name__ == "__main__":
     p.add_option("-m", "--mode",default='test',
             action="store", dest="mode",
             help="test|train [test]")
+    p.add_option("-w", "--weights",default=None,
+            action="store", dest="weights",
+            help="test|train [test]")
+    p.add_option("-i", "--iters",default=10,type="int",
+            action="store", dest="iters",
+            help="Training iterations [10]")
     p.add_option("", "--known_pattern",default=r'known.*\.txt',
             action="store", dest="known",
             help="pattern for known files [known*]")
@@ -106,31 +113,76 @@ if __name__ == "__main__":
         verbose('Loading answer file: {0}'.format(args[1]))
         answers = docread.loadanswers(args[1])
 
+        # Checking for consistency
         if not len(problems) == len(answers):
             p.error("Not match for number of problems({0}) and \
             answers({1})".format(len(problems),len(answers)))
 
-        # Analysing problems
-        for id,(ks,uks) in problems:
-            info('Analysing problem: {0}'.format(id))
-            info('Answer to unknown: {0}'.format(answers[id]))
+        # Loading weights or initializing
+        if opts.weights:
+            verbose('Loading weights file: {0}'.format(args[1]))
+            # TODO load weights when given file
+        else:
+            WS=W.Weights()
 
-            # Load unknown
-            if len(uks) > 1:
-                p.error("More than one unknown file for {0}".format(id))
-            
-            doc_=docread.txt(uks[0])
+        # Iterating over problems
+        for it in range(opts.iters):
+            info("="*60)
+            info("Iteration {0}".format(it))
+            info("="*60)
 
-            # Load knowns
-            docs = []
-            for k in ks:
-                docs.append(docread.txt(k))
+            Acc_=0
+            Total_=0.0
+            for id,(ks,uks) in problems:
+                info('Analysing problem: {0}'.format(id))
+                info('Answer to unknown: {0}'.format(answers[id]))
+                if answers[id].startswith('Y'):
+                    ANS=True
+                else:
+                    ANS=False
+
+                # Load unknown
+                if len(uks) > 1:
+                    p.error("More than one unknown file for {0}".format(id))
                 
-                
-            verbose('Starting comparison')
-            for doc in docs:
-                for n,f in distance.distances:
-                    d=f(doc_,doc)
-                    info("{0} distance".format(n).ljust(30),
-                         "{0:0.4f}".format(d))
-                        
+                doc_=docread.txt(uks[0])
+
+                # Load knowns
+                docs = []
+                for k in ks:
+                    docs.append((k,docread.txt(k)))
+                    
+                    
+                verbose('Starting comparison')
+                for k,doc in docs:
+                    verbose('Comparing with: {0}'.format(k))
+                    feats=[]
+                    for n,f in distance.distances:
+                        d=f(doc_,doc)
+                        verbose("{0} distance".format(n).ljust(30),
+                                "{0:0.4f}".format(d))
+                        feats.append((n,d))
+                    D=WS.val(feats)
+                    info("Total distance".ljust(30),"{0:0.4f}".format(D))
+                    if D > 0.0:
+                        RES=True
+                    else:
+                        RES=False
+
+                    if RES==ANS:
+                        Acc_+=1
+                    else:
+                        if ANS:
+                            WS.plus([(e,1) for e,f in feats ])
+                            WS.minus(feats)
+                        else:
+                            WS.plus([(e,-1) for e,f in feats ])
+                            WS.minus(feats)
+                    Total_+=1
+            info("Total Accuracy".ljust(30),"{0:0.4f}".format(Acc_/Total_))
+
+            verbose("Final weights")
+            verbose("".join(["{0:30s} {1:0.4f}\n".format(e,c) 
+                for e,c in WS.weights()]))
+
+                            
