@@ -20,10 +20,17 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------------
 
+# System libraries
 import optparse
 import sys
 import os
 import os.path
+import itertools
+
+# ML libraries
+import numpy as np
+from sklearn import svm
+from sklearn import preprocessing
 
 # Local imports
 import docread
@@ -60,9 +67,6 @@ if __name__ == "__main__":
     p.add_option("-w", "--weights",default=None,
             action="store", dest="weights",
             help="test|train [test]")
-    p.add_option("-i", "--iters",default=10,type="int",
-            action="store", dest="iters",
-            help="Training iterations [10]")
     p.add_option("", "--known_pattern",default=r'known.*\.txt',
             action="store", dest="known",
             help="pattern for known files [known*]")
@@ -125,64 +129,65 @@ if __name__ == "__main__":
         else:
             WS=W.Weights()
 
-        # Iterating over problems
-        for it in range(opts.iters):
-            info("="*60)
-            info("Iteration {0}".format(it))
-            info("="*60)
 
-            Acc_=0
-            Total_=0.0
-            for id,(ks,uks) in problems:
-                info('Analysing problem: {0}'.format(id))
-                info('Answer to unknown: {0}'.format(answers[id]))
-                if answers[id].startswith('Y'):
-                    ANS=True
-                else:
-                    ANS=False
+        samples=[]
+        classes=[]
+        # Transforms documents into samples 
+        for id,(ks,uks) in problems:
+            info('Reading from : {0}'.format(id))
+            info('Answer to unknown: {0}'.format(answers[id]))
+            if answers[id].startswith('Y'):
+                ANS=1
+            else:
+                ANS=0
 
-                # Load unknown
-                if len(uks) > 1:
-                    p.error("More than one unknown file for {0}".format(id))
+            # Load unknown
+            if len(uks) > 1:
+                p.error("More than one unknown file for {0}".format(id))
+            
+            doc_=docread.txt(uks[0])
+
+            # Load knowns
+            docs = []
+            for k in ks:
+                docs.append((k,docread.txt(k)))
                 
-                doc_=docread.txt(uks[0])
+                
+            verbose('Starting comparison')
+            samples_=[]
+            classes_=[]
+            for k,doc in docs:
+                verbose('Comparing with: {0}'.format(k))
+                feats=[]
+                for n,f in distance.distances:
+                    d=f(doc_,doc)
+                    verbose("{0} distance".format(n).ljust(30),
+                            "{0:0.4f}".format(d))
+                    feats.append(d)
+                samples_.append(feats)
+                classes_.append(ANS)
+            samples.append(samples_)
+            classes.append(classes_)
+        # ML
+        N_Acc_=0
+        Total_=0.0
+        # 1-leave-out
+        for i in range(len(samples)):
+            X_train = samples[:i]+samples[i+1:]
+            X_train = np.array(list(itertools.chain(*X_train)))
+            X_test  = np.array(samples[i])
+            Y_train = classes[:i]+classes[i+1:]
+            Y_train = np.array(list(itertools.chain(*Y_train)))
+            Y_test = np.array(classes[i])
 
-                # Load knowns
-                docs = []
-                for k in ks:
-                    docs.append((k,docread.txt(k)))
-                    
-                    
-                verbose('Starting comparison')
-                for k,doc in docs:
-                    verbose('Comparing with: {0}'.format(k))
-                    feats=[]
-                    for n,f in distance.distances:
-                        d=f(doc_,doc)
-                        verbose("{0} distance".format(n).ljust(30),
-                                "{0:0.4f}".format(d))
-                        feats.append((n,d))
-                    D=WS.val(feats)
-                    info("Total distance".ljust(30),"{0:0.4f}".format(D))
-                    if D > 0.0:
-                        RES=True
-                    else:
-                        RES=False
+            svc = svm.SVC(kernel='poly',C=1.0,gamma=0.2)
+            svc.fit(X_train,Y_train)
+            preds = svc.predict(X_test) 
+            
+            for x,x_ in zip(preds,Y_test):
+                if x==x_:
+                    N_Acc_+=1
+                Total_+=1
 
-                    if RES==ANS:
-                        Acc_+=1
-                    else:
-                        if ANS:
-                            WS.plus([(e,1) for e,f in feats ])
-                            WS.minus(feats)
-                        else:
-                            WS.plus([(e,-1) for e,f in feats ])
-                            WS.minus(feats)
-                    Total_+=1
-            info("Total Accuracy".ljust(30),"{0:0.4f}".format(Acc_/Total_))
+        info('Accuracy : {0:04f}'.format(N_Acc_/Total_))
 
-            verbose("Final weights")
-            verbose("".join(["{0:30s} {1:0.4f}\n".format(e,c) 
-                for e,c in WS.weights()]))
-
-                            
