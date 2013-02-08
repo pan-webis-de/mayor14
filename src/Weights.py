@@ -41,9 +41,10 @@ class Weights:
         self.zeros(feats)
         return sum([self.w[e]*c for e,c in feats])
 
-    def normalize(self,norm):
+    def normalize(self,total):
         for e,c in self.w.iteritems():
-            self.w[e]=self.w[e]/norm.w[e]
+            self.w[e]=self.w[e]/total
+        print self.w
 
     def zeros(self,feats):
         self.w.update([(e,0.5) for e,c in feats if not self.w.has_key(e)])

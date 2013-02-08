@@ -25,6 +25,8 @@ import numpy as np
 import Weights as W
 from sklearn import svm
 from sklearn import preprocessing
+import random 
+random.seed()
 
 def svmtrain(xdata,ydata):
     xdata=np.array(xdata)
@@ -47,8 +49,11 @@ def avinit(filename):
 def avptrain(xdata,ydata,iters):
     ws=W.Weights()
     acc=W.Weights()
+    total=0
+    xydata=zip(xdata,ydata)
     for i in range(iters):
-        for x,y in zip(xdata,ydata):
+        random.shuffle(xydata)
+        for x,y in xydata:
             x=list(enumerate(x))
             if ws.val(x)>0.5:
                 y_=0
@@ -57,12 +62,10 @@ def avptrain(xdata,ydata,iters):
             if not y_==y:
                 if y==0:
                     ws.plus(list(enumerate([1 for a in x])))
-                    ws.minus(x)
                 else:
                     ws.minus(list(enumerate([1 for a in x])))
-                    ws.plus(x)
-                acc.plus(ws.w.iteritems())
-        ws.normalize(acc)
+                acc.plus(list(ws.w.iteritems()))
+                total+=1
     return ws
 
 def avptest(xdata,ws):

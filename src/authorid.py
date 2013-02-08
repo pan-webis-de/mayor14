@@ -61,7 +61,7 @@ if __name__ == "__main__":
             help="test|train [test]")
     p.add_option("-i", "--iters",default=10,type="int",
             action="store", dest="iters",
-            help="Number of iterations [4]")
+            help="Number of iterations [10]")
     p.add_option("-w", "--weights",default=None,
             action="store", dest="weights",
             help="test|train [test]")
