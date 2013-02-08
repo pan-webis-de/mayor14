@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
 # ----------------------------------------------------------------------
-# Distance metrics
+# Author ID main 
 # ----------------------------------------------------------------------
 # Ivan Vladimir Meza-Ruiz/ ivanvladimir at turing.iimas.unam.mx
 # 2012/IIMAS/UNAM
@@ -27,15 +27,10 @@ import os
 import os.path
 import itertools
 
-# ML libraries
-import numpy as np
-from sklearn import svm
-from sklearn import preprocessing
-
 # Local imports
 import docread
 import distance
-import Weights as W
+import ML
 
 def verbose(*args):
     if opts.verbose:
@@ -64,9 +59,15 @@ if __name__ == "__main__":
     p.add_option("-m", "--mode",default='test',
             action="store", dest="mode",
             help="test|train [test]")
+    p.add_option("-i", "--iters",default=10,type="int",
+            action="store", dest="iters",
+            help="Number of iterations [4]")
     p.add_option("-w", "--weights",default=None,
             action="store", dest="weights",
             help="test|train [test]")
+    p.add_option("", "--method",default="avp",
+            action="store", dest="method",
+            help="avp|svm [avp]")
     p.add_option("", "--known_pattern",default=r'known.*\.txt',
             action="store", dest="known",
             help="pattern for known files [known*]")
@@ -122,13 +123,6 @@ if __name__ == "__main__":
             p.error("Not match for number of problems({0}) and \
             answers({1})".format(len(problems),len(answers)))
 
-        # Loading weights or initializing
-        if opts.weights:
-            verbose('Loading weights file: {0}'.format(args[1]))
-            # TODO load weights when given file
-        else:
-            WS=W.Weights()
-
 
         samples=[]
         classes=[]
@@ -153,7 +147,7 @@ if __name__ == "__main__":
                 docs.append((k,docread.txt(k)))
                 
                 
-            verbose('Starting comparison')
+            verbose('Loading files')
             samples_=[]
             classes_=[]
             for k,doc in docs:
@@ -168,26 +162,36 @@ if __name__ == "__main__":
                 classes_.append(ANS)
             samples.append(samples_)
             classes.append(classes_)
-        # ML
-        N_Acc_=0
-        Total_=0.0
-        # 1-leave-out
-        for i in range(len(samples)):
-            X_train = samples[:i]+samples[i+1:]
-            X_train = np.array(list(itertools.chain(*X_train)))
-            X_test  = np.array(samples[i])
-            Y_train = classes[:i]+classes[i+1:]
-            Y_train = np.array(list(itertools.chain(*Y_train)))
-            Y_test = np.array(classes[i])
 
-            svc = svm.SVC(kernel='poly',C=1.0,gamma=0.2)
-            svc.fit(X_train,Y_train)
-            preds = svc.predict(X_test) 
-            
+
+        # Initialization of ML
+        Total_=0.0
+        N_Acc_=0
+
+        # leave-one-out problem
+        info('Leave one oue one out')
+        for i in range(len(samples)):
+            info('Model for ',str(i))
+            X_train = samples[:i]+samples[i+1:]
+            X_train = list(itertools.chain(*X_train))
+            X_test  = samples[i]
+            Y_train = classes[:i]+classes[i+1:]
+            Y_train = list(itertools.chain(*Y_train))
+            Y_test  = classes[i]
+
+            if opts.method.startswith('svm'):
+                svc   = ML.svmtrain(X_train,Y_train)
+                preds = ML.svmtest(svc,X_test)
+            elif opts.method.startswith('avp'):
+                ws    = ML.avptrain(X_train,Y_train,opts.iters)
+                preds = ML.avptest(X_test,ws)
+                
             for x,x_ in zip(preds,Y_test):
                 if x==x_:
                     N_Acc_+=1
                 Total_+=1
+            verbose("Prediction "," ".join([str(x) for x in preds]))
+            verbose("GS         "," ".join([str(x) for x in Y_test]))
 
         info('Accuracy : {0:04f}'.format(N_Acc_/Total_))
 
