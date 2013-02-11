@@ -145,12 +145,12 @@ if __name__ == "__main__":
             if len(uks) > 1:
                 p.error("More than one unknown file for {0}".format(id))
             
-            doc_=docread.bigram(uks[0])
+            doc_=docread.trigram(uks[0])
 
             # Load knowns 
             docs = []
             for k in ks:
-                docs.append((k,docread.bigram(k)))
+                docs.append((k,docread.trigram(k)))
                 
                 
             verbose('Starting comparison')
