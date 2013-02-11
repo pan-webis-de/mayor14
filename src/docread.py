@@ -33,7 +33,7 @@ def txt(filename):
     return doc
 
 def trigram(wds):
-	tri = zip(wds, wds[1:], wds[2:])
+    tri = zip(wds, wds[1:], wds[2:])
     doc = Counter(tri)
     return doc
 

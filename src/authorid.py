@@ -65,7 +65,7 @@ if __name__ == "__main__":
     p.add_option("-w", "--weights",default=None,
             action="store", dest="weights",
             help="test|train [test]")
-    p.add_option("", "--method",default="avp",
+    p.add_option("", "--method",default="svm",
             action="store", dest="method",
             help="avp|svm [avp]")
     p.add_option("", "--known_pattern",default=r'known.*\.txt',
