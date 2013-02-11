@@ -28,8 +28,13 @@ from collections import Counter
 
 def txt(filename):
     with open(filename) as fh:
-        wds = fh.read().split()
+        wds = re.split('\W+', fh.read())
     doc=Counter(wds)
+    return doc
+
+def trigram(wds):
+	tri = zip(wds, wds[1:], wds[2:])
+    doc = Counter(tri)
     return doc
 
 def dirproblems(dirname,rknown  =r"known.*\.txt",

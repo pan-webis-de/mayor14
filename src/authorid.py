@@ -135,16 +135,16 @@ if __name__ == "__main__":
             else:
                 ANS=0
 
-            # Load unknown
+            # Load unknown 
             if len(uks) > 1:
                 p.error("More than one unknown file for {0}".format(id))
             
-            doc_=docread.txt(uks[0])
+            doc_=docread.trigram(uks[0])
 
-            # Load knowns
+            # Load knowns 
             docs = []
             for k in ks:
-                docs.append((k,docread.txt(k)))
+                docs.append((k,docread.trigram(k)))
                 
                 
             verbose('Loading files')
