@@ -32,9 +32,9 @@ def txt(filename):
     doc=Counter(wds)
     return doc
 
-def bigram(wds):
-    bi = zip(wds, wds[1:])
-    doc=Counter(bi)
+def trigram(wds):
+	tri = zip(wds, wds[1:], wds[2:])
+    doc = Counter(tri)
     return doc
 
 def dirproblems(dirname,rknown  =r"known.*\.txt",
