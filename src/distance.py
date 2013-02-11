@@ -23,9 +23,10 @@
 # -------------------------------------------------------------------------
 
 #import nltk
+from math import sqrt
+from math import pow
 
-
-def jacard(A,B):
+def jacard(A, B):
     A=set(A.elements())
     B=set(B.elements())
     return 1-len(A.intersection(B))*1.0/len(A.union(B))
@@ -35,7 +36,7 @@ def masi_distance (A, B):
     label2=set(B.elements())
     return 1 - float(len(label1.intersection(label2)))/float(max(len(label1),len(label2)))
 
-def tanimoto(A,B,**args):
+def tanimoto(A, B,**args):
     vec1=set(A.elements())
     vec2=set(B.elements())
     
@@ -43,9 +44,9 @@ def tanimoto(A,B,**args):
   
     if len(d1d2)  == 0: return 0.0
   
-    return 1-float(len(d1d2))/ (len(vec1) + len(vec2) - len(d1d2))
-	
-def sorensen(A,B,**args):
+    return 1-float(len(d1d2)) / ((pow(len(vec1),2) + (pow(len(vec2),2) - len(d1d2))))
+
+def sorensen(A, B ,**args):
     vec1=set(A.elements())
     vec2=set(B.elements())
  
@@ -57,9 +58,21 @@ def sorensen(A,B,**args):
     return 1-float(2.0*d1d2 / (len(vec1) + len(vec2) ) )
 
 
+def dot(a,b):
+	
+	commons = set(a.keys()).intersection (set(b.keys()))
+	return sum([a[k] * b[k] for k in commons])
+
+def cosine(a,b):
+
+	return dot(a, b) / (sqrt(dot(a,a)) * sqrt(dot(b,b)))
+
+
 distances=[("Jacard",jacard),
            ("Masi",masi_distance),
            ("Tanimoto",tanimoto),
-           ("Sorensen",sorensen)]
+           ("Sorensen",sorensen), 
+	("Cosine", cosine)]
+
 
 
