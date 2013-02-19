@@ -39,6 +39,12 @@ def verbose(*args):
 def info(*args):
     print >> out, "".join(args)
 
+def posneg(val):
+    if val:
+        return "Y"
+    else:
+        return "N"
+
 # MAIN
 if __name__ == "__main__":
     usage="""%prog [options] dir [anwers]
@@ -61,11 +67,11 @@ if __name__ == "__main__":
             help="test|train [test]")
     p.add_option("-i", "--iters",default=10,type="int",
             action="store", dest="iters",
-            help="Number of iterations [10]")
+            help="Number of iterations for avg [10]")
     p.add_option("-w", "--weights",default=None,
             action="store", dest="weights",
-            help="test|train [test]")
-    p.add_option("", "--method",default="svm",
+            help="weights file [None]")
+    p.add_option("", "--method",default="avp",
             action="store", dest="method",
             help="avp|svm [avp]")
     p.add_option("", "--known_pattern",default=r'known.*\.txt',
@@ -74,6 +80,9 @@ if __name__ == "__main__":
     p.add_option("", "--unknown_pattern",default=r'unknown*.txt',
             action="store", dest="unknown",
             help="pattern for unknown file [unknown*]")
+    p.add_option("", "--figures", default=None,
+            action="store", dest="figures",
+            help="Save figures in directory [None]")
     p.add_option("-v", "--verbose",
             action="store_true", dest="verbose",
             help="Verbose mode [Off]")
@@ -85,6 +94,12 @@ if __name__ == "__main__":
 
     if not opts.mode in ["train","test"]:
         p.error('Mode argument not valid: train or test')
+
+    if opts.figures:
+        import numpy as np
+        import matplotlib
+        import matplotlib.pyplot as plt
+
 
 
     dirname = args[0]
@@ -138,30 +153,65 @@ if __name__ == "__main__":
             # Load unknown 
             if len(uks) > 1:
                 p.error("More than one unknown file for {0}".format(id))
-            
-            doc_=docread.trigram(uks[0])
+           
+            # Builds uknnown representation of document
+            docreps_=[]
+            for rep,f in docread.representations:
+                docreps_.append((rep,f(uks[0])))
 
             # Load knowns 
             docs = []
             for k in ks:
-                docs.append((k,docread.trigram(k)))
-                
+                docreps=[]
+                for rep,f in docread.representations:
+                    docreps.append((k,f(k)))
+                docs.append(docreps)
                 
             verbose('Loading files')
             samples_=[]
             classes_=[]
-            for k,doc in docs:
+            for docreps in docs:
                 verbose('Comparing with: {0}'.format(k))
                 feats=[]
-                for n,f in distance.distances:
-                    d=f(doc_,doc)
-                    verbose("{0} distance".format(n).ljust(30),
-                            "{0:0.4f}".format(d))
-                    feats.append(d)
+                for doc,doc_ in zip(docreps,docreps_): 
+                    verbose("-- {0} --".format(doc_[0]))
+                    for n,f in distance.distances:
+                        d=f(doc_[1],doc[1])
+                        verbose("{0} distance".format(n).ljust(30),
+                                "{0:0.4f}".format(d))
+                        feats.append(d)
                 samples_.append(feats)
                 classes_.append(ANS)
+                   
             samples.append(samples_)
             classes.append(classes_)
+
+
+            # save figures if requiered
+            if opts.figures:
+                data=np.zeros((len(docs)*len(docread.representations),
+                              (len(docs)+1)*len(distance.distances)))
+                for ix1 in range(len(docs)):
+                    for ix2 in range(ix1,len(docs)):
+                        for ixr in range(len(docread.representations)):
+                            dis=0
+                            for n,f in distance.distances:
+                                ix2_=dis*(len(docs)+1)+ix2
+                                ix1_=ixr*len(docs)+ix1
+                                data[ix1_,ix2_]=f(docs[ix1][ixr][1],docs[ix2][ixr][1])
+                                dis+=1
+                for ix1 in range(len(docs)):
+                    for ixr in range(len(docread.representations)):
+                        dis=0
+                        for n,f in distance.distances:
+                            ix1_=ixr*len(docs)+ix1
+                            ix2_=(dis+1)*(len(docs)+1)-1
+                            data[ix1_,ix2_]=f(docreps[ixr][1],docs[ix1][ixr][1])
+                            dis+=1
+                fig,ax = plt.subplots()
+                ax.pcolor(data, cmap=plt.cm.hot)
+                plt.show()
+     
 
 
         # Initialization of ML
@@ -190,8 +240,8 @@ if __name__ == "__main__":
                 if x==x_:
                     N_Acc_+=1
                 Total_+=1
-            verbose("Prediction "," ".join([str(x) for x in preds]))
-            verbose("GS         "," ".join([str(x) for x in Y_test]))
+            verbose("Prediction "," ".join([posneg(x) for x in preds]))
+            verbose("GS         "," ".join([posneg(x) for x in Y_test]))
 
         info('Accuracy : {0:04f}'.format(N_Acc_/Total_))
 

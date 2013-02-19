@@ -75,7 +75,6 @@ def avptest(xdata,ws):
             ydata.append(1)
         else:
             ydata.append(0)
-    print ws.w
     return ydata
 
 

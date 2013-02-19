@@ -29,23 +29,37 @@ from math import pow
 def jacard(A, B):
     A=set(A.elements())
     B=set(B.elements())
-    return 1-len(A.intersection(B))*1.0/len(A.union(B))
+    num=len(A.intersection(B))*1.0
+    den=len(A.union(B))
+    if den==0:
+        return 0.0
+    else:
+        return  1-num/den 
  
 def masi_distance (A, B):
     label1=set(A.elements())
     label2=set(B.elements())
-    return 1 - float(len(label1.intersection(label2)))/float(max(len(label1),len(label2)))
-
+    num=float(len(label1.intersection(label2)))
+    den=float(max(len(label1),len(label2)))
+    if den==0:
+        return 0.0
+    else:
+        return  1-num/den 
+ 
 def tanimoto(A, B,**args):
     vec1=set(A.elements())
     vec2=set(B.elements())
     
     d1d2 = [item for item in vec1 if item in vec2]
   
-    if len(d1d2)  == 0: return 0.0
+    num=float(len(d1d2))
+    den=((pow(len(vec1),2) + (pow(len(vec2),2) - len(d1d2))))
+    if den==0:
+        return 0.0
+    else:
+        return  1-num/den 
+ 
   
-    return 1-float(len(d1d2)) / ((pow(len(vec1),2) + (pow(len(vec2),2) - len(d1d2))))
-
 def sorensen(A, B ,**args):
     vec1=set(A.elements())
     vec2=set(B.elements())
@@ -64,9 +78,13 @@ def dot(a,b):
 	return sum([a[k] * b[k] for k in commons])
 
 def cosine(a,b):
+    num=dot(a, b)
+    den=(sqrt(dot(a,a)) * sqrt(dot(b,b)))
 
-	return dot(a, b) / (sqrt(dot(a,a)) * sqrt(dot(b,b)))
-
+    if den==0:
+        return 0.0
+    else:
+        return  num/den 
 
 distances=[("Jacard",jacard),
            ("Masi",masi_distance),

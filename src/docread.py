@@ -32,12 +32,19 @@ def txt(filename):
     doc=Counter(wds)
     return doc
 
-def trigram(wds):
+def trigram(filename):
+    with open(filename) as fh:
+        wds = re.split('\W+', fh.read())
     tri = zip(wds, wds[1:], wds[2:])
     doc = Counter(tri)
     return doc
 
-def dirproblems(dirname,rknown  =r"known.*\.txt",
+
+representations=[
+    ('trigram',trigram),
+    ('bog',txt)]
+
+def dirproblems(dirname, rknown  =r"known.*\.txt",
                          runknown=r"unknown.*\.txt",ignore=[]):
     """Loads the directories containing problems"""
     dirnames=[(x,"{0}/{1}".format(dirname,x)) for x in os.listdir(dirname)  
@@ -49,8 +56,9 @@ def dirproblems(dirname,rknown  =r"known.*\.txt",
                         dirproblem(dirname,rknown,runknown,ignore)))
     return problems
 
-def dirproblem(dirname,rknown  =r"known.*\.txt",
-                         runknown=r"unknown.*\.txt",ignore=[]):
+def dirproblem(dirname, rknown  =r"known.*\.txt",
+                        runknown=r"unknown.*\.txt",ignore=[]):
+    """Loads problem """
     r_known=re.compile(rknown)
     r_unknown=re.compile(runknown)
     known  =["{0}/{1}".format(dirname,x) for x in os.listdir(dirname) 
@@ -63,7 +71,7 @@ def dirproblem(dirname,rknown  =r"known.*\.txt",
 
 
 def loadanswers(filename):
-    # Loading ingnore if exists
+    """Loads answers file"""
     r_answer=re.compile(r"[^\w]*(\w*) (Y|N)$")
     answers={}
     for line in open(filename):
