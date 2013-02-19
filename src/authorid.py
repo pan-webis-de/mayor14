@@ -131,9 +131,9 @@ if __name__ == "__main__":
             info('Reading from : {0}'.format(id))
             info('Answer to unknown: {0}'.format(answers[id]))
             if answers[id].startswith('Y'):
-                ANS=1
+                ANS=0.0
             else:
-                ANS=0
+                ANS=1.1
 
             # Load unknown 
             if len(uks) > 1:
