@@ -32,6 +32,13 @@ def txt(filename):
     doc=Counter(wds)
     return doc
 
+def bigram(filename):
+    with open(filename) as fh:
+        wds = re.split('\W+', fh.read())
+    tri = zip(wds, wds[1:])
+    doc = Counter(tri)
+    return doc
+
 def trigram(filename):
     with open(filename) as fh:
         wds = re.split('\W+', fh.read())
@@ -42,6 +49,7 @@ def trigram(filename):
 
 representations=[
     ('trigram',trigram),
+    ('bigram',bigram),
     ('bog',txt)]
 
 def dirproblems(dirname, rknown  =r"known.*\.txt",

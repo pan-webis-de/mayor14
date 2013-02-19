@@ -209,7 +209,8 @@ if __name__ == "__main__":
                             data[ix1_,ix2_]=f(docreps[ixr][1],docs[ix1][ixr][1])
                             dis+=1
                 fig,ax = plt.subplots()
-                ax.pcolor(data, cmap=plt.cm.hot)
+                ax.pcolor(data, edgecolors='k', linewidths=2,cmap=plt.cm.Blues)
+                plt.title("Distance visualization T. docs {0}".format(len(docs)))
                 plt.show()
      
 
