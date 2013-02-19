@@ -2,7 +2,43 @@
 Author Identification
 =====================
 
-This is the code for my homepage.
+This is the code for author identification
+
+Documentation
+-------------
+
+This file. 
+
+For creating an html version, use (it requieres docutils_)
+
+::
+
+   make doc
+
+PAN 2013 Lab
+------------
+
+Copy the _PAN 2013 directory trainning data into the data directory
+
+::
+
+  mkdir data
+  cp -R <path>/PAN13-AuthorIdentification-TrainingCorpus data
+
+
+Running training with defaults
+
+::
+
+    sh script/train_pan13.sh
+
+Running training with SVM
+
+::
+
+    sh script/train_pan13.s 
+
+
 
 Requirements
 ------------
@@ -10,9 +46,19 @@ Requirements
 The software requieres the following packages
 
 - python_ (2.7)
+- scikit-learn_
+
+Optrional
+
+- PAN_ for dataset testing
+- docutils_ for creating html documentation
 
 
 .. target-notes::Borrar esto para commentar
 
 
 .. _python: http://www.python.org
+.. _scikit-learn: http://scikit-learn.org/stable
+.. _python: http://www.python.org
+.. _PAN: http://pan.webis.de
+.. _docutils: http://docutils.sourceforge.net
