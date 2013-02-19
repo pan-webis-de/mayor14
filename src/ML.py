@@ -22,11 +22,35 @@
 
 # ML libraries
 import numpy as np
-import Weights as W
 from sklearn import svm
 from sklearn import preprocessing
 import random 
 random.seed()
+
+import glpk
+import Weights as W
+
+def lptrain(xdata,ydata):
+    lp = glpk.LPX()
+    lp.obj.maximize = True 
+    lp.rows.add(len(xdata))         # Append three rows to this instance
+    for r in lp.rows:      # Iterate over all rows
+            r.name = chr(ord('sample')+r.index) # Name them p, q, and r
+    for ix in range(len(xdata)):
+        if ydata[ix]==0:
+            lp.rows[0].bounds = None, 100.0 
+    lp.rows[1].bounds = None, 600.0  # Set bound -inf < q <= 600
+    lp.rows[2].bounds = None, 300.0  # Set bound -inf < r <= 300
+    xdata=np.array(xdata)
+    ydata=np.array(ydata)
+    svc = svm.SVC(kernel='poly',C=1.0,gamma=0.2)
+    svc.fit(xdata,ydata)
+    return svc
+
+def svmtest(svc,xdata):
+    xdata=np.array(xdata)
+    return svc.predict(xdata) 
+
 
 def svmtrain(xdata,ydata):
     xdata=np.array(xdata)
@@ -38,6 +62,20 @@ def svmtrain(xdata,ydata):
 def svmtest(svc,xdata):
     xdata=np.array(xdata)
     return svc.predict(xdata) 
+
+
+def lptrain(xdata,ydata):
+    xdata=np.array(xdata)
+    ydata=np.array(ydata)
+    svc = svm.SVC(kernel='poly',C=1.0,gamma=0.2)
+    svc.fit(xdata,ydata)
+    return svc
+
+def svmtest(svc,xdata):
+    xdata=np.array(xdata)
+    return svc.predict(xdata) 
+
+
 
 
 def avinit(filename):
