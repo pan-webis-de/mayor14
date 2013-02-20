@@ -37,6 +37,7 @@ def txt(filename):
     with codecs.open(filename,'r','utf-8') as fh:
         wds = re.split('\W+', fh.read().lower())
         doc=Counter(wds)
+    preprocess(doc)
     return doc
 
 def bigram(filename):
@@ -44,6 +45,7 @@ def bigram(filename):
         wds = re.split('\W+', fh.read().lower())
         tri = zip(wds, wds[1:])
         doc = Counter(tri)
+    preprocess(doc,ncommons=0,ncutoff=1)
     return doc
 
 def trigram(filename):
@@ -51,7 +53,17 @@ def trigram(filename):
         wds = re.split('\W+', fh.read().lower())
         tri = zip(wds, wds[1:], wds[2:])
         doc = Counter(tri)
+    preprocess(doc,ncommons=0,ncutoff=1)
     return doc
+
+
+def preprocess(doc,ncommons=10,ncutoff=5):
+    commons=[x for x,c in doc.most_common(ncommons)]
+    cutoff=[x for x,c in doc.iteritems() if c <= ncutoff ]
+    for c in commons:
+        del doc[c]
+    for c in cutoff:
+        del doc[c]
 
 
 representations=[
