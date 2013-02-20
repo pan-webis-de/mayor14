@@ -32,20 +32,47 @@ import Weights as W
 
 def choice(x):
     if x>0.5:
-        return 1.0
+        return (1.0,x)
     else:
-        return 0.0
+        return (0.0,x)
 
 def lptrain(xdata,ydata):
     A=[[] for x in xdata[0]]
+    # Constrains for linear program
     for ix in range(len(xdata)):
         for iy in range(len(xdata[0])):
+            # Adding constrains for alpha < 0.5 
             if ydata[ix]==0:
                 A[iy].append(xdata[ix][iy])
-            else:
                 A[iy].append(-xdata[ix][iy])
+            else:
+            # Adding constrains for alpha > 0.5 
+                A[iy].append(-xdata[ix][iy])
+                A[iy].append(xdata[ix][iy])
+    # Adding constrains for 0.0 < alpha < 1.0 
+    for iy in range(len(xdata[0])):
+        for iy_ in range(len(xdata[0])):
+            if iy==iy_:
+                A[iy].append(-1.0)
+                A[iy].append(1.0)
+            else:
+                A[iy].append(0.0)
+                A[iy].append(0.0)
     A=matrix(A)
-    B=matrix([ 0.5  for y in ydata])
+    B=[]
+    # Adding constrains
+    for y in ydata:
+        if y==0.0:
+            B.append(0.5)
+            B.append(0.0)
+        else:
+            B.append(-0.5)
+            B.append(1.0)
+    for y in range(len(xdata[0])):
+        B.append(0.0)
+        B.append(1.0)
+
+    B=matrix(B)
     c=matrix([1.0 for x in xdata[0]])
     sol=solvers.lp(c,A,B)
     return sol['x']
@@ -65,13 +92,14 @@ def svmtest(svc,xdata):
 def svmtrain(xdata,ydata):
     xdata=np.array(xdata)
     ydata=np.array(ydata)
-    svc = svm.SVC(kernel='poly',C=1.0,gamma=0.2)
+    svc = svm.SVC(kernel='rbf',C=0.001,gamma=0.001,probability=True)
     svc.fit(xdata,ydata)
     return svc
 
+
 def svmtest(svc,xdata):
     xdata=np.array(xdata)
-    return svc.predict(xdata) 
+    return [(x,svc.predict_proba(x)[0][x]) for x in svc.predict(xdata)]
 
 
 def avinit(filename):
@@ -88,27 +116,27 @@ def avptrain(xdata,ydata,iters):
     for i in range(iters):
         random.shuffle(xydata)
         for x,y in xydata:
+            x_total=sum(x)
             x=list(enumerate(x))
-            if ws.val(x)>0.5:
-                y_=0
-            else:
+            score=ws.val(x)
+            if score>0.5:
                 y_=1
+            else:
+                y_=0
             if not y_==y:
                 if y==0:
-                    ws.plus(list(enumerate([1 for a in x])))
+                    ws.minus(list(enumerate([.1*val for ix,val in x])))
                 else:
-                    ws.minus(list(enumerate([1 for a in x])))
+                    ws.plus(list(enumerate([.1*val for ix,val in x])))
                 acc.plus(list(ws.w.iteritems()))
                 total+=1
     return ws
 
 def avptest(xdata,ws):
-    ydata=[]
+    y=[]
     for x in xdata:
-        if ws.val(list(enumerate(x)))>0.5:
-            ydata.append(1)
-        else:
-            ydata.append(0)
-    return ydata
+        y.append(choice(ws.val(list(enumerate(x)))))
+    return y
+
 
 

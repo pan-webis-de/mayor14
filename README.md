@@ -9,6 +9,7 @@ Requirements
 
 * python 2.7
 * scikit-learn
+* python-cvxopt 
 
 Optional:
 

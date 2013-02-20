@@ -24,32 +24,40 @@ import re
 import sys
 import os
 import os.path
+import codecs
 from collections import Counter
 
+def punct(filename):
+    with codecs.open(filename,'r','utf-8') as fh:
+        wds = re.findall('\W+', fh.read().lower())
+        doc=Counter(wds)
+    return doc
+
 def txt(filename):
-    with open(filename) as fh:
-        wds = re.split('\W+', fh.read())
-    doc=Counter(wds)
+    with codecs.open(filename,'r','utf-8') as fh:
+        wds = re.split('\W+', fh.read().lower())
+        doc=Counter(wds)
     return doc
 
 def bigram(filename):
-    with open(filename) as fh:
-        wds = re.split('\W+', fh.read())
-    tri = zip(wds, wds[1:])
-    doc = Counter(tri)
+    with codecs.open(filename,'r','utf-8') as fh:
+        wds = re.split('\W+', fh.read().lower())
+        tri = zip(wds, wds[1:])
+        doc = Counter(tri)
     return doc
 
 def trigram(filename):
-    with open(filename) as fh:
-        wds = re.split('\W+', fh.read())
-    tri = zip(wds, wds[1:], wds[2:])
-    doc = Counter(tri)
+    with codecs.open(filename,'r','utf-8') as fh:
+        wds = re.split('\W+', fh.read().lower())
+        tri = zip(wds, wds[1:], wds[2:])
+        doc = Counter(tri)
     return doc
 
 
 representations=[
     ('trigram',trigram),
     ('bigram',bigram),
+#    ('punctuation',punct),
     ('bog',txt)]
 
 def dirproblems(dirname, rknown  =r"known.*\.txt",

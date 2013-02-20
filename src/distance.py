@@ -84,7 +84,7 @@ def cosine(a,b):
     if den==0:
         return 0.0
     else:
-        return  num/den 
+        return  1-num/den 
 
 distances=[("Jacard",jacard),
            ("Masi",masi_distance),

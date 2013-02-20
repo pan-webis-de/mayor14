@@ -235,17 +235,19 @@ if __name__ == "__main__":
                 preds = ML.svmtest(svc,X_test)
             elif opts.method.startswith('avp'):
                 ws    = ML.avptrain(X_train,Y_train,opts.iters)
+               # print " ".join(["{0:.3f}".format(w) for w in ws.w.values()])
                 preds = ML.avptest(X_test,ws)
             elif opts.method.startswith('lp'):
                 ws    = ML.lptrain(X_train,Y_train)
                 preds = ML.lptest(X_test,ws)
                 
             for x,x_ in zip(preds,Y_test):
-                if x==x_:
+                if x[0]==x_:
                     N_Acc_+=1
                 Total_+=1
-            verbose("Prediction "," ".join([posneg(x) for x in preds]))
+            verbose("Prediction "," ".join(["{0}/{1:0.2f}".format(posneg(x),y)
+                                            for x,y in preds]))
             verbose("GS         "," ".join([posneg(x) for x in Y_test]))
 
-        info('Accuracy : {0:04f}'.format(N_Acc_/Total_))
+        info('Accuracy : {0:3.3f}%'.format(100.0*N_Acc_/Total_))
 
