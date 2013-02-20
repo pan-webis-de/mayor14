@@ -40,7 +40,7 @@ def info(*args):
     print >> out, "".join(args)
 
 def posneg(val):
-    if val<=0.5:
+    if val<0.5:
         return "Y"
     else:
         return "N"
@@ -118,7 +118,8 @@ if __name__ == "__main__":
     if os.path.exists('.ignore'):
         verbose('Loading files to ignore frm: .ignore')
         with open('.ignore') as file:
-            _ignore=file.read().readlines()
+            for line in file:
+                _ignore.append(line.strip())
 
         
     # load problems or problem
@@ -131,7 +132,7 @@ if __name__ == "__main__":
         if not len(args)==2:
             p.error("Answers needed for train mode")
         verbose('Loading answer file: {0}'.format(args[1]))
-        answers = docread.loadanswers(args[1])
+        answers = docread.loadanswers(args[1],_ignore)
 
         # Checking for consistency
         if not len(problems) == len(answers):
@@ -206,11 +207,12 @@ if __name__ == "__main__":
                         for n,f in distance.distances:
                             ix1_=ixr*len(docs)+ix1
                             ix2_=(dis+1)*(len(docs)+1)-1
-                            data[ix1_,ix2_]=f(docreps[ixr][1],docs[ix1][ixr][1])
+                            data[ix1_,ix2_]=f(docreps_[ixr][1],docs[ix1][ixr][1])
                             dis+=1
                 fig,ax = plt.subplots()
                 ax.pcolor(data, edgecolors='k', linewidths=2,cmap=plt.cm.Blues)
-                plt.title("Distance visualization T. docs {0}".format(len(docs)))
+                plt.title("Distance visualization T. docs {0} \n\
+case {1}".format(len(docs),posneg(ANS)))
                 plt.show()
      
 
@@ -235,17 +237,18 @@ if __name__ == "__main__":
                 preds = ML.svmtest(svc,X_test)
             elif opts.method.startswith('avp'):
                 ws    = ML.avptrain(X_train,Y_train,opts.iters)
-               # print " ".join(["{0:.3f}".format(w) for w in ws.w.values()])
+                #print " ".join(["{0:.3f}".format(w) for w in ws.w.values()])
                 preds = ML.avptest(X_test,ws)
             elif opts.method.startswith('lp'):
                 ws    = ML.lptrain(X_train,Y_train)
+                print " ".join(["{0:.3f}".format(w) for w in ws])
                 preds = ML.lptest(X_test,ws)
                 
             for x,x_ in zip(preds,Y_test):
                 if x[0]==x_:
                     N_Acc_+=1
                 Total_+=1
-            verbose("Prediction "," ".join(["{0}/{1:0.2f}".format(posneg(x),y)
+            verbose("Prediction "," ".join(["{0}/{1:0.2}".format(posneg(x),y)
                                             for x,y in preds]))
             verbose("GS         "," ".join([posneg(x) for x in Y_test]))
 

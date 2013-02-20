@@ -86,7 +86,7 @@ def dirproblem(dirname, rknown  =r"known.*\.txt",
     return known,unknown
 
 
-def loadanswers(filename):
+def loadanswers(filename,ignore=[]):
     """Loads answers file"""
     r_answer=re.compile(r"[^\w]*(\w*) (Y|N)$")
     answers={}
@@ -96,5 +96,6 @@ def loadanswers(filename):
             continue
         m=r_answer.match(line)
         if m:
-            answers[m.group(1)]=m.group(2)
+            if not m.group(1) in ignore:
+                answers[m.group(1)]=m.group(2)
     return answers

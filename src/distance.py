@@ -53,7 +53,7 @@ def tanimoto(A, B,**args):
     d1d2 = [item for item in vec1 if item in vec2]
   
     num=float(len(d1d2))
-    den=((pow(len(vec1),2) + (pow(len(vec2),2) - len(d1d2))))
+    den=(pow(len(vec1),2) + (pow(len(vec2),2) - len(d1d2)))
     if den==0:
         return 0.0
     else:
@@ -90,7 +90,7 @@ distances=[("Jacard",jacard),
            ("Masi",masi_distance),
            ("Tanimoto",tanimoto),
            ("Sorensen",sorensen), 
-	("Cosine", cosine)]
+  	("Cosine", cosine)]
 
 
 

@@ -31,10 +31,10 @@ from cvxopt import matrix, solvers
 import Weights as W
 
 def choice(x):
-    if x>0.5:
-        return (1.0,x)
-    else:
+    if x<=0.5:
         return (0.0,x)
+    else:
+        return (1.0,x)
 
 def lptrain(xdata,ydata):
     A=[[] for x in xdata[0]]
