@@ -27,25 +27,35 @@ from sklearn import preprocessing
 import random 
 random.seed()
 
-import glpk
+from cvxopt import matrix, solvers
 import Weights as W
 
+def choice(x):
+    if x>0.5:
+        return 1.0
+    else:
+        return 0.0
+
 def lptrain(xdata,ydata):
-    lp = glpk.LPX()
-    lp.obj.maximize = True 
-    lp.rows.add(len(xdata))         # Append three rows to this instance
-    for r in lp.rows:      # Iterate over all rows
-            r.name = chr(ord('sample')+r.index) # Name them p, q, and r
+    A=[[] for x in xdata[0]]
     for ix in range(len(xdata)):
-        if ydata[ix]==0:
-            lp.rows[0].bounds = None, 100.0 
-    lp.rows[1].bounds = None, 600.0  # Set bound -inf < q <= 600
-    lp.rows[2].bounds = None, 300.0  # Set bound -inf < r <= 300
-    xdata=np.array(xdata)
-    ydata=np.array(ydata)
-    svc = svm.SVC(kernel='poly',C=1.0,gamma=0.2)
-    svc.fit(xdata,ydata)
-    return svc
+        for iy in range(len(xdata[0])):
+            if ydata[ix]==0:
+                A[iy].append(xdata[ix][iy])
+            else:
+                A[iy].append(-xdata[ix][iy])
+    A=matrix(A)
+    B=matrix([ 0.5  for y in ydata])
+    c=matrix([1.0 for x in xdata[0]])
+    sol=solvers.lp(c,A,B)
+    return sol['x']
+
+def lptest(xdata,ws):
+    y=[]
+    for x in xdata:
+        y.append(choice(sum([x_*w for x_,w in zip(x,ws)])))
+    return y
+
 
 def svmtest(svc,xdata):
     xdata=np.array(xdata)
@@ -62,20 +72,6 @@ def svmtrain(xdata,ydata):
 def svmtest(svc,xdata):
     xdata=np.array(xdata)
     return svc.predict(xdata) 
-
-
-def lptrain(xdata,ydata):
-    xdata=np.array(xdata)
-    ydata=np.array(ydata)
-    svc = svm.SVC(kernel='poly',C=1.0,gamma=0.2)
-    svc.fit(xdata,ydata)
-    return svc
-
-def svmtest(svc,xdata):
-    xdata=np.array(xdata)
-    return svc.predict(xdata) 
-
-
 
 
 def avinit(filename):

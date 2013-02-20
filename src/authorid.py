@@ -40,7 +40,7 @@ def info(*args):
     print >> out, "".join(args)
 
 def posneg(val):
-    if val:
+    if val<=0.5:
         return "Y"
     else:
         return "N"
@@ -146,9 +146,9 @@ if __name__ == "__main__":
             info('Reading from : {0}'.format(id))
             info('Answer to unknown: {0}'.format(answers[id]))
             if answers[id].startswith('Y'):
-                ANS=0.0
+                ANS=0 # Close in distance
             else:
-                ANS=1.1
+                ANS=1 # Far in distance
 
             # Load unknown 
             if len(uks) > 1:
@@ -236,6 +236,9 @@ if __name__ == "__main__":
             elif opts.method.startswith('avp'):
                 ws    = ML.avptrain(X_train,Y_train,opts.iters)
                 preds = ML.avptest(X_test,ws)
+            elif opts.method.startswith('lp'):
+                ws    = ML.lptrain(X_train,Y_train)
+                preds = ML.lptest(X_test,ws)
                 
             for x,x_ in zip(preds,Y_test):
                 if x==x_:
