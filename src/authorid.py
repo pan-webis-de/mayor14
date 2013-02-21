@@ -64,22 +64,25 @@ if __name__ == "__main__":
             help="Output [STDOUT]")
     p.add_option("-m", "--mode",default='test',
             action="store", dest="mode",
-            help="test|train [test]")
+            help="test|train|devel [test]")
     p.add_option("-i", "--iters",default=10,type="int",
             action="store", dest="iters",
             help="Number of iterations for avg [10]")
-    p.add_option("-w", "--weights",default=None,
-            action="store", dest="weights",
-            help="weights file [None]")
-    p.add_option("", "--method",default="avp",
+    p.add_option("", "--model",default="pan13.model",
+            action="store", dest="model",
+            help="Model to save training or to test with [None]")
+    p.add_option("", "--method",default="lp",
             action="store", dest="method",
-            help="avp|svm [avp]")
+            help="lp|avp|svm [avp]")
     p.add_option("", "--known_pattern",default=r'known.*\.txt',
             action="store", dest="known",
-            help="pattern for known files [known*]")
+            help="pattern for known files [known*.txt]")
     p.add_option("", "--unknown_pattern",default=r'unknown*.txt',
             action="store", dest="unknown",
-            help="pattern for unknown file [unknown*]")
+            help="pattern for unknown file [unknown*.txt]")
+    p.add_option("", "--show-figures", default=False,
+            action="store_true", dest="showf",
+            help="Shows figures [None]")
     p.add_option("", "--figures", default=None,
             action="store", dest="figures",
             help="Save figures in directory [None]")
@@ -92,16 +95,10 @@ if __name__ == "__main__":
     if not len(args) > 0:
         p.error('Wrong number of arguments')
 
-    if not opts.mode in ["train","test"]:
-        p.error('Mode argument not valid: train or test')
+    if not opts.mode in ["train","test","devel"]:
+        p.error('Mode argument not valid: devel, train  test')
 
-    if opts.figures:
-        import numpy as np
-        import matplotlib
-        import matplotlib.pyplot as plt
-
-
-
+    
     dirname = args[0]
 
     # Parameters
@@ -113,6 +110,18 @@ if __name__ == "__main__":
             p.error('Output parameter could not been open: {0}'\
                     .format(opts.output))
 
+    # Preparing for saving info
+    if opts.figures or opts.showf:
+        import numpy as np
+        import matplotlib
+        import matplotlib.pyplot as plt
+        if opts.figures:
+            if not os.path.exists(opts.figures):
+                verbose("Creating directory for figures:",opts.figures)
+                os.mkdir(opts.figures)
+    
+
+    verbose("Running in mode:",opts.mode)
     # Loading ingnore if exists
     _ignore=[]
     if os.path.exists('.ignore'):
@@ -122,13 +131,13 @@ if __name__ == "__main__":
                 _ignore.append(line.strip())
 
         
+
     # load problems or problem
     problems=docread.dirproblems(dirname,opts.known,opts.unknown,_ignore)
 
-    # TRAINNING MODE
-    if opts.mode.startswith("train"):
-      
-        # Loading answers file
+    # Loading answers file only for DEVELOPMENT OR TRAINNING MODE
+    if opts.mode.startswith("train") or opts.mode.startswith("devel"):
+ 
         if not len(args)==2:
             p.error("Answers needed for train mode")
         verbose('Loading answer file: {0}'.format(args[1]))
@@ -140,56 +149,58 @@ if __name__ == "__main__":
             answers({1})".format(len(problems),len(answers)))
 
 
-        samples=[]
-        classes=[]
-        # Transforms documents into samples 
-        for id,(ks,uks) in problems:
-            info('Reading from : {0}'.format(id))
-            info('Answer to unknown: {0}'.format(answers[id]))
-            if answers[id].startswith('Y'):
-                ANS=0 # Close in distance
-            else:
-                ANS=1 # Far in distance
-
+    samples=[]
+    classes=[]
+    # Transforms documents into samples 
+    for id,(ks,uks) in problems:
+        verbose('Reading from : {0}'.format(id))
             # Load unknown 
-            if len(uks) > 1:
-                p.error("More than one unknown file for {0}".format(id))
-           
-            # Builds uknnown representation of document
-            docreps_=[]
+        if len(uks) > 1:
+            p.error("More than one unknown file for {0}".format(id))
+       
+        # Builds uknnown representation of document
+        docreps_=[]
+        for rep,f in docread.representations:
+            docreps_.append((rep,f(uks[0])))
+
+        # Load knowns 
+        docs = []
+        for k in ks:
+            docreps=[]
             for rep,f in docread.representations:
-                docreps_.append((rep,f(uks[0])))
-
-            # Load knowns 
-            docs = []
-            for k in ks:
-                docreps=[]
-                for rep,f in docread.representations:
-                    docreps.append((k,f(k)))
-                docs.append(docreps)
-                
-            verbose('Loading files')
-            samples_=[]
-            classes_=[]
-            for docreps in docs:
-                verbose('Comparing with: {0}'.format(k))
-                feats=[]
-                for doc,doc_ in zip(docreps,docreps_): 
-                    verbose("-- {0} --".format(doc_[0]))
-                    for n,f in distance.distances:
-                        d=f(doc_[1],doc[1])
-                        verbose("{0} distance".format(n).ljust(30),
-                                "{0:0.4f}".format(d))
-                        feats.append(d)
-                samples_.append(feats)
+                docreps.append((k,f(k)))
+            docs.append(docreps)
+            
+        verbose('Loading files')
+        samples_=[]
+        classes_=[]
+        for docreps in docs:
+            verbose('Comparing with: {0}'.format(k))
+            feats=[]
+            for doc,doc_ in zip(docreps,docreps_): 
+                verbose("-- {0} --".format(doc_[0]))
+                for n,f in distance.distances:
+                    d=f(doc_[1],doc[1])
+                    verbose("{0} distance".format(n).ljust(30),
+                            "{0:0.4f}".format(d))
+                    feats.append(d)
+            samples_.append(feats)
+            # Creating answers only if TRAINING or DEVELPMENT
+            if opts.mode.startswith("train") or opts.mode.startswith("devel"):
+                info('Answer to unknown: {0}'.format(answers[id]))
+                if answers[id].startswith('Y'):
+                    ANS=0 # Close in distance
+                else:
+                    ANS=1 # Far in distance
                 classes_.append(ANS)
-                   
-            samples.append(samples_)
-            classes.append(classes_)
+        samples.append(samples_)
+        classes.append(classes_)
 
-
+        # Saving figures only if TRAINING or DEVELOPMENT
+        if opts.mode.startswith("train") or opts.mode.startswith("devel"):
             # save figures if requiered
-            if opts.figures:
+            if opts.figures or opts.showf:
+                nproblem=1
                 data=np.zeros((len(docs)*len(docread.representations),
                               (len(docs)+1)*len(distance.distances)))
                 for ix1 in range(len(docs)):
@@ -213,44 +224,114 @@ if __name__ == "__main__":
                 ax.pcolor(data, edgecolors='k', linewidths=2,cmap=plt.cm.Blues)
                 plt.title("Distance visualization T. docs {0} \n\
 case {1}".format(len(docs),posneg(ANS)))
-                plt.show()
+                if opts.figures:
+                    plt.savefig("{0}/{1}.png".format(opts.figures,id))
+                if opts.showf:
+                    plt.show()
      
+    # DEVELOPMENT OR TRAINNING MODE
+    if opts.mode.startswith("train") or opts.mode.startswith("devel"):
+ 
+        if opts.mode.startswith("devel"):
+            # leave-one-out problem
+            info('Leave one out setting for development')
+            # Initialization of ML
+            Total =0.0
+            N_Acc =0
+            Total_=0.0
+            N_Acc_=0
+            for i in range(len(samples)):
+                info('Model for ',str(i))
+                X_train = samples[:i]+samples[i+1:]
+                X_train = list(itertools.chain(*X_train))
+                X_test  = samples[i]
+                Y_train = classes[:i]+classes[i+1:]
+                Y_train = list(itertools.chain(*Y_train))
+                Y_test  = classes[i]
+
+                if opts.method.startswith('svm'):
+                    svc   = ML.svmtrain(X_train,Y_train)
+                    preds = ML.svmtest(svc,X_test)
+                elif opts.method.startswith('avp'):
+                    ws    = ML.avptrain(X_train,Y_train,opts.iters)
+                    #print " ".join(["{0:.3f}".format(w) for w in ws.w.values()])
+                    preds = ML.avptest(X_test,ws)
+                elif opts.method.startswith('lp'):
+                    ws    = ML.lptrain(X_train,Y_train)
+                    print " ".join(["{0:.3f}".format(w) for w in ws])
+                    preds = ML.lptest(X_test,ws)
+           
+                res=ML.voted(preds)
+
+                if res==answers[problems[i][0]]:
+                    N_Acc+=1
+                Total+=1
+
+                for x,x_ in zip(preds,Y_test):
+                    if x[0]==x_:
+                        N_Acc_+=1
+                    Total_+=1
+                verbose("Predictions "," ".join(["{0}/{1:0.2}".format(posneg(x),y)
+                                                for x,y in preds]))
+                verbose("GSs         "," ".join([posneg(x) for x in Y_test]))
+                verbose("Prediction  ",res)
+                verbose("GS          ",answers[problems[i][0]])
 
 
-        # Initialization of ML
-        Total_=0.0
-        N_Acc_=0
-
-        # leave-one-out problem
-        info('Leave one oue one out')
-        for i in range(len(samples)):
-            info('Model for ',str(i))
-            X_train = samples[:i]+samples[i+1:]
+            info('Accuracy over all decisions : {0:3.3f}%'.format(100.0*N_Acc_/Total_))
+            info('Accuracy over problems : {0:3.3f}%'.format(100.0*N_Acc/Total))
+        # Trainning model
+        elif opts.mode.startswith("train"):
+            import pickle
+            
+            X_train = samples
             X_train = list(itertools.chain(*X_train))
-            X_test  = samples[i]
-            Y_train = classes[:i]+classes[i+1:]
+            Y_train = classes
             Y_train = list(itertools.chain(*Y_train))
-            Y_test  = classes[i]
+
+            verbose("Trainning model")
+            if opts.method.startswith('svm'):
+                verbose("Creating a SVM")
+                svc   = ML.svmtrain(X_train,Y_train)
+                s     = pickle.dumps(svc)
+            elif opts.method.startswith('avp'):
+                verbose("Creating an Average Percetron model")
+                ws    = ML.avptrain(X_train,Y_train,opts.iters)
+                s     = pickle.dumps(ws)
+            elif opts.method.startswith('lp'):
+                verbose("Calculating a linear program")
+                ws    = ML.lptrain(X_train,Y_train)
+                s     = pickle.dumps(ws)
+
+            verbose("Saving model into",opts.model)
+            with open(opts.model,"w") as model:
+                model.write(s)
+    elif opts.mode.startswith("test"):
+        import pickle
+        with open(opts.model,"r") as model:
+            s=model.read()
+        for i in range(len(samples)):
+            X_test  = samples[i]
 
             if opts.method.startswith('svm'):
-                svc   = ML.svmtrain(X_train,Y_train)
+                svc   = pickle.loads(s)
                 preds = ML.svmtest(svc,X_test)
             elif opts.method.startswith('avp'):
-                ws    = ML.avptrain(X_train,Y_train,opts.iters)
-                #print " ".join(["{0:.3f}".format(w) for w in ws.w.values()])
+                ws    = pickle.loads(s)
                 preds = ML.avptest(X_test,ws)
             elif opts.method.startswith('lp'):
-                ws    = ML.lptrain(X_train,Y_train)
-                print " ".join(["{0:.3f}".format(w) for w in ws])
+                ws    =  pickle.loads(s)
                 preds = ML.lptest(X_test,ws)
-                
-            for x,x_ in zip(preds,Y_test):
-                if x[0]==x_:
-                    N_Acc_+=1
-                Total_+=1
-            verbose("Prediction "," ".join(["{0}/{1:0.2}".format(posneg(x),y)
-                                            for x,y in preds]))
-            verbose("GS         "," ".join([posneg(x) for x in Y_test]))
+            
+            res=ML.voted(preds)
+            info(problems[i][0]," {0} ".format(res))
 
-        info('Accuracy : {0:3.3f}%'.format(100.0*N_Acc_/Total_))
+
+
+    else:
+        info("Error with mode",opts.mode)
+
+
+ 
+
 

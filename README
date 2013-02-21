@@ -5,7 +5,7 @@ Author Identification
 This is the code for author identification
 
 Documentation
--------------
+=============
 
 This file. 
 
@@ -16,7 +16,7 @@ For creating an html version, use (it requieres docutils_)
    make doc
 
 PAN 2013 Lab
-------------
+============
 
 Copy the _PAN 2013 directory trainning data into the data directory
 
@@ -26,18 +26,91 @@ Copy the _PAN 2013 directory trainning data into the data directory
   cp -R <path>/PAN13-AuthorIdentification-TrainingCorpus data
 
 
-Running training with defaults
+Using through scripts
+=====================
+
+TRAINING
+--------
+
+Training with defaults (Linear programming, verbose, model in pan13.model)
 
 ::
 
     sh script/train_pan13.sh
 
-Running training with SVM
+
+Training with SVM (verbose, saving model in pan13.model)
 
 ::
 
-    sh script/train_pan13.s 
+    sh script/train_pan13.sh --method svm
 
+
+TESTING
+-------
+
+Testing for defaults
+
+::
+
+    sh script/testing_pan13.sh
+
+Testing with SVM
+
+::
+
+    sh script/testing_pan13.sh --method svm
+
+
+
+Development cycling (one-leave-out)
+-----------------------------------
+
+Testing for defaults
+
+::
+
+    sh script/develop_pan13.sh
+
+
+Graph the distances per problem
+
+::
+
+    sh script/develop_pan13.sh --show-figures
+
+
+
+authorid.py
+-----------
+
+::
+
+	Usage: authorid.py [options] dir [anwers]
+
+			Runs user identification
+
+			dir   : Directory with author examples
+			answer: File with answers for trainning
+
+
+	Options:
+	  --version             show program's version number and exit
+	  -h, --help            show this help message and exit
+	  -o OUTPUT, --output=OUTPUT
+							Output [STDOUT]
+	  -m MODE, --mode=MODE  test|train|devel [test]
+	  -i ITERS, --iters=ITERS
+							Number of iterations for avg [10]
+	  --model=MODEL         Model to save training or to test with [None]
+	  --method=METHOD       lp|avp|svm [avp]
+	  --known_pattern=KNOWN
+							pattern for known files [known*.txt]
+	  --unknown_pattern=UNKNOWN
+							pattern for unknown file [unknown*.txt]
+	  --show-figures        Shows figures [None]
+	  --figures=FIGURES     Save figures in directory [None]
+	  -v, --verbose         Verbose mode [Off]
 
 
 Requirements

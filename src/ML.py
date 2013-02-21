@@ -140,3 +140,13 @@ def avptest(xdata,ws):
 
 
 
+
+def voted(preds):
+    cs={0.0:0.0, 1.0:0.0}
+    for pred,val in preds:
+        cs[pred]+=val
+
+    if cs[0.0]>=cs[1.0]:
+        return "Y"
+    else:
+        return "N"
