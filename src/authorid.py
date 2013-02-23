@@ -257,9 +257,12 @@ case {1}".format(len(docs),posneg(ANS)))
                     #print " ".join(["{0:.3f}".format(w) for w in ws.w.values()])
                     preds = ML.avptest(X_test,ws)
                 elif opts.method.startswith('lp'):
-                    ws    = ML.lptrain(X_train,Y_train)
-                    print " ".join(["{0:.3f}".format(w) for w in ws])
-                    preds = ML.lptest(X_test,ws)
+                    try:
+                        ws    = ML.lptrain(X_train,Y_train)
+                        print " ".join(["{0:.3f}".format(w) for w in ws])
+                        preds = ML.lptest(X_test,ws)
+                    except TypeError:
+                        preds = ML.lptest(X_test,[(1.0/15) for x in X_test[0]])
            
                 res=ML.voted(preds)
 
