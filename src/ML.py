@@ -74,6 +74,7 @@ def lptrain(xdata,ydata):
 
     B=matrix(B)
     c=matrix([1.0 for x in xdata[0]])
+    solvers.options['show_progress'] = False
     sol=solvers.lp(c,A,B)
     return sol['x']
 
@@ -88,18 +89,21 @@ def svmtest(svc,xdata):
     xdata=np.array(xdata)
     return svc.predict(xdata) 
 
-
 def svmtrain(xdata,ydata):
     xdata=np.array(xdata)
     ydata=np.array(ydata)
-    svc = svm.SVC(kernel='rbf',C=0.001,gamma=0.001,probability=True)
+    svc = svm.NuSVC(
+        nu=0.6,
+        degree=4,
+        probability=True
+        )
     svc.fit(xdata,ydata)
     return svc
 
 
 def svmtest(svc,xdata):
     xdata=np.array(xdata)
-    return [(x,svc.predict_proba(x)[0][x]) for x in svc.predict(xdata)]
+    return [(x,svc.predict_proba(x)[0][1-x]) for x in svc.predict(xdata)]
 
 
 def avinit(filename):

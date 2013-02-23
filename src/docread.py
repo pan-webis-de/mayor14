@@ -31,31 +31,31 @@ def punct(filename):
     with codecs.open(filename,'r','utf-8') as fh:
         wds = re.findall('(?u)\W+', fh.read().lower())
         doc=Counter(wds)
-    return doc
+    com=preprocess(doc)
+    return doc,com
 
 def txt(filename):
     with codecs.open(filename,'r','utf-8') as fh:
         wds = re.split('(?u)\W+', fh.read().lower())
         doc=Counter(wds)
-    preprocess(doc)
-    return doc
+    com=preprocess(doc)
+    return doc,com
 
 def bigram(filename):
     with codecs.open(filename,'r','utf-8') as fh:
         wds = re.split('(?u)\W+', fh.read().lower())
         tri = zip(wds, wds[1:])
         doc = Counter(tri)
-    preprocess(doc,ncommons=0,ncutoff=1)
-    return doc
+    com=preprocess(doc,ncommons=0,ncutoff=1)
+    return doc,com
 
 def trigram(filename):
     with codecs.open(filename,'r','utf-8') as fh:
         wds = re.split('(?u)\W+', fh.read().lower())
         tri = zip(wds, wds[1:], wds[2:])
         doc = Counter(tri)
-    preprocess(doc,ncommons=0,ncutoff=1)
-    return doc
-
+    com=preprocess(doc,ncommons=0,ncutoff=1)
+    return doc,com
 
 def preprocess(doc,ncommons=10,ncutoff=5):
     commons=[x for x,c in doc.most_common(ncommons)]
@@ -64,6 +64,7 @@ def preprocess(doc,ncommons=10,ncutoff=5):
         del doc[c]
     for c in cutoff:
         del doc[c]
+    return commons
 
 
 representations=[

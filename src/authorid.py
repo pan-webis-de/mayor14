@@ -26,6 +26,8 @@ import sys
 import os
 import os.path
 import itertools
+from collections import Counter
+
 
 # Local imports
 import docread
@@ -177,13 +179,28 @@ if __name__ == "__main__":
         for docreps in docs:
             verbose('Comparing with: {0}'.format(k))
             feats=[]
+            commons=Counter()
             for doc,doc_ in zip(docreps,docreps_): 
                 verbose("-- {0} --".format(doc_[0]))
                 for n,f in distance.distances:
-                    d=f(doc_[1],doc[1])
+                    d=f(doc_[1][0],doc[1][0])
                     verbose("{0} distance".format(n).ljust(30),
                             "{0:0.4f}".format(d))
                     feats.append(d)
+                commons.update(doc[1][1])
+            _tmp=[feats,0,0]
+            # Figures out the language by common words
+            if commons['the']>=1:
+                _tmp[1]=feats
+                _tmp[2]=[0.0 for x in feats]
+            elif commons['el']>=1:
+                _tmp[1]=feats
+                _tmp[2]=[0.0 for x in feats]
+            else:
+                _tmp[2]=feats
+                _tmp[1]=[0.0 for x in feats]
+
+            feats=list(itertools.chain(*_tmp))
             samples_.append(feats)
             # Creating answers only if TRAINING or DEVELPMENT
             if opts.mode.startswith("train") or opts.mode.startswith("devel"):
@@ -201,6 +218,8 @@ if __name__ == "__main__":
             # save figures if requiered
             if opts.figures or opts.showf:
                 nproblem=1
+                xtick_lbs = range((len(docs)+1)*len(distance.distances))
+                ytick_lbs = range(len(docs)*len(docread.representations))
                 data=np.zeros((len(docs)*len(docread.representations),
                               (len(docs)+1)*len(distance.distances)))
                 for ix1 in range(len(docs)):
@@ -211,6 +230,8 @@ if __name__ == "__main__":
                                 ix2_=dis*(len(docs)+1)+ix2
                                 ix1_=ixr*len(docs)+ix1
                                 data[ix1_,ix2_]=f(docs[ix1][ixr][1],docs[ix2][ixr][1])
+                                xtick_lbs[ix2_]="Doc {0}".format(ix2)
+                                ytick_lbs[ix1_]="Doc {0}".format(ix1)
                                 dis+=1
                 for ix1 in range(len(docs)):
                     for ixr in range(len(docread.representations)):
@@ -219,11 +240,21 @@ if __name__ == "__main__":
                             ix1_=ixr*len(docs)+ix1
                             ix2_=(dis+1)*(len(docs)+1)-1
                             data[ix1_,ix2_]=f(docreps_[ixr][1],docs[ix1][ixr][1])
+                            xtick_lbs[ix2_]="Unk".format(ix2)
                             dis+=1
                 fig,ax = plt.subplots()
                 ax.pcolor(data, edgecolors='k', linewidths=2,cmap=plt.cm.Blues)
-                plt.title("Distance visualization T. docs {0} \n\
-case {1}".format(len(docs),posneg(ANS)))
+                xtick_lcs = np.array([.5+x for x in range((len(docs)+1)*\
+                            len(distance.distances))])
+
+                ytick_lcs = np.array([.5+x for x in range(len(docs)*\
+                            len(docread.representations))])
+                xtick_lbs = np.array(xtick_lbs)
+                ytick_lbs = np.array(ytick_lbs)
+                plt.xticks(xtick_lcs,xtick_lbs,rotation='vertical')
+                plt.yticks(ytick_lcs,ytick_lbs)
+                plt.title("Distance visualization {0} (N. docs {1}) \n\
+case {2}".format(id,len(docs),posneg(ANS)))
                 if opts.figures:
                     plt.savefig("{0}/{1}.png".format(opts.figures,id))
                 if opts.showf:
@@ -262,23 +293,28 @@ case {1}".format(len(docs),posneg(ANS)))
                         print " ".join(["{0:.3f}".format(w) for w in ws])
                         preds = ML.lptest(X_test,ws)
                     except TypeError:
+                        print "ERROR NO MODEL"
                         preds = ML.lptest(X_test,[(1.0/15) for x in X_test[0]])
            
                 res=ML.voted(preds)
 
                 if res==answers[problems[i][0]]:
+                    pref=""
                     N_Acc+=1
+                else:
+                    pref="**"
                 Total+=1
 
                 for x,x_ in zip(preds,Y_test):
                     if x[0]==x_:
                         N_Acc_+=1
                     Total_+=1
-                verbose("Predictions "," ".join(["{0}/{1:0.2}".format(posneg(x),y)
+                verbose(pref,"Model       ",problems[i][0])
+                verbose(pref,"Predictions "," ".join(["{0}/{1:0.2}".format(posneg(x),y)
                                                 for x,y in preds]))
-                verbose("GSs         "," ".join([posneg(x) for x in Y_test]))
-                verbose("Prediction  ",res)
-                verbose("GS          ",answers[problems[i][0]])
+                verbose(pref,"GSs         "," ".join([posneg(x) for x in Y_test]))
+                verbose(pref,"Prediction  ",res)
+                verbose(pref,"GS          ",answers[problems[i][0]])
 
 
             info('Accuracy over all decisions : {0:3.3f}%'.format(100.0*N_Acc_/Total_))
