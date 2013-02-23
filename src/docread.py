@@ -27,23 +27,26 @@ import os.path
 import codecs
 from collections import Counter
 
+spaces=re.compile('\W+',re.UNICODE)
+wordpunct=re.compile('\w+\W+',re.UNICODE)
+
 def punct(filename):
     with codecs.open(filename,'r','utf-8') as fh:
-        wds = re.findall('(?u)\W+', fh.read().lower())
+        wds = wordpunct.findall( fh.read().lower())
         doc=Counter(wds)
     com=preprocess(doc)
     return doc,com
 
 def txt(filename):
     with codecs.open(filename,'r','utf-8') as fh:
-        wds = re.split('(?u)\W+', fh.read().lower())
+        wds = spaces.split(fh.read().lower())
         doc=Counter(wds)
     com=preprocess(doc)
     return doc,com
 
 def bigram(filename):
     with codecs.open(filename,'r','utf-8') as fh:
-        wds = re.split('(?u)\W+', fh.read().lower())
+        wds = spaces.split( fh.read().lower())
         tri = zip(wds, wds[1:])
         doc = Counter(tri)
     com=preprocess(doc,ncommons=0,ncutoff=1)
@@ -51,7 +54,7 @@ def bigram(filename):
 
 def trigram(filename):
     with codecs.open(filename,'r','utf-8') as fh:
-        wds = re.split('(?u)\W+', fh.read().lower())
+        wds = spaces.split( fh.read().lower())
         tri = zip(wds, wds[1:], wds[2:])
         doc = Counter(tri)
     com=preprocess(doc,ncommons=0,ncutoff=1)
@@ -70,7 +73,7 @@ def preprocess(doc,ncommons=10,ncutoff=5):
 representations=[
     ('trigram',trigram),
     ('bigram',bigram),
-#    ('punctuation',punct),
+    ('punctuation',punct),
     ('bog',txt)]
 
 def dirproblems(dirname, rknown  =r"known.*\.txt",

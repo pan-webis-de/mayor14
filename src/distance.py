@@ -90,7 +90,7 @@ distances=[("Jacard",jacard),
            ("Masi",masi_distance),
            ("Tanimoto",tanimoto),
            ("Sorensen",sorensen), 
-  	("Cosine", cosine)]
+  	   ("Cosine", cosine)]
 
 
 
