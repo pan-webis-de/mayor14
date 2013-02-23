@@ -229,7 +229,8 @@ if __name__ == "__main__":
                             for n,f in distance.distances:
                                 ix2_=dis*(len(docs)+1)+ix2
                                 ix1_=ixr*len(docs)+ix1
-                                data[ix1_,ix2_]=f(docs[ix1][ixr][1],docs[ix2][ixr][1])
+                                data[ix1_,ix2_]=f(docs[ix1][ixr][1][0],
+                                                  docs[ix2][ixr][1][0])
                                 xtick_lbs[ix2_]="Doc {0}".format(ix2)
                                 ytick_lbs[ix1_]="Doc {0}".format(ix1)
                                 dis+=1
@@ -239,7 +240,8 @@ if __name__ == "__main__":
                         for n,f in distance.distances:
                             ix1_=ixr*len(docs)+ix1
                             ix2_=(dis+1)*(len(docs)+1)-1
-                            data[ix1_,ix2_]=f(docreps_[ixr][1],docs[ix1][ixr][1])
+                            data[ix1_,ix2_]=f(docreps_[ixr][1][0],
+                                              docs[ix1][ixr][1][0])
                             xtick_lbs[ix2_]="Unk".format(ix2)
                             dis+=1
                 fig,ax = plt.subplots()
