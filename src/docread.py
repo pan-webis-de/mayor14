@@ -71,7 +71,7 @@ def preprocess(doc,ncommons=10,ncutoff=5):
 
 
 representations=[
-    ('trigram',trigram),
+#    ('trigram',trigram),
     ('bigram',bigram),
     ('punctuation',punct),
     ('bog',txt)]
