@@ -15,6 +15,40 @@ For creating an html version, use (it requieres docutils_)
 
    make doc
 
+Installation
+============
+
+Clone the repository
+
+::
+
+  git clone https://github.com/ivanvladimir/authorid.git
+
+
+Intall python libraries
+
+::
+
+  sudo apt-get install build-essential python-dev python-setuptools
+  sudo apt-get install libatlas-base-dev gfortran
+  sudo apt-get install python-numpy python-scipy
+  sudo apt-get install python-matplotlib
+
+
+Install cvxopt library (Linnear programming)
+
+:: 
+
+  sudo apt-get install python-cvxopt
+
+
+Install scikit-learn (SVM model)
+
+::
+
+  sudo apt-get install python-sklearn
+
+
 
 PAN 2013 Lab
 ============
