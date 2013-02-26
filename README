@@ -71,14 +71,14 @@ Training with defaults (Linear programming, verbose, model in pan13.model)
 
 ::
 
-    sh script/train_pan13.sh
+    sh script/train_pan13.sh $TRAINDIR $ANSWERSFILE
 
 
 Training with SVM (verbose, saving model in pan13.model)
 
 ::
 
-    sh script/train_pan13.sh --method svm
+    sh script/train_pan13.sh --method svm $TRAINDIR $ANSWERSFILE
 
 
 TESTING
@@ -88,13 +88,13 @@ Testing for defaults
 
 ::
 
-    sh script/testing_pan13.sh
+    sh script/testing_pan13.sh $TESTDIR
 
 Testing with SVM
 
 ::
 
-    sh script/testing_pan13.sh --method svm
+    sh script/testing_pan13.sh --method svm $TESTDIR
 
 
 Development cycling (one-leave-out)
@@ -104,14 +104,14 @@ Testing for defaults
 
 ::
 
-    sh script/develop_pan13.sh
+    sh script/develop_pan13.sh $TRAINDIR $ANSWERSFILE
 
 
 Graph the distances per problem
 
 ::
 
-    sh script/develop_pan13.sh --show-figures
+    sh script/develop_pan13.sh --show-figures $TRAINDIR $ANSWERSFILE
 
 
 
