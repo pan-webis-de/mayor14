@@ -69,12 +69,38 @@ def preprocess(doc,ncommons=10,ncutoff=5):
         del doc[c]
     return commons
 
+def paragraph(text):
+  # [.!?][\s]+(?=[A-Z])
+  sep = re.compile('\.')
+  return sep.split(text)
+
+def words(text):
+  sep = re.compile('\W+',re.UNICODE)
+  text = re.sub(sep, ' ', text)
+  text = re.sub(re.compile('\s+'), ' ', text).strip(' ')
+  return spaces.split(text)
+
+def par(filename):
+  with codecs.open(filename,'r','utf-8') as fh:
+     text = ( fh.read().lower())
+  ps = paragraph(text)
+  par = Counter() 
+  for k, p in enumerate(ps):
+    ws = words(p)
+    par[k]=len(ws)/5
+  com=preprocess(par,ncommons=0,ncutoff=0)
+  for i in range(0, len(ps)):
+    ws = words(ps[i])
+  print "*************"
+  print par
+  return par,com
 
 representations=[
 #    ('trigram',trigram),
     ('bigram',bigram),
     ('punctuation',punct),
-    ('bog',txt)]
+    ('bog',txt),
+        ('par',par)]
 
 def dirproblems(dirname, rknown  =r"known.*\.txt",
                          runknown=r"unknown.*\.txt",ignore=[]):
