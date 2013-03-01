@@ -71,14 +71,14 @@ Training with defaults (Linear programming, verbose, model in pan13.model)
 
 ::
 
-    sh script/train_pan13.sh $TRAINDIR $ANSWERSFILE
+    bash script/train_pan13.sh TRAINDIR
 
 
 Training with SVM (verbose, saving model in pan13.model)
 
 ::
 
-    sh script/train_pan13.sh --method svm $TRAINDIR $ANSWERSFILE
+    bash script/train_pan13.sh --method svm TRAINDIR 
 
 
 TESTING
@@ -88,13 +88,15 @@ Testing for defaults
 
 ::
 
-    sh script/testing_pan13.sh $TESTDIR
+    bassh script/testing_pan13.sh INPUTDIR OUTPUTDIR
+
+The output will be saved by default into the file: OUTPUTDIR/Results.txt
 
 Testing with SVM
 
 ::
 
-    sh script/testing_pan13.sh --method svm $TESTDIR
+    bassh script/testing_pan13.sh --method svm INPUTDIR OUTPUTDIR
 
 
 Development cycling (one-leave-out)
@@ -104,19 +106,21 @@ Testing for defaults
 
 ::
 
-    sh script/develop_pan13.sh $TRAINDIR $ANSWERSFILE
+    sh script/develop_pan13.sh $TRAINDIR
 
 
 Graph the distances per problem
 
 ::
 
-    sh script/develop_pan13.sh --show-figures $TRAINDIR $ANSWERSFILE
+    sh script/develop_pan13.sh --show-figures $TRAINDIR
 
 
 
 authorid.py
 -----------
+
+This is the main script and it has the following options
 
 ::
 

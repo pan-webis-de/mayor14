@@ -88,6 +88,9 @@ if __name__ == "__main__":
     p.add_option("", "--figures", default=None,
             action="store", dest="figures",
             help="Save figures in directory [None]")
+    p.add_option("", "--answers", default="Answers.txt",
+            action="store", dest="answers",
+            help="Answers file [Answers.txt]")
     p.add_option("-v", "--verbose",
             action="store_true", dest="verbose",
             help="Verbose mode [Off]")
@@ -139,11 +142,12 @@ if __name__ == "__main__":
 
     # Loading answers file only for DEVELOPMENT OR TRAINNING MODE
     if opts.mode.startswith("train") or opts.mode.startswith("devel"):
- 
-        if not len(args)==2:
-            p.error("Answers needed for train mode")
-        verbose('Loading answer file: {0}'.format(args[1]))
-        answers = docread.loadanswers(args[1],_ignore)
+        if len(args)==2:
+            answers_file= args[1]
+        else:
+            answers_file="{0}/{1}".format(args[0],opts.answers)
+        verbose('Loading answer file: {0}'.format(answers_file))
+        answers = docread.loadanswers(answers_file,_ignore)
 
         # Checking for consistency
         if not len(problems) == len(answers):
@@ -344,7 +348,7 @@ case {2}".format(id,len(docs),posneg(ANS)))
                 ws    = ML.lptrain(X_train,Y_train)
                 s     = pickle.dumps(ws)
 
-            verbose("Saving model into",opts.model)
+            verbose("Saving model into ",opts.model)
             with open(opts.model,"w") as model:
                 model.write(s)
     elif opts.mode.startswith("test"):

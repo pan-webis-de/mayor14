@@ -8,17 +8,19 @@ Instrucctions for running in PAN13
 
 ### Trainning assesment
 
-  sh script/train_pan13.sh /media/pan13-training-data/pan13-author-identification-training-data/ /media/pan13-training-data/pan13-author-identification-training-data/Answers.txt
+  bash script/train_pan13.sh TRAINDIR 
 
 
 ## Test on unknown data
 
-  sh script/test_pan13.sh $DIR
+  bash script/test_pan13.sh INPUTDIR OUTPUTDIR
   
+The results will be saved into $OUTDIR/Results.txt
+
 
 ### Development assesment
 
-  sh script/develop_pan13.sh /media/pan13-training-data/pan13-author-identification-training-data/ /media/pan13-training-data/pan13-author-identification-training-data/Answers.txt
+  bash script/develop_pan13.sh TRAINDIR
 
 
 Requirements
