@@ -28,7 +28,16 @@ import codecs
 from collections import Counter
 
 spaces=re.compile('\W+',re.UNICODE)
+rcapital=re.compile(r'[A-Z][A-Za-z]+',re.UNICODE)
 wordpunct=re.compile('\w+\W+',re.UNICODE)
+
+def capital(filename):
+    with codecs.open(filename,'r','utf-8') as fh:
+        wds = rcapital.findall( fh.read())
+        doc=Counter(wds)
+    com=preprocess(doc,ncommons=0,ncutoff=1)
+    return doc,com
+
 
 def punct(filename):
     with codecs.open(filename,'r','utf-8') as fh:
@@ -98,7 +107,8 @@ representations=[
     ('bigram',bigram),
     ('punctuation',punct),
     ('bog',txt),
-        ('par',par)]
+    ('capital',capital),
+    ('par',par)]
 
 def dirproblems(dirname, rknown  =r"known.*\.txt",
                          runknown=r"unknown.*\.txt",ignore=[]):
