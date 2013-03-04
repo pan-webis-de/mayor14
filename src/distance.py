@@ -25,6 +25,7 @@
 #import nltk
 from math import sqrt
 from math import pow
+from numpy import array
 
 def jacard(A, B):
     A=set(A.elements())
@@ -72,8 +73,7 @@ def sorensen(A, B ,**args):
     return 1-float(2.0*d1d2 / (len(vec1) + len(vec2) ) )
 
 
-def dot(a,b):
-	
+def dot(a,b):	
 	commons = set(a.keys()).intersection (set(b.keys()))
 	return sum([a[k] * b[k] for k in commons])
 
@@ -86,11 +86,36 @@ def cosine(a,b):
     else:
         return  1-num/den 
 
+def cosine(a,b):
+    num=dot(a, b)
+    den=(sqrt(dot(a,a)) * sqrt(dot(b,b)))
+
+    if den==0:
+        return 0.0
+    else:
+        return  1-num/den 
+
+def manhattan(A,B):
+    return abs(array(A) - array(B)).sum()
+
+def euclidean(A,B):
+    return sqrt(((array(A) - array(B))**2).sum())
+
+def overlap(A, B):
+    A = set(A.elements())
+    B = set(B.elements())
+    num = len(A.intersection(B)) * 1.0
+    den = min(len(A), len(B))
+    if den == 0:
+        return 0.0
+    else:
+        return  1 - (num/den)
+
 distances=[("Jacard",jacard),
            ("Masi",masi_distance),
            ("Tanimoto",tanimoto),
            ("Sorensen",sorensen), 
-  	   ("Cosine", cosine)]
-
-
-
+           ("Cosine", cosine),
+           ("Manhattan", manhattan),
+           ("Euclidean", euclidean),
+           ("Overlap", overlap)]
