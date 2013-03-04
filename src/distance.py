@@ -59,8 +59,7 @@ def tanimoto(A, B,**args):
         return 0.0
     else:
         return  1-num/den 
- 
-  
+   
 def sorensen(A, B ,**args):
     vec1=set(A.elements())
     vec2=set(B.elements())
@@ -72,19 +71,9 @@ def sorensen(A, B ,**args):
   
     return 1-float(2.0*d1d2 / (len(vec1) + len(vec2) ) )
 
-
 def dot(a,b):	
 	commons = set(a.keys()).intersection (set(b.keys()))
 	return sum([a[k] * b[k] for k in commons])
-
-def cosine(a,b):
-    num=dot(a, b)
-    den=(sqrt(dot(a,a)) * sqrt(dot(b,b)))
-
-    if den==0:
-        return 0.0
-    else:
-        return  1-num/den 
 
 def cosine(a,b):
     num=dot(a, b)
