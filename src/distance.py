@@ -85,10 +85,12 @@ def cosine(a,b):
         return  1-num/den 
 
 def manhattan(A,B):
-    return abs(array(A) - array(B)).sum()
+    commons = set(A.keys()).union(set(B.keys()))
+    return abs(sum([A[a] - B[a] for a in commons]))
 
 def euclidean(A,B):
-    return sqrt(((array(A) - array(B))**2).sum())
+    commons = set(A.keys()).union(set(B.keys()))
+    return sqrt(sum([A[a]-B[a] for a in commons])**2)
 
 def overlap(A, B):
     A = set(A.elements())
@@ -100,11 +102,24 @@ def overlap(A, B):
     else:
         return  1 - (num/den)
 
+def overlap_(A, B):
+    A = set(A.elements())
+    B = set(B.elements())
+    num = len(A.intersection(B)) * 1.0
+    den = max(len(A), len(B))
+    if den == 0:
+        return 0.0
+    else:
+        return  1 - (num/den)
+
+
+
 distances=[("Jacard",jacard),
            ("Masi",masi_distance),
            ("Tanimoto",tanimoto),
            ("Sorensen",sorensen), 
-           ("Cosine", cosine),
-           ("Manhattan", manhattan),
-           ("Euclidean", euclidean),
-           ("Overlap", overlap)]
+#           ("Manhattan", manhattan),
+#           ("Euclidean", euclidean),
+           ("Overlap'", overlap_),
+           ("Overlap", overlap),
+           ("Cosine", cosine)]

@@ -103,7 +103,7 @@ def svmtrain(xdata,ydata):
 
 def svmtest(svc,xdata):
     xdata=np.array(xdata)
-    return [(x,svc.predict_proba(x)[0][1-x]) for x in svc.predict(xdata)]
+    return [(svc.predict(x)[0],max(svc.predict_proba(x)[0])) for x in xdata]
 
 
 def avinit(filename):

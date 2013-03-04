@@ -67,6 +67,9 @@ if __name__ == "__main__":
     p.add_option("-m", "--mode",default='test',
             action="store", dest="mode",
             help="test|train|devel [test]")
+    p.add_option("", "--off",default=[],
+            action="append", dest="off",
+            help="distances or representations to turn off")
     p.add_option("-i", "--iters",default=10,type="int",
             action="store", dest="iters",
             help="Number of iterations for avg [10]")
@@ -174,6 +177,8 @@ if __name__ == "__main__":
         for k in ks:
             docreps=[]
             for rep,f in docread.representations:
+                if rep in opts.off:
+                    continue
                 docreps.append((k,f(k)))
             docs.append(docreps)
             
@@ -187,6 +192,8 @@ if __name__ == "__main__":
             for doc,doc_ in zip(docreps,docreps_): 
                 verbose("-- {0} --".format(doc_[0]))
                 for n,f in distance.distances:
+                    if n in opts.off:
+                        continue
                     d=f(doc_[1][0],doc[1][0])
                     verbose("{0} distance".format(n).ljust(30),
                             "{0:0.4f}".format(d))
@@ -219,18 +226,20 @@ if __name__ == "__main__":
 
         # Saving figures only if TRAINING or DEVELOPMENT
         if opts.mode.startswith("train") or opts.mode.startswith("devel"):
+            distances=[d for d in distance.distances if not d in opts.off]
+            representations=[d for d in docread.representations if not d in opts.off]
             # save figures if requiered
             if opts.figures or opts.showf:
                 nproblem=1
-                xtick_lbs = range((len(docs)+1)*len(distance.distances))
-                ytick_lbs = range(len(docs)*len(docread.representations))
-                data=np.zeros((len(docs)*len(docread.representations),
-                              (len(docs)+1)*len(distance.distances)))
+                xtick_lbs = range((len(docs)+1)*len(distances))
+                ytick_lbs = range(len(docs)*len(representations))
+                data=np.zeros((len(docs)*len(representations),
+                              (len(docs)+1)*len(distances)))
                 for ix1 in range(len(docs)):
                     for ix2 in range(ix1,len(docs)):
-                        for ixr in range(len(docread.representations)):
+                        for ixr in range(len(representations)):
                             dis=0
-                            for n,f in distance.distances:
+                            for n,f in distances:
                                 ix2_=dis*(len(docs)+1)+ix2
                                 ix1_=ixr*len(docs)+ix1
                                 data[ix1_,ix2_]=f(docs[ix1][ixr][1][0],
@@ -239,9 +248,9 @@ if __name__ == "__main__":
                                 ytick_lbs[ix1_]="Doc {0}".format(ix1)
                                 dis+=1
                 for ix1 in range(len(docs)):
-                    for ixr in range(len(docread.representations)):
+                    for ixr in range(len(representations)):
                         dis=0
-                        for n,f in distance.distances:
+                        for n,f in distances:
                             ix1_=ixr*len(docs)+ix1
                             ix2_=(dis+1)*(len(docs)+1)-1
                             data[ix1_,ix2_]=f(docreps_[ixr][1][0],
@@ -251,10 +260,10 @@ if __name__ == "__main__":
                 fig,ax = plt.subplots()
                 ax.pcolor(data, edgecolors='k', linewidths=2,cmap=plt.cm.Blues)
                 xtick_lcs = np.array([.5+x for x in range((len(docs)+1)*\
-                            len(distance.distances))])
+                            len(distances))])
 
                 ytick_lcs = np.array([.5+x for x in range(len(docs)*\
-                            len(docread.representations))])
+                            len(representations))])
                 xtick_lbs = np.array(xtick_lbs)
                 ytick_lbs = np.array(ytick_lbs)
                 plt.xticks(xtick_lcs,xtick_lbs,rotation='vertical')
