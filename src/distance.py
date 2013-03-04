@@ -120,6 +120,6 @@ distances=[("Jacard",jacard),
            ("Sorensen",sorensen), 
 #           ("Manhattan", manhattan),
 #           ("Euclidean", euclidean),
-           ("Overlap'", overlap_),
-           ("Overlap", overlap),
+#           ("Overlap'", overlap_),
+#           ("Overlap", overlap),
            ("Cosine", cosine)]

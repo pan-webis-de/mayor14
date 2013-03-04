@@ -170,6 +170,8 @@ if __name__ == "__main__":
         # Builds uknnown representation of document
         docreps_=[]
         for rep,f in docread.representations:
+            if rep in opts.off:
+                continue
             docreps_.append((rep,f(uks[0])))
 
         # Load knowns 
@@ -179,7 +181,7 @@ if __name__ == "__main__":
             for rep,f in docread.representations:
                 if rep in opts.off:
                     continue
-                docreps.append((k,f(k)))
+                docreps.append((rep,f(k)))
             docs.append(docreps)
             
         verbose('Loading files')
@@ -297,7 +299,7 @@ case {2}".format(id,len(docs),posneg(ANS)))
 
                 if opts.method.startswith('svm'):
                     svc   = ML.svmtrain(X_train,Y_train)
-                    preds = ML.svmtest(svc,X_test)
+                    preds = ML.svmtest(svc,X_test,Y_test)
                 elif opts.method.startswith('avp'):
                     ws    = ML.avptrain(X_train,Y_train,opts.iters)
                     #print " ".join(["{0:.3f}".format(w) for w in ws.w.values()])
