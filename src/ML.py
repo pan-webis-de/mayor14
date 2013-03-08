@@ -149,8 +149,22 @@ def avptest(xdata,ws):
         y.append(choice(ws.val(list(enumerate(x)))))
     return y
 
+def anntrain(xdata,ydata,epochs):
+    print len(xdata[0])
+    ds=ClassificationDataSet(len(xdata[0]),1, nb_classes=2)
+    for i,algo in enumerate (xdata):
+        ds.addSample(algo,ydata[i])
+    #ds._convertToOneOfMany( )
+    net=buildNetwork(len(xdata[0]),1,1,outclass=SoftmaxLayer,hiddenclass=TanhLayer)
+    trainer=BackpropTrainer(net,dataset=ds,verbose=True)
+    trainer.trainEpochs(epochs)
+    return net
 
-
+def anntest(xdata,net):
+    out=[]
+    for dato in xdata:
+        out.append((net.activate(dato)[0],0.5))
+    return out 
 
 def voted(preds):
     cs={0.0:0.0, 1.0:0.0}
