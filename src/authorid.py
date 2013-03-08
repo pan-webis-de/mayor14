@@ -78,7 +78,7 @@ if __name__ == "__main__":
             help="Model to save training or to test with [None]")
     p.add_option("", "--method",default="lp",
             action="store", dest="method",
-            help="lp|avp|svm [avp]")
+            help="lp|avp|svm|ann [avp]")
     p.add_option("", "--known_pattern",default=r'known.*\.txt',
             action="store", dest="known",
             help="pattern for known files [known*.txt]")
@@ -304,6 +304,9 @@ case {2}".format(id,len(docs),posneg(ANS)))
                     ws    = ML.avptrain(X_train,Y_train,opts.iters)
                     #print " ".join(["{0:.3f}".format(w) for w in ws.w.values()])
                     preds = ML.avptest(X_test,ws)
+                elif opts.method.startswith('ann'):
+                    ws    = ML.anntrain(X_train,Y_train,opts.iters)
+                    preds = ML.anntest(X_test,ws)
                 elif opts.method.startswith('lp'):
                     try:
                         ws    = ML.lptrain(X_train,Y_train)
@@ -354,6 +357,10 @@ case {2}".format(id,len(docs),posneg(ANS)))
                 verbose("Creating an Average Percetron model")
                 ws    = ML.avptrain(X_train,Y_train,opts.iters)
                 s     = pickle.dumps(ws)
+             elif opts.method.startswith('ann'):
+                verbose("Calculating an artificial neural network")
+                ws = ML.anntrain(X_train,Y_train)
+                s = pickle.dumps(ws)
             elif opts.method.startswith('lp'):
                 verbose("Calculating a linear program")
                 ws    = ML.lptrain(X_train,Y_train)
@@ -378,6 +385,9 @@ case {2}".format(id,len(docs),posneg(ANS)))
             elif opts.method.startswith('lp'):
                 ws    =  pickle.loads(s)
                 preds = ML.lptest(X_test,ws)
+            elif opts.method.startswith('ann'):
+                ws    =  pickle.loads(s)
+                preds = ML.anntest(X_test,ws)
             
             res=ML.voted(preds)
             info(problems[i][0]," {0} ".format(res))
