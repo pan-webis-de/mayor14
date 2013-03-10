@@ -25,6 +25,7 @@
 #import nltk
 from math import sqrt
 from math import pow
+from numpy import array
 
 def jacard(A, B):
     A=set(A.elements())
@@ -58,8 +59,7 @@ def tanimoto(A, B,**args):
         return 0.0
     else:
         return  1-num/den 
- 
-  
+   
 def sorensen(A, B ,**args):
     vec1=set(A.elements())
     vec2=set(B.elements())
@@ -71,9 +71,7 @@ def sorensen(A, B ,**args):
   
     return 1-float(2.0*d1d2 / (len(vec1) + len(vec2) ) )
 
-
-def dot(a,b):
-	
+def dot(a,b):	
 	commons = set(a.keys()).intersection (set(b.keys()))
 	return sum([a[k] * b[k] for k in commons])
 
@@ -86,11 +84,42 @@ def cosine(a,b):
     else:
         return  1-num/den 
 
+def manhattan(A,B):
+    commons = set(A.keys()).union(set(B.keys()))
+    return abs(sum([A[a] - B[a] for a in commons]))
+
+def euclidean(A,B):
+    commons = set(A.keys()).union(set(B.keys()))
+    return sqrt(sum([A[a]-B[a] for a in commons])**2)
+
+def overlap(A, B):
+    A = set(A.elements())
+    B = set(B.elements())
+    num = len(A.intersection(B)) * 1.0
+    den = min(len(A), len(B))
+    if den == 0:
+        return 0.0
+    else:
+        return  1 - (num/den)
+
+def overlap_(A, B):
+    A = set(A.elements())
+    B = set(B.elements())
+    num = len(A.intersection(B)) * 1.0
+    den = max(len(A), len(B))
+    if den == 0:
+        return 0.0
+    else:
+        return  1 - (num/den)
+
+
+
 distances=[("Jacard",jacard),
            ("Masi",masi_distance),
            ("Tanimoto",tanimoto),
            ("Sorensen",sorensen), 
-  	   ("Cosine", cosine)]
-
-
-
+#           ("Manhattan", manhattan),
+#           ("Euclidean", euclidean),
+#           ("Overlap'", overlap_),
+#           ("Overlap", overlap),
+           ("Cosine", cosine)]

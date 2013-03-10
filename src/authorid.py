@@ -75,6 +75,9 @@ if __name__ == "__main__":
     p.add_option("-m", "--mode",default='test',
             action="store", dest="mode",
             help="test|train|devel [test]")
+    p.add_option("", "--off",default=[],
+            action="append", dest="off",
+            help="distances or representations to turn off")
     p.add_option("-i", "--iters",default=10,type="int",
             action="store", dest="iters",
             help="Number of iterations for avg [10]")
@@ -83,7 +86,7 @@ if __name__ == "__main__":
             help="Model to save training or to test with [None]")
     p.add_option("", "--method",default="lp",
             action="store", dest="method",
-            help="lp|avp|svm [avp]")
+            help="lp|avp|svm|ann [avp]")
     p.add_option("", "--known_pattern",default=r'known.*\.txt',
             action="store", dest="known",
             help="pattern for known files [known*.txt]")
@@ -175,6 +178,8 @@ if __name__ == "__main__":
         # Builds uknnown representation of document
         docreps_=[]
         for rep,f in docread.representations:
+            if rep in opts.off:
+                continue
             docreps_.append((rep,f(uks[0])))
 
         # Load knowns 
@@ -182,7 +187,9 @@ if __name__ == "__main__":
         for k in ks:
             docreps=[]
             for rep,f in docread.representations:
-                docreps.append((k,f(k)))
+                if rep in opts.off:
+                    continue
+                docreps.append((rep,f(k)))
             docs.append(docreps)
             
         verbose('Loading files')
@@ -195,6 +202,8 @@ if __name__ == "__main__":
             for doc,doc_ in zip(docreps,docreps_): 
                 verbose("-- {0} --".format(doc_[0]))
                 for n,f in distance.distances:
+                    if n in opts.off:
+                        continue
                     d=f(doc_[1][0],doc[1][0])
                     verbose("{0} distance".format(n).ljust(30),
                             "{0:0.4f}".format(d))
@@ -227,18 +236,20 @@ if __name__ == "__main__":
 
         # Saving figures only if TRAINING or DEVELOPMENT
         if opts.mode.startswith("train") or opts.mode.startswith("devel"):
+            distances=[d for d in distance.distances if not d in opts.off]
+            representations=[d for d in docread.representations if not d in opts.off]
             # save figures if requiered
             if opts.figures or opts.showf:
                 nproblem=1
-                xtick_lbs = range((len(docs)+1)*len(distance.distances))
-                ytick_lbs = range(len(docs)*len(docread.representations))
-                data=np.zeros((len(docs)*len(docread.representations),
-                              (len(docs)+1)*len(distance.distances)))
+                xtick_lbs = range((len(docs)+1)*len(distances))
+                ytick_lbs = range(len(docs)*len(representations))
+                data=np.zeros((len(docs)*len(representations),
+                              (len(docs)+1)*len(distances)))
                 for ix1 in range(len(docs)):
                     for ix2 in range(ix1,len(docs)):
-                        for ixr in range(len(docread.representations)):
+                        for ixr in range(len(representations)):
                             dis=0
-                            for n,f in distance.distances:
+                            for n,f in distances:
                                 ix2_=dis*(len(docs)+1)+ix2
                                 ix1_=ixr*len(docs)+ix1
                                 data[ix1_,ix2_]=f(docs[ix1][ixr][1][0],
@@ -247,9 +258,9 @@ if __name__ == "__main__":
                                 ytick_lbs[ix1_]="Doc {0}".format(ix1)
                                 dis+=1
                 for ix1 in range(len(docs)):
-                    for ixr in range(len(docread.representations)):
+                    for ixr in range(len(representations)):
                         dis=0
-                        for n,f in distance.distances:
+                        for n,f in distances:
                             ix1_=ixr*len(docs)+ix1
                             ix2_=(dis+1)*(len(docs)+1)-1
                             data[ix1_,ix2_]=f(docreps_[ixr][1][0],
@@ -259,10 +270,10 @@ if __name__ == "__main__":
                 fig,ax = plt.subplots()
                 ax.pcolor(data, edgecolors='k', linewidths=2,cmap=plt.cm.Blues)
                 xtick_lcs = np.array([.5+x for x in range((len(docs)+1)*\
-                            len(distance.distances))])
+                            len(distances))])
 
                 ytick_lcs = np.array([.5+x for x in range(len(docs)*\
-                            len(docread.representations))])
+                            len(representations))])
                 xtick_lbs = np.array(xtick_lbs)
                 ytick_lbs = np.array(ytick_lbs)
                 plt.xticks(xtick_lcs,xtick_lbs,rotation='vertical')
@@ -296,11 +307,14 @@ case {2}".format(id,len(docs),posneg(ANS)))
 
                 if opts.method.startswith('svm'):
                     svc   = ML.svmtrain(X_train,Y_train)
-                    preds = ML.svmtest(svc,X_test)
+                    preds = ML.svmtest(svc,X_test,Y_test)
                 elif opts.method.startswith('avp'):
                     ws    = ML.avptrain(X_train,Y_train,opts.iters)
                     #print " ".join(["{0:.3f}".format(w) for w in ws.w.values()])
                     preds = ML.avptest(X_test,ws)
+                elif opts.method.startswith('ann'):
+                    ws    = ML.anntrain(X_train,Y_train,opts.iters)
+                    preds = ML.anntest(X_test,ws)
                 elif opts.method.startswith('lp'):
                     try:
                         ws    = ML.lptrain(X_train,Y_train)
@@ -351,6 +365,10 @@ case {2}".format(id,len(docs),posneg(ANS)))
                 verbose("Creating an Average Percetron model")
                 ws    = ML.avptrain(X_train,Y_train,opts.iters)
                 s     = pickle.dumps(ws)
+             elif opts.method.startswith('ann'):
+                verbose("Calculating an artificial neural network")
+                ws = ML.anntrain(X_train,Y_train)
+                s = pickle.dumps(ws)
             elif opts.method.startswith('lp'):
                 verbose("Calculating a linear program")
                 ws    = ML.lptrain(X_train,Y_train)
@@ -375,6 +393,9 @@ case {2}".format(id,len(docs),posneg(ANS)))
             elif opts.method.startswith('lp'):
                 ws    =  pickle.loads(s)
                 preds = ML.lptest(X_test,ws)
+            elif opts.method.startswith('ann'):
+                ws    =  pickle.loads(s)
+                preds = ML.anntest(X_test,ws)
             
             res=ML.voted(preds)
             info(problems[i][0]," {0} ".format(res))

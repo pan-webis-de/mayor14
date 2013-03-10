@@ -32,9 +32,9 @@ import Weights as W
 
 def choice(x):
     if x<=0.5:
-        return (0.0,x)
+        return (0,x)
     else:
-        return (1.0,x)
+        return (1,x)
 
 def lptrain(xdata,ydata):
     A=[[] for x in xdata[0]]
@@ -92,18 +92,25 @@ def svmtest(svc,xdata):
 def svmtrain(xdata,ydata):
     xdata=np.array(xdata)
     ydata=np.array(ydata)
-    svc = svm.NuSVC(
-        nu=0.6,
-        degree=4,
+    svc = svm.SVR(
+            C=5,
+#            epsilon=0.2,
+            kernel='linear',
+#            degree=2,
+#        nu=0.6,
+#        degree=4,
         probability=True
         )
     svc.fit(xdata,ydata)
     return svc
 
 
-def svmtest(svc,xdata):
+def svmtest(svc,xdata,goal=None):
     xdata=np.array(xdata)
-    return [(x,svc.predict_proba(x)[0][1-x]) for x in svc.predict(xdata)]
+    #if goal:
+    #    print goal
+    #print [svc.predict(x) for x in xdata]
+    return [choice(svc.predict(x)[0]) for x in xdata]
 
 
 def avinit(filename):
@@ -142,8 +149,22 @@ def avptest(xdata,ws):
         y.append(choice(ws.val(list(enumerate(x)))))
     return y
 
+def anntrain(xdata,ydata,epochs):
+    print len(xdata[0])
+    ds=ClassificationDataSet(len(xdata[0]),1, nb_classes=2)
+    for i,algo in enumerate (xdata):
+        ds.addSample(algo,ydata[i])
+    #ds._convertToOneOfMany( )
+    net=buildNetwork(len(xdata[0]),1,1,outclass=SoftmaxLayer,hiddenclass=TanhLayer)
+    trainer=BackpropTrainer(net,dataset=ds,verbose=True)
+    trainer.trainEpochs(epochs)
+    return net
 
-
+def anntest(xdata,net):
+    out=[]
+    for dato in xdata:
+        out.append((net.activate(dato)[0],0.5))
+    return out 
 
 def voted(preds):
     cs={0.0:0.0, 1.0:0.0}
@@ -159,7 +180,7 @@ def voted(preds):
         return "N"
     if cs_[1.0]==0:
         return "Y"
-    #print ">>>>",0.0,cs[0.0]/cs_[0.0],1.0,cs[1.0]/cs_[1.0]
+    print ">>>>",0.0,cs[0.0]/cs_[0.0],1.0,cs[1.0]/cs_[1.0]
     if cs_[0.0]>=cs_[1.0]:
         return "Y"
     else:
