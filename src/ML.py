@@ -4,7 +4,15 @@
 # ML methods
 # ----------------------------------------------------------------------
 # Ivan Vladimir Meza-Ruiz/ ivanvladimir at turing.iimas.unam.mx
-# 2012/IIMAS/UNAM
+# 2013/IIMAS/UNAM
+# Paola Ledesma 
+# 2013/ENAH
+# Gibran Fuentes
+# 2013/IIMAS/UNAM
+# Gabriela Jasso
+# 2013/FI/UNAM
+# Ángel Toledo
+# 2013/FC/UNAM
 # ----------------------------------------------------------------------
 # authorid.py is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by

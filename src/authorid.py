@@ -365,7 +365,7 @@ case {2}".format(id,len(docs),posneg(ANS)))
                 verbose("Creating an Average Percetron model")
                 ws    = ML.avptrain(X_train,Y_train,opts.iters)
                 s     = pickle.dumps(ws)
-             elif opts.method.startswith('ann'):
+            elif opts.method.startswith('ann'):
                 verbose("Calculating an artificial neural network")
                 ws = ML.anntrain(X_train,Y_train)
                 s = pickle.dumps(ws)
