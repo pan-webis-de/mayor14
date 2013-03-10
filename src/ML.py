@@ -30,13 +30,24 @@
 
 # ML libraries
 import numpy as np
-from sklearn import svm
-from sklearn import preprocessing
 import random 
 random.seed()
 
+# Suppor vector machine
+from sklearn import svm
+from sklearn import preprocessing
+
+# Linear programming
 from cvxopt import matrix, solvers
 import Weights as W
+
+# Neuronal Networks
+from pybrain.datasets            import ClassificationDataSet
+from pybrain.utilities           import percentError
+from pybrain.tools.shortcuts     import buildNetwork
+from pybrain.supervised.trainers import BackpropTrainer
+from pybrain.structure.modules   import SoftmaxLayer,TanhLayer
+
 
 def choice(x):
     if x<=0.5:
@@ -102,12 +113,8 @@ def svmtrain(xdata,ydata):
     ydata=np.array(ydata)
     svc = svm.SVR(
             C=5,
-#            epsilon=0.2,
             kernel='linear',
-#            degree=2,
-#        nu=0.6,
-#        degree=4,
-        probability=True
+            probability=True
         )
     svc.fit(xdata,ydata)
     return svc
@@ -120,12 +127,6 @@ def svmtest(svc,xdata,goal=None):
     #print [svc.predict(x) for x in xdata]
     return [choice(svc.predict(x)[0]) for x in xdata]
 
-
-def avinit(filename):
-    # Loading weights or initializing
-    if filename:
-        # TODO load weights when given file
-        pass
 
 def avptrain(xdata,ydata,iters):
     ws=W.Weights()

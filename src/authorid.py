@@ -34,6 +34,7 @@ import sys
 import os
 import os.path
 import itertools
+import re
 from collections import Counter
 
 
@@ -59,7 +60,7 @@ def posneg(val):
 if __name__ == "__main__":
     usage="""%prog [options] dir [anwers]
 
-        Runs user identification 
+        Runs user author identification 
 
         dir   : Directory with author examples
         answer: File with answers for trainning
@@ -75,6 +76,15 @@ if __name__ == "__main__":
     p.add_option("-m", "--mode",default='test',
             action="store", dest="mode",
             help="test|train|devel [test]")
+    p.add_option("", "--list",default=False,
+            action="store_true", dest="list_info",
+            help="Displays distances metrics and representations")
+    p.add_option("-q", "--query",default=None,
+            action="store", dest="query",
+            help="Query for a document")
+    p.add_option("-u", "--use",default="distances",
+            action="store", dest="modify",
+            help="distances|vectorspace abstrac representation to use")
     p.add_option("", "--off",default=[],
             action="append", dest="off",
             help="distances or representations to turn off")
@@ -114,7 +124,6 @@ if __name__ == "__main__":
     if not opts.mode in ["train","test","devel"]:
         p.error('Mode argument not valid: devel, train  test')
 
-    
     dirname = args[0]
 
     # Parameters
@@ -125,6 +134,22 @@ if __name__ == "__main__":
         except:
             p.error('Output parameter could not been open: {0}'\
                     .format(opts.output))
+
+    # If asked to print information 
+    if opts.list_info:
+        verbose('List information')
+        verbose('-- Available Distances Metrics')
+        for distance,f in distance.distances:
+            verbose(distance)
+
+        verbose('-- Available Representations')
+        for rep,f in docread.representations:
+            verbose(rep)
+
+        sys.exit(0)
+
+
+    # -- Normal functioning
 
     # Preparing for saving info
     if opts.figures or opts.showf:
@@ -137,7 +162,6 @@ if __name__ == "__main__":
                 os.mkdir(opts.figures)
     
 
-    verbose("Running in mode:",opts.mode)
     # Loading ingnore if exists
     _ignore=[]
     if os.path.exists('.ignore'):
@@ -147,10 +171,48 @@ if __name__ == "__main__":
                 _ignore.append(line.strip())
 
         
-
     # load problems or problem
-    problems=docread.dirproblems(dirname,opts.known,opts.unknown,_ignore)
+    problems=docread.problems(
+        docread.dirproblems(dirname,opts.known,opts.unknown,_ignore))
 
+    # If asked to print information 
+    if opts.query:
+        verbose('Query information')
+        for id,(ks,uks) in problems:
+            for k in ks:
+                if opts.query in k[0]:
+                    verbose("--- {0} ---".format(k[0]))
+                    verbose("--- original ---")
+                    docread.prettyprint(k[0])
+
+                    for n,f in docread.representations:
+                        rep,c,pars=f(k[1])
+                        verbose("--- {0} partition ---".format(n))
+                        print >> out, "\n:: ".join(pars)
+                        verbose("--- {0} ---".format(n))
+                        for key,v in rep.most_common():
+                            verbose('{0} {1}'.format(key.ljust(45),v))
+
+         
+            for u in uks:
+                if opts.query in u[0]:
+                    verbose("--- {0} ---".format(u[0]))
+                    verbose("--- original ---")
+                    docread.prettyprint(u[0])
+
+                    for n,f in docread.representations:
+                        rep,ci,par=f(k[1])
+                        verbose("--- {0} partition ---".format(n))
+                        print >> out, "\n:: ".join(pars)
+                        verbose("--- {0} ---".format(n))
+                        for key,v in rep.most_common():
+                            verbose('{0} {1}'.format(key.ljust(45),v))
+
+
+        sys.exit(0)
+    
+
+    verbose("Running in mode:",opts.mode)
     # Loading answers file only for DEVELOPMENT OR TRAINNING MODE
     if opts.mode.startswith("train") or opts.mode.startswith("devel"):
         if len(args)==2:
@@ -180,7 +242,7 @@ if __name__ == "__main__":
         for rep,f in docread.representations:
             if rep in opts.off:
                 continue
-            docreps_.append((rep,f(uks[0])))
+            docreps_.append((rep,f(uks[0][1])))
 
         # Load knowns 
         docs = []
@@ -189,14 +251,15 @@ if __name__ == "__main__":
             for rep,f in docread.representations:
                 if rep in opts.off:
                     continue
-                docreps.append((rep,f(k)))
+                docreps.append((rep,f(k[1])))
             docs.append(docreps)
             
         verbose('Loading files')
         samples_=[]
         classes_=[]
+
         for docreps in docs:
-            verbose('Comparing with: {0}'.format(k))
+            verbose('Comparing with: {0}'.format(k[0]))
             feats=[]
             commons=Counter()
             for doc,doc_ in zip(docreps,docreps_): 
