@@ -15,6 +15,7 @@ For creating an html version, use (it requieres docutils_)
 
    make doc
 
+
 Installation
 ============
 
@@ -49,6 +50,14 @@ Install scikit-learn (SVM model)
   sudo apt-get install python-sklearn
 
 
+Install pybrain (ANN model)
+
+::
+
+  git clone git://github.com/pybrain/pybrain.git
+  sudo python setup.py install
+
+
 
 PAN 2013 Lab
 ============
@@ -61,8 +70,8 @@ Copy the _PAN 2013 directory trainning data into the data directory
   cp -R <path>/PAN13-AuthorIdentification-TrainingCorpus data
 
 
-Using through scripts
-=====================
+Using scripts to perform author identification
+==============================================
 
 TRAINING
 --------
@@ -102,7 +111,7 @@ Testing with SVM
 Development cycling (one-leave-out)
 -----------------------------------
 
-Testing for defaults
+Testing with defaults
 
 ::
 

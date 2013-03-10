@@ -30,6 +30,7 @@ Requirements
 * numpy, scikit
 * scikit-learn
 * python-cvxopt 
+* pybrain
 
 Optional:
 

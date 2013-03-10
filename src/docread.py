@@ -91,8 +91,6 @@ def par(filename):
   com=preprocess(par,ncommons=0,ncutoff=0)
   for i in range(0, len(ps)):
     ws = words(ps[i])
-  print "*************"
-  print par
   return par,com
 
 representations=[
