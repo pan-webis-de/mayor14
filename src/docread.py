@@ -42,7 +42,7 @@ wordpunct=re.compile('\w+\W+',re.UNICODE)
 rcoma=re.compile(r'\w+,',re.UNICODE)
 rdot=re.compile(r'\w+\.',re.UNICODE)
 rspc=re.compile(r'\w+\d+[/]',re.UNICODE)
-
+rwspc=re.compile(r'\s',re.UNICODE)
 
 def readdoc(filename):
     with codecs.open(filename,'r','utf-8') as fh:
@@ -88,8 +88,14 @@ def dot(doc):
     com=preprocess(doc,ncommons=1,ncutoff=0)
     return doc,com,[x.encode('utf-8') for x in wds]
 
-def spc(doc):
+def sqrbrackets(doc):
     wds = rspc.findall(doc)
+    doc=Counter([x.encode('utf-8') for x in wds])
+    com=preprocess(doc,ncommons=1,ncutoff=0)
+    return doc,com,[x.encode('utf-8') for x in wds]
+
+def whitespc(doc):
+    wds = rwspc.findall(doc)
     doc=Counter([x.encode('utf-8') for x in wds])
     com=preprocess(doc,ncommons=1,ncutoff=0)
     return doc,com,[x.encode('utf-8') for x in wds]
@@ -144,7 +150,8 @@ representations=[
     ('bog',txt),
     ('capital',capital),
     ('par',par),
-    ('spc',spc),
+    ('sqrbrackets',sqrbrackets),
+    ('whitespc',whitespc),
     ]
 
 
