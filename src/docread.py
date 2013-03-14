@@ -37,13 +37,16 @@ from collections import Counter
 
 spaces=re.compile('\W+',re.UNICODE)
 rcapital=re.compile(r'[A-Z][A-Za-z]+',re.UNICODE)
+#rcapital=re.compile(r'[A-Z][^W]+',re.UNICODE)
 rpar = re.compile('\'''',re.UNICODE)
+#rpar = re.compile('\.\r?\n',re.UNICODE)
 wordpunct=re.compile('\w+\W+',re.UNICODE)
+#wordpunct=re.compile('\w+[.,;?¿]',re.UNICODE)
 rcoma=re.compile(r'\w+,',re.UNICODE)
 rdot=re.compile(r'\w+\.',re.UNICODE)
 rspc=re.compile(r'\w+\d+[/]',re.UNICODE)
 rwspc=re.compile(r'\s',re.UNICODE)
-rnumbers=re.compile(r'\d+',re.UNICODE)
+rnumbers=re.compile(r'\d+(\.\d+)?',re.UNICODE)
 
 def readdoc(filename):
     with codecs.open(filename,'r','utf-8') as fh:
@@ -64,8 +67,6 @@ def numbers(doc):
     doc=Counter([x.encode('utf-8') for x in wds])
     com=preprocess(doc,ncommons=0,ncutoff=1)
     return doc,com,[x.encode('utf-8') for x in wds]
-
-
 
 def capital(doc):
     wds = rcapital.findall(doc)
@@ -139,7 +140,8 @@ def par(doc):
     par = Counter() 
     for k, p in enumerate(pars):
         wds = spaces.split(p)
-        par[str(k)]=len(wds)
+        par[str(k)]=len(wds)/5
+        #par[str(k-len(pars))]=len(wds)
     com=preprocess(par,ncommons=0,ncutoff=0)
     return par,com,[x.encode('utf-8') for x in pars]
 
@@ -162,6 +164,7 @@ representations=[
     ('letters',letters),
     ('bigram',bigram),
     ('punctuation',punct),
+    ('numbers',numbers),
     ('coma',coma),
     ('dot',dot),
     ('bog',txt),
