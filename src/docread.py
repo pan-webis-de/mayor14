@@ -185,6 +185,7 @@ def dirproblems(dirname, rknown  =r"known.*\.txt",
     dirnames=[(x,"{0}/{1}".format(dirname,x)) for x in os.listdir(dirname)  
                 if not x in ignore and
                    os.path.isdir("{0}/{1}".format(dirname,x))]
+    dirnames.sort()
     problems=[]
     for id,dirname in dirnames:
         problems.append((id,
