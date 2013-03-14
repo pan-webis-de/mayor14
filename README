@@ -97,7 +97,7 @@ Testing for defaults
 
 ::
 
-    bassh script/testing_pan13.sh INPUTDIR OUTPUTDIR
+    bash script/testing_pan13.sh INPUTDIR OUTPUTDIR
 
 The output will be saved by default into the file: OUTPUTDIR/Results.txt
 
@@ -105,7 +105,7 @@ Testing with SVM
 
 ::
 
-    bassh script/testing_pan13.sh --method svm INPUTDIR OUTPUTDIR
+    bash script/testing_pan13.sh --method svm INPUTDIR OUTPUTDIR
 
 
 Development cycling (one-leave-out)
