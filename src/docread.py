@@ -201,9 +201,11 @@ def dirproblem(dirname, rknown  =r"known.*\.txt",
     known  =["{0}/{1}".format(dirname,x) for x in os.listdir(dirname) 
                         if not x in ignore and
                         r_known.match(x)]
+    known.sort()
     unknown=["{0}/{1}".format(dirname,x) for x in os.listdir(dirname)
                         if not x in ignore and
                         r_unknown.match(x)]
+    unknown.sort()
     return known,unknown
 
 
