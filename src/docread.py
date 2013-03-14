@@ -36,9 +36,10 @@ import codecs
 from collections import Counter
 
 spaces=re.compile('\W+',re.UNICODE)
-rcapital=re.compile(r'[A-Z][A-Za-z]+',re.UNICODE)
-rpar = re.compile('\.',re.UNICODE)
-wordpunct=re.compile('\w+\W+',re.UNICODE)
+rcapital=re.compile(r'[A-Z][^\W]+',re.UNICODE)
+rnumbers=re.compile(r'\d+',re.UNICODE)
+rpar = re.compile('(\.\r?\n)',re.UNICODE)
+wordpunct=re.compile('\w+[.,;?¿]',re.UNICODE)
 
 def readdoc(filename):
     with codecs.open(filename,'r','utf-8') as fh:
@@ -54,6 +55,14 @@ def apply(f,filename):
     with codecs.open(filename,'r','utf-8') as fh:
         return f(fh.read().encode())
 
+def numbers(doc):
+    wds = rnumbers.findall(doc)
+    doc=Counter([x.encode('utf-8') for x in wds])
+    com=preprocess(doc,ncommons=0,ncutoff=1)
+    return doc,com,[x.encode('utf-8') for x in wds]
+
+
+
 def capital(doc):
     wds = rcapital.findall(doc)
     doc=Counter([x.encode('utf-8') for x in wds])
@@ -64,7 +73,7 @@ def capital(doc):
 def punct(doc):
     wds = wordpunct.findall(doc.lower())
     doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc)
+    com=preprocess(doc,ncommons=0,ncutoff=1)
     return doc,com,[x.encode('utf-8') for x in wds]
 
 def txt(doc):
@@ -72,6 +81,13 @@ def txt(doc):
     doc=Counter([x.encode('utf-8') for x in wds])
     com=preprocess(doc)
     return doc,com,[x.encode('utf-8') for x in wds]
+
+def letters(doc):
+    wds = doc.lower()
+    doc=Counter([x.encode('utf-8') for x in wds])
+    com=preprocess(doc)
+    return doc,com,[x.encode('utf-8') for x in wds]
+
 
 def bigram(doc):
     wds = spaces.split(doc.lower())
@@ -91,14 +107,13 @@ def trigram(filename):
     com=preprocess(doc,ncommons=0,ncutoff=1)
     return doc,com,tri
 
-
 def par(doc):
-    pars = rpar.split(doc.lower())
+    pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
     par = Counter() 
     for k, p in enumerate(pars):
         wds = spaces.split(p)
-        par[str(k)]=len(wds)/5
-    com=preprocess(par,ncommons=0,ncutoff=0)
+        par[str(k)]=len(wds)/10
+    com=[]
     return par,com,[x.encode('utf-8') for x in pars]
 
 def preprocess(doc,ncommons=10,ncutoff=5):
@@ -118,9 +133,11 @@ def paragraph(text):
 representations=[
 #    ('trigram',trigram),
     ('bigram',bigram),
-    ('punctuation',punct),
+#    ('punctuation',punct),
+    ('letters',letters),
     ('bog',txt),
     ('capital',capital),
+    ('numbers',numbers),
     ('par',par)]
 
 

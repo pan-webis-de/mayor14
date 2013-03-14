@@ -186,6 +186,8 @@ if __name__ == "__main__":
                     docread.prettyprint(k[0])
 
                     for n,f in docread.representations:
+                        if n in opts.off:
+                            continue
                         rep,c,pars=f(k[1])
                         verbose("--- {0} partition ---".format(n))
                         print >> out, "\n:: ".join(pars)
@@ -201,6 +203,9 @@ if __name__ == "__main__":
                     docread.prettyprint(u[0])
 
                     for n,f in docread.representations:
+                        if n in opts.off:
+                            continue
+
                         rep,ci,par=f(k[1])
                         verbose("--- {0} partition ---".format(n))
                         print >> out, "\n:: ".join(pars)
@@ -267,6 +272,7 @@ if __name__ == "__main__":
                 for n,f in distance.distances:
                     if n in opts.off:
                         continue
+
                     d=f(doc_[1][0],doc[1][0])
                     verbose("{0} distance".format(n).ljust(30),
                             "{0:0.4f}".format(d))

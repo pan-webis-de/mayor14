@@ -96,7 +96,11 @@ def manhattan(A,B):
 
 def euclidean(A,B):
     commons = set(A.keys()).union(set(B.keys()))
-    return sqrt(sum([A[a]-B[a] for a in commons])**2)
+    AA=sqrt(sum([(A[a])**2 for a in A.keys()]))
+    BB=sqrt(sum([(B[a])**2 for a in B.keys()]))
+    if AA*BB == 0.0:
+        return 0.0
+    return 1.0-sqrt(sum([(A[a]-B[a])**2 for a in commons]))/(AA*BB)
 
 def overlap(A, B):
     A = set(A.elements())
@@ -125,7 +129,7 @@ distances=[("Jacard",jacard),
            ("Tanimoto",tanimoto),
            ("Sorensen",sorensen), 
 #           ("Manhattan", manhattan),
-#           ("Euclidean", euclidean),
+           ("Euclidean", euclidean),
 #           ("Overlap'", overlap_),
 #           ("Overlap", overlap),
            ("Cosine", cosine)]
