@@ -129,7 +129,7 @@ distances=[("Jacard",jacard),
            ("Tanimoto",tanimoto),
            ("Sorensen",sorensen), 
 #           ("Manhattan", manhattan),
-           ("Euclidean", euclidean),
+#           ("Euclidean", euclidean),
 #           ("Overlap'", overlap_),
 #           ("Overlap", overlap),
            ("Cosine", cosine)]

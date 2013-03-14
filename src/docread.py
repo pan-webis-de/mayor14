@@ -134,7 +134,8 @@ def trigram(filename):
     return doc,com,tri
 
 def par(doc):
-    pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
+    #pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
+    pars = rpar.split(doc.lower())
     par = Counter() 
     for k, p in enumerate(pars):
         wds = spaces.split(p)
@@ -158,8 +159,8 @@ def paragraph(text):
 
 representations=[
 #    ('trigram',trigram),
+    ('letters',letters),
     ('bigram',bigram),
-#    ('letters',letters),
     ('punctuation',punct),
     ('coma',coma),
     ('dot',dot),
