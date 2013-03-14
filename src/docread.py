@@ -164,7 +164,7 @@ representations=[
     ('letters',letters),
     ('bigram',bigram),
     ('punctuation',punct),
-    ('numbers',numbers),
+#    ('numbers',numbers),
     ('coma',coma),
     ('dot',dot),
     ('bog',txt),
