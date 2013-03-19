@@ -134,17 +134,6 @@ def trigram(doc):
     com=preprocess(doc,ncommons=0,ncutoff=1)
     return doc,com,[x.encode('utf-8') for x in wds]
 
-def fourgram(doc):
-    wds = spaces.split(doc.lower())
-    four = zip(wds, wds[1:], wds[2:], wds[3:])
-    doc = Counter(["{0} {1} {2} {3}".format(v.encode('utf-8'),
-                                    x.encode('utf-8'),
-                                    y.encode('utf-8'),
-                                    z.encode('utf-8')) for v ,x, y, z in four])
-
-    com=preprocess(doc,ncommons=0,ncutoff=1)
-    return doc,com,[x.encode('utf-8') for x in wds]    
-
 def par(doc):
     #pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
     pars = rpar.split(doc.lower())
@@ -173,7 +162,6 @@ def paragraph(text):
 representations=[('letters',letters),
     ('bigram',bigram),
     #('trigram',trigram),
-#   ('fourgram', fourgram),
     ('punctuation',punct),
  #   ('numbers',numbers),
     ('coma',coma),
