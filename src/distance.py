@@ -83,12 +83,12 @@ def dot(a,b):
 
 def cosine(a,b):
     num=dot(a, b)
-    den=(sqrt(dot(a,a)) * sqrt(dot(b,b)))
+    den=sqrt(dot(a,a)) * sqrt(dot(b,b))
 
     if den==0:
         return 0.0
     else:
-        return  1-num/den 
+        return 1-num/den 
 
 def manhattan(A,B):
     commons = set(A.keys()).union(set(B.keys()))
@@ -100,7 +100,7 @@ def euclidean(A,B):
     BB=sqrt(sum([(B[a])**2 for a in B.keys()]))
     if AA*BB == 0.0:
         return 0.0
-    return 1.0-sqrt(sum([(A[a]-B[a])**2 for a in commons]))/(AA*BB)
+    return 1-sqrt(sum([(A[a]-B[a])**2 for a in commons]))/(AA*BB)
 
 def overlap(A, B):
     A = set(A.elements())
@@ -125,11 +125,11 @@ def overlap_(A, B):
 
 
 distances=[("Jacard",jacard),
-           ("Masi",masi_distance),
+  #         ("Masi",masi_distance),
            ("Tanimoto",tanimoto),
-           ("Sorensen",sorensen), 
-#           ("Manhattan", manhattan),
+           ("Sorensen",sorensen)]
+        #  ("Manhattan", manhattan)]
 #           ("Euclidean", euclidean),
 #           ("Overlap'", overlap_),
 #           ("Overlap", overlap),
-           ("Cosine", cosine)]
+#         ("Cosine", cosine)]
