@@ -160,6 +160,16 @@ This is the main script and it has the following options
 	  -v, --verbose         Verbose mode [Off]
 
 
+
+Create corpus links
+-------------------
+
+::
+
+  python src/create_corpus.py -v data/links.txt
+
+
+
 Requirements
 ------------
 
@@ -168,6 +178,7 @@ The software requieres the following packages
 - python_ (2.7)
 - scikit-learn_
 - python-cvxopt_
+- NLTK_ (create corpus script)
 
 Optional
 
