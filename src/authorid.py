@@ -263,8 +263,8 @@ if __name__ == "__main__":
         samples_=[]
         classes_=[]
 
-        for docreps in docs:
-            verbose('Comparing with: {0}'.format(k[0]))
+        for idoc,docreps in enumerate(docs):
+            verbose('Comparing with: {0}'.format(ks[idoc][0]))
             feats=[]
             commons=Counter()
             for doc,doc_ in zip(docreps,docreps_): 
@@ -446,6 +446,7 @@ case {2}".format(id,len(docs),posneg(ANS)))
             verbose("Saving model into ",opts.model)
             with open(opts.model,"w") as model:
                 model.write(s)
+    # TESR model
     elif opts.mode.startswith("test"):
         import pickle
         with open(opts.model,"r") as model:
@@ -468,6 +469,8 @@ case {2}".format(id,len(docs),posneg(ANS)))
             
             res=ML.voted(preds)
             info(problems[i][0]," {0} ".format(res))
+            verbose("Predictions "," ".join(["{0}/{1:0.2}".format(posneg(x),y)
+                                                for x,y in preds]))
 
 
 
