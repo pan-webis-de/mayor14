@@ -46,7 +46,7 @@ typeproblems=['original']
 def minimum(line):
     if line.startswith('Fax'):
         return False
-    return len(line)>100
+    return len(line)>150
     
 
 def extract_links(line,opts={}):
@@ -57,15 +57,17 @@ def extract_links(line,opts={}):
         return None
     bits=line.split(u';')
     # TODO: return year
-    url = bits[1].encode('utf-8')    
-    html = urlopen(url).read()    
-    raw = "\n".join(filter(minimum,
-                    [line.strip() for line in  nltk.clean_html(html).splitlines()]))
-    return (bits[2].encode('utf-8'),(bits[0].encode('utf-8'), # LANG
-                                     raw  # html
-                                    )
-            ) 
-        
+    if len(bits[0])>0:
+        url = bits[1].encode('utf-8')
+        html = urlopen(url).read()
+        raw = "\n".join(filter(minimum,
+                        [line.strip() for line in  nltk.clean_html(html).splitlines()]))
+        return (bits[2].encode('utf-8'), # NAME
+                bits[0].encode('utf-8'), # LANG
+                raw                      # html
+               )
+    else:
+        return ('','')
 
 # MAIN
 if __name__ == "__main__":
@@ -127,39 +129,46 @@ if __name__ == "__main__":
     answers=[]
     for linkfilename in args:
         with codecs.open(linkfilename,'r','utf-8') as linkfile:
-            authors=defaultdict(list)
-            authors_= [x for x in map(extract_links,linkfile) if x]
-            for name,info in authors_:
-                if name:
-                    authors[name].append(info)
-
-            for name,info in authors.iteritems():
-                if len(info)>1:
-                    verbose('Creating problems for ',name)
+            problems=[[]]
+            links_= [x for x in map(extract_links,linkfile) if x]
+            for info in links_:
+                if len(info[0])>0:
+                    problems[-1].append(info)
                 else:
-                    verbose('Not enough documents for ',name)
+                    problems.append([])
+            if len(problems[-1])==0:
+                problems.pop()
+
+            for problem in problems:
+                if len(problem)>1:
+                    verbose('Creating problems for ',problem[0][0])
+                else:
+                    verbose('Not enough documents for ',problem[0][0])
                     continue
                 # Create original problem
-                if 'original' in typeproblems:
-                    lang=info[0][0]
-                    ID="{0}{1:02}".format(
-                            lang.upper(),
-                            cproblems[lang])
-                    os.mkdir("{0}/{1}".format(
-                            opts.odir,ID))
-                    nknown=1
-                    # Generating KNOWNS
-                    for n,(lang,txt) in enumerate(info[:-1]):
-                        namefile_="known{0:02}.txt".format(n)
-                        namefile="{0}/{1}/{2}".format(opts.odir,ID,namefile_)
-                        with open(namefile,'w') as known:
-                            print >> known, txt
-                    namefile_="unknown.txt"
+                lang=problem[0][1]
+                ID="{0}{1:02}".format(
+                        lang.upper(),
+                        cproblems[lang])
+                os.mkdir("{0}/{1}".format(
+                        opts.odir,ID))
+                nknown=1
+                # Generating KNOWNS
+                for n,(name,lang,txt) in enumerate(problem[:-1]):
+                    namefile_="known{0:02}.txt".format(n)
                     namefile="{0}/{1}/{2}".format(opts.odir,ID,namefile_)
-                    with open(namefile,'w') as unknown:
-                        print >> unknown, info[-1][1]
+                    with open(namefile,'w') as known:
+                        print >> known, txt
+                namefile_="unknown.txt"
+                namefile="{0}/{1}/{2}".format(opts.odir,ID,namefile_)
+                # Generating UNKNOWN
+                with open(namefile,'w') as unknown:
+                    print >> unknown, problem[-1][2]
+                if problem[-1][0]==problem[0][0]:
                     answers.append((ID,'Y'))
-                    cproblems[lang]+=1
+                else:
+                    answers.append((ID,'N'))
+                cproblems[lang]+=1
 
     namefile="{0}/Answers.txt".format(opts.odir)
     with open(namefile,'w') as ans:

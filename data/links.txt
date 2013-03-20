@@ -43,3 +43,17 @@
 SP;http://www.jornada.unam.mx/2013/03/19/politica/010o1pol;JHL;2013
 SP;http://www.jornada.unam.mx/2013/03/18/politica/008o1pol;JHL;2013
 SP;http://www.jornada.unam.mx/2013/03/15/politica/010o1pol;JHL;2013
+;;
+EN;http://www.guardian.co.uk/commentisfree/2013/mar/10/two-apps-transform-your-life;CB;2013
+EN;http://www.guardian.co.uk/commentisfree/2013/mar/03/three-unusual-birthday-wishes-charlie-brooker;CB;2013
+EN;http://www.guardian.co.uk/commentisfree/2012/dec/30/armchair-paralympian-words-of-2012;CB;2012
+EN;http://www.guardian.co.uk/travel/2012/dec/28/charlie-brooker-japan-fire-festival;CB;2012
+EN;http://www.guardian.co.uk/commentisfree/2012/dec/17/newtown-shooting-helpless-charlie-brooker;CB;2012
+;;
+SP;http://www.milenio.com/cdb/doc/impreso/9175506;CGL;2013
+SP;http://www.milenio.com/cdb/doc/impreso/9175425;CGL;2013
+SP;http://www.milenio.com/cdb/doc/impreso/9175309;CGL;2013
+SP;http://www.milenio.com/cdb/doc/impreso/9175077;CGL;2013
+SP;http://www.milenio.com/cdb/doc/impreso/9174991;CGL;2013
+SP;http://www.milenio.com/cdb/doc/impreso/9174888;CGL;2013
+SP;http://www.jornada.unam.mx/2013/03/15/politica/010o1pol;JHL;2013

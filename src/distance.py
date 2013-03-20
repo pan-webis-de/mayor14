@@ -53,7 +53,8 @@ def masi_distance (A, B):
     else:
         return  1-num/den 
  
-def tanimoto(A, B,**args):
+def ledesma(A, B,**args):
+    # Variación de Tanimoto
     vec1=set(A.elements())
     vec2=set(B.elements())
     
@@ -126,7 +127,7 @@ def overlap_(A, B):
 
 distances=[("Jacard",jacard),
   #         ("Masi",masi_distance),
-           ("Tanimoto",tanimoto),
+           ("Ledesma",ledesma),
            ("Sorensen",sorensen)]
         #  ("Manhattan", manhattan)]
 #           ("Euclidean", euclidean),
