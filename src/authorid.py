@@ -34,9 +34,7 @@ import sys
 import os
 import os.path
 import itertools
-import re
 from collections import Counter
-
 
 # Local imports
 import docread
@@ -139,8 +137,8 @@ if __name__ == "__main__":
     if opts.list_info:
         verbose('List information')
         verbose('-- Available Distances Metrics')
-        for distance,f in distance.distances:
-            verbose(distance)
+        for distancen,f in distance.distances:
+            verbose(distancen)
 
         verbose('-- Available Representations')
         for rep,f in docread.representations:
@@ -154,7 +152,6 @@ if __name__ == "__main__":
     # Preparing for saving info
     if opts.figures or opts.showf:
         import numpy as np
-        import matplotlib
         import matplotlib.pyplot as plt
         if opts.figures:
             if not os.path.exists(opts.figures):
@@ -356,7 +353,9 @@ case {2}".format(id,len(docs),posneg(ANS)))
      
     # DEVELOPMENT OR TRAINNING MODE
     if opts.mode.startswith("train") or opts.mode.startswith("devel"):
- 
+        tp=0.0
+        fp=0.0
+        fn=0.0
         if opts.mode.startswith("devel"):
             # leave-one-out problem
             info('Leave one out setting for development')
@@ -398,7 +397,12 @@ case {2}".format(id,len(docs),posneg(ANS)))
                 if res==answers[problems[i][0]]:
                     pref=""
                     N_Acc+=1
+                    tp+=1
                 else:
+                    if res=='':
+                        fn+=1
+                    else:
+                        fp+=1
                     pref="**"
                 Total+=1
 
@@ -416,6 +420,11 @@ case {2}".format(id,len(docs),posneg(ANS)))
 
             info('Accuracy over all decisions : {0:3.3f}%'.format(100.0*N_Acc_/Total_))
             info('Accuracy over problems : {0:3.3f}%'.format(100.0*N_Acc/Total))
+            pres=100.0*tp/(tp+fp)
+            recall=100.0*tp/(tp+fn)
+            info('Precision : {0:3.3f}%'.format(pres))
+            info('Recall    : {0:3.3f}%'.format(recall))
+            info('F1-score  : {0:3.3f}%'.format(2*pres*recall/(pres+recall)))
         # Trainning model
         elif opts.mode.startswith("train"):
             import pickle
@@ -446,7 +455,7 @@ case {2}".format(id,len(docs),posneg(ANS)))
             verbose("Saving model into ",opts.model)
             with open(opts.model,"w") as model:
                 model.write(s)
-    # TESR model
+    # TEST model
     elif opts.mode.startswith("test"):
         import pickle
         with open(opts.model,"r") as model:
