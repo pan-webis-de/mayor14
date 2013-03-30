@@ -1,45 +1,3 @@
-#SP;http://gabazo.blogspot.mx/2011/12/historia-de-un-deicidio.html;Mario Vargas Llosa;
-#SP;http://gabazo.blogspot.mx/2011/11/vargas-llosa-y-cien-anos-de-soledad.html;Mario Vargas Llosa;2007
-#SP;http://gabazo.blogspot.mx/2011/11/cuatro-decadas-de-cien-anos-de-soledad.html;Gabriel García Marquéz;2007
-#SP;http://gabazo.blogspot.mx/2011/09/dario-castrillon-hoyos.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/09/beguin-y-sharon.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/09/salvador-allende-el-equivocado.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/09/shakira.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/09/hugo-chavez.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/09/javier-solana-y-wesley-clark.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/09/bill-clinton-la-sensualidad-del-poder.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/09/palabras-magicas.html;Gabriel García Marquéz;1968
-#SP;http://gabazo.blogspot.mx/2011/08/naufrago-en-tierra-firme.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/08/consideraciones.html;Gabriel García Marquéz;1995
-#SP;http://gabazo.blogspot.mx/2011/08/valor-original.html;Gabriel García Marquéz;2001
-#SP;http://gabazo.blogspot.mx/2011/08/millonaria-soledad.html;Gabriel García Marquéz;2007
-#SP;http://gabazo.blogspot.mx/2011/08/los-otros.html;Gabriel García Marquéz;1996
-#SP;http://gabazo.blogspot.mx/2011/08/otro-mundo.html;Gabriel García Marquéz;1995
-#SP;http://gabazo.blogspot.mx/2011/08/paraiso-para-infantes.html;Gabriel García Marquéz;1994
-#SP;http://gabazo.blogspot.mx/2011/08/sin-antifaz.html;Gabriel García Marquéz;1993
-#SP;http://gabazo.blogspot.mx/2011/08/creatividad-en-estado-puro.html;Gabriel García Marquéz;1998
-#SP;http://gabazo.blogspot.mx/2011/08/evocacion-y-sabiduria.html;Gabriel García Marquéz;1993
-#SP;http://gabazo.blogspot.mx/2011/08/certeza-premonitoria.html;Mario Benedetti;1972
-#SP;http://gabazo.blogspot.mx/2011/07/mambru.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/07/ilusion-optica.html;Gabriel García Marquéz;1982
-#SP;http://gabazo.blogspot.mx/2011/07/sombra-iluminada.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/07/sin-consuelo.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/07/culto-marcial.html;Gabriel García Marquéz;1977
-#SP;http://gabazo.blogspot.mx/2011/06/maestro-admirable.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/06/colombia-querida.html;Gabriel García Marquéz;2003
-#SP;http://gabazo.blogspot.mx/2011/06/espejos-del-alma.html;Gabriel García Marquéz;2003
-#SP;http://gabazo.blogspot.mx/2011/06/los-beatles.html;Gabriel García Marquéz;1980
-#SP;http://gabazo.blogspot.mx/2011/06/valledupar-la-parranda-del-siglo.html;Gabriel García Marquéz;1983
-#SP;http://gabazo.blogspot.mx/2011/06/sonata-inocente.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/06/homenaje-al-nobel-pen-american-center.html;Gabriel García Marquéz;2003
-#SP;http://gabazo.blogspot.mx/2011/06/el-juramento.html;Gabriel García Marquéz;1950
-#SP;http://gabazo.blogspot.mx/2011/06/estas-navidades-siniestras.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/06/discurso-fundacion-del-nuevo-cine.html;Gabriel García Marquéz;1986
-#SP;http://gabazo.blogspot.mx/2004/12/perfiles.html?view=sidebar;Gabriel García Marquéz;2001
-#SP;http://gabazo.blogspot.mx/2004/12/amigos.html;Tomás Eloy Martínez;2002
-#SP;http://gabazo.blogspot.mx/2005/01/ensayos.html;Gabriel García Marquéz;1997
-#SP;http://gabazo.blogspot.mx/2006/08/cuentos.html;Gabriel García Marquéz;
-#SP;http://gabazo.blogspot.mx/2011/06/allende-la-verdadera-muerte-de-un.html;Gabriel García Marquéz;1973
 SP;http://www.jornada.unam.mx/2013/03/19/politica/010o1pol;JHL;2013
 SP;http://www.jornada.unam.mx/2013/03/18/politica/008o1pol;JHL;2013
 SP;http://www.jornada.unam.mx/2013/03/15/politica/010o1pol;JHL;2013
@@ -124,3 +82,4 @@ EN;http://www.chomsky.info/articles/197311--.htm;Noam Chomksy;1973
 EN;http://www.chomsky.info/articles/19700813.htm;Noam Chomsky;1970
 EN;http://www.chomsky.info/articles/19671207.htm;Noam Chomsky;1967
 ;;
+EN;http://www.chomsky.info/articles/19801011.htm;Noam Chomsky;1980

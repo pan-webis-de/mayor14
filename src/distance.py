@@ -34,25 +34,83 @@ from math import pow
 from numpy import array
 
 def jacard(A, B):
-    A=set(A.elements())
-    B=set(B.elements())
-    num=len(A.intersection(B))*1.0
-    den=len(A.union(B))
+    A_=set(A.keys())
+    B_=set(B.keys())
+    commons = A_.intersection(B_)
+    full = A_.union(B_)
+    num=len(commons)*1.0
+    den=len(full)
     if den==0:
-        return 0.0
+        return 1.0
     else:
         return  1-num/den 
- 
-def masi_distance (A, B):
-    label1=set(A.elements())
-    label2=set(B.elements())
-    num=float(len(label1.intersection(label2)))
-    den=float(max(len(label1),len(label2)))
+
+def jacardw(A, B):
+    A_=set(A.keys())
+    B_=set(B.keys())
+    commons = A_.intersection(B_)
+    num=sum([A[x]+B[x] for x in commons])*1.0
+    den=sum([A[x] for x in A_])+sum([B[x] for x in B_])
     if den==0:
-        return 0.0
+        return 1.0
     else:
         return  1-num/den 
- 
+
+
+def h0(A, B):
+    # http://cmp.felk.cvut.cz/~chum/papers/chum_bmvc08.pdf
+    commons = set(A.keys()).intersection(set(B.keys()))
+    num=sum([min(A[x],B[x]) for x in commons])*1.0
+    den=sum([max(A[x],B[x]) for x in commons])*1.0
+    if den==0:
+        return 1.0
+    else:
+        return  1-num/den 
+
+
+def masi(A, B):
+    # Equivalent to overlap_
+    A_=set(A.keys())
+    B_=set(B.keys())
+    commons = A_.intersection(B_)
+    num=len(commons)*1.0
+    den=max(len(A_),len(B_))
+    if den==0:
+        return 1.0
+    else:
+        return  1-num/den 
+
+def masiw(A, B):
+    # Equivalent to overlap_
+    A_=set(A.keys())
+    B_=set(B.keys())
+    commons = A_.intersection(B_)
+    num=sum([min(A[x],B[x]) for x in commons])*1.0
+    den=max(sum([A[x] for x in A_]),sum([B[x] for x in B_]))
+    if den==0:
+        return 1.0
+    else:
+        return  1-num/den 
+
+
+
+
+def overlap(A, B):
+    A = set(A.elements())
+    B = set(B.elements())
+    num = len(A.intersection(B)) * 1.0
+    den = min(len(A), len(B))
+    if den == 0:
+        return 1.0
+    else:
+        return  1 - (num/den)
+
+
+
+
+
+
+
 def ledesma(A, B,**args):
     # Variación de Tanimoto
     vec1=set(A.elements())
@@ -63,7 +121,7 @@ def ledesma(A, B,**args):
     num=float(len(d1d2))
     den=(pow(len(vec1),2) + (pow(len(vec2),2) - len(d1d2)))
     if den==0:
-        return 0.0
+        return 1.0
     else:
         return  1-num/den 
    
@@ -74,7 +132,7 @@ def sorensen(A, B ,**args):
     d1d2 =  len([ item  for item in vec1 if item in vec2 ])
   
     if len(vec1) + len(vec2) == 0:
-        return 0.0
+        return 1.0
   
     return 1-float(2.0*d1d2 / (len(vec1) + len(vec2) ) )
 
@@ -87,7 +145,7 @@ def cosine(a,b):
     den=sqrt(dot(a,a)) * sqrt(dot(b,b))
 
     if den==0:
-        return 0.0
+        return 1.0
     else:
         return 1-num/den 
 
@@ -96,40 +154,24 @@ def manhattan(A,B):
     return abs(sum([A[a] - B[a] for a in commons]))
 
 def euclidean(A,B):
-    commons = set(A.keys()).union(set(B.keys()))
+    commons = set(A.keys()).intersection(set(B.keys()))
     AA=sqrt(sum([(A[a])**2 for a in A.keys()]))
     BB=sqrt(sum([(B[a])**2 for a in B.keys()]))
     if AA*BB == 0.0:
         return 0.0
     return 1-sqrt(sum([(A[a]-B[a])**2 for a in commons]))/(AA*BB)
 
-def overlap(A, B):
-    A = set(A.elements())
-    B = set(B.elements())
-    num = len(A.intersection(B)) * 1.0
-    den = min(len(A), len(B))
-    if den == 0:
-        return 0.0
-    else:
-        return  1 - (num/den)
-
-def overlap_(A, B):
-    A = set(A.elements())
-    B = set(B.elements())
-    num = len(A.intersection(B)) * 1.0
-    den = max(len(A), len(B))
-    if den == 0:
-        return 0.0
-    else:
-        return  1 - (num/den)
 
 
-
-distances=[("Jacard",jacard),
-           ("Masi",masi_distance),
-           ("Ledesma",ledesma),
-           ("Sorensen",sorensen),
-           ("Euclidean", euclidean),
+distances=[
+#           ("Jacard",jacard),
+#           ("Masi",masi),
+           ("Weighted Jacard",jacardw),
+           ('Weighted h0',h0),
+           ("Weighted Masi",masiw),
+#           ("Ledesma",ledesma),
+#           ("Sorensen",sorensen),
+#           ("Euclidean", euclidean),
 #          ("Manhattan", manhattan),
 #          ("Overlap'", overlap_),
 #          ("Overlap", overlap),

@@ -48,37 +48,16 @@ rwspc=re.compile(r'\s',re.UNICODE)
 rnumbers=re.compile(r'\d+',re.UNICODE)
 
 
-def readstopwords(filename):
-    stopwords=[]
-    with codecs.open(filename,'r','utf-8') as file:
-        for line in file:
-            line=line.strip()
-            if len(line)>0 and not line[0]=='#':
-                stopwords.append(line.encode('utf-8'))
-    return stopwords
-
-
-def readdoc(filename):
-    try:
-        with codecs.open(filename,'r','utf-8') as fh:
-            return  fh.read()
-    except UnicodeDecodeError:
-        try:
-            with codecs.open(filename,'r','ISO-8859-1') as fh:
-                return fh.read()
-        except UnicodeDecodeError:
-            return ""
-
 def prettyprint(filename):
     with codecs.open(filename,'r','utf-8') as fh:
         for line in fh:
             line=line.strip()
             print line.encode('utf-8')
 
-def apply(f,filename):
-    with codecs.open(filename,'r','utf-8') as fh:
-        return f(fh.read().encode())
+def none(docs,filename):
+    return None
 
+# Functions for representation extraction
 def numbers(doc,sw=[]):
     wds = rnumbers.findall(doc)
     values=[x.encode('utf-8') for x in wds]
@@ -197,7 +176,7 @@ representations=[
     #('dot',dot),           #X
     ('bow',bow),
     #('capital',capital),   #X
-    ('par',par),
+    #('par',par),
     ('sqrbrackets',sqrbrackets),
     ('whitespc',whitespc),
     ]
@@ -235,6 +214,29 @@ def dirproblem(dirname, rknown  =r"known.*\.txt",
                         r_unknown.match(x)]
     unknown.sort()
     return known,unknown
+
+# Reading file functions
+def readstopwords(filename):
+    stopwords=[]
+    with codecs.open(filename,'r','utf-8') as file:
+        for line in file:
+            line=line.strip()
+            if len(line)>0 and not line[0]=='#':
+                stopwords.append(line.encode('utf-8'))
+    return stopwords
+
+
+def readdoc(filename):
+    try:
+        with codecs.open(filename,'r','utf-8') as fh:
+            return  fh.read()
+    except UnicodeDecodeError:
+        try:
+            with codecs.open(filename,'r','ISO-8859-1') as fh:
+                return fh.read()
+        except UnicodeDecodeError:
+            return ""
+
 
 
 def loadanswers(filename,ignore=[]):
