@@ -126,11 +126,12 @@ def overlap_(A, B):
 
 
 distances=[("Jacard",jacard),
-  #         ("Masi",masi_distance),
+           ("Masi",masi_distance),
            ("Ledesma",ledesma),
-           ("Sorensen",sorensen)]
-        #  ("Manhattan", manhattan)]
-#           ("Euclidean", euclidean),
-#           ("Overlap'", overlap_),
-#           ("Overlap", overlap),
-#         ("Cosine", cosine)]
+           ("Sorensen",sorensen),
+           ("Euclidean", euclidean),
+#          ("Manhattan", manhattan),
+#          ("Overlap'", overlap_),
+#          ("Overlap", overlap),
+#          ("Cosine", cosine)
+           ]

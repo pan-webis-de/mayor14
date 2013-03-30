@@ -107,6 +107,9 @@ if __name__ == "__main__":
     p.add_option("", "--figures", default=None,
             action="store", dest="figures",
             help="Save figures in directory [None]")
+    p.add_option("", "--stopwords", default="data/stopwords.txt",
+            action="store", dest="stopwords",
+            help="List of stop words [data/stopwords.txt]")
     p.add_option("", "--answers", default="Answers.txt",
             action="store", dest="answers",
             help="Answers file [Answers.txt]")
@@ -159,7 +162,7 @@ if __name__ == "__main__":
                 os.mkdir(opts.figures)
     
 
-    # Loading ingnore if exists
+    # Loading ignore if exists
     _ignore=[]
     if os.path.exists('.ignore'):
         verbose('Loading files to ignore frm: .ignore')
@@ -167,7 +170,17 @@ if __name__ == "__main__":
             for line in file:
                 _ignore.append(line.strip())
 
-        
+
+    # Loading stopwords if exits
+    stopwords=[]
+    if os.path.exists(opts.stopwords):
+        verbose('Loading stopwords: ',opts.stopwords)
+        stopwords=docread.readstopwords(opts.stopwords)
+    else:
+        info('Stopwords file not found assuming, emtpy',opts.stopwords)
+
+
+
     # load problems or problem
     problems=docread.problems(
         docread.dirproblems(dirname,opts.known,opts.unknown,_ignore))
@@ -185,7 +198,7 @@ if __name__ == "__main__":
                     for n,f in docread.representations:
                         if n in opts.off:
                             continue
-                        rep,c,pars=f(k[1])
+                        rep,c,pars=f(k[1],sw=stopwords)
                         verbose("--- {0} partition ---".format(n))
                         print >> out, "\n:: ".join(pars)
                         verbose("--- {0} ---".format(n))
@@ -202,8 +215,7 @@ if __name__ == "__main__":
                     for n,f in docread.representations:
                         if n in opts.off:
                             continue
-
-                        rep,ci,par=f(k[1])
+                        rep,ci,pars=f(k[1],sw=stopwords)
                         verbose("--- {0} partition ---".format(n))
                         print >> out, "\n:: ".join(pars)
                         verbose("--- {0} ---".format(n))
@@ -244,7 +256,7 @@ if __name__ == "__main__":
         for rep,f in docread.representations:
             if rep in opts.off:
                 continue
-            docreps_.append((rep,f(uks[0][1])))
+            docreps_.append((rep,f(uks[0][1],stopwords)))
 
         # Load knowns 
         docs = []
@@ -253,7 +265,7 @@ if __name__ == "__main__":
             for rep,f in docread.representations:
                 if rep in opts.off:
                     continue
-                docreps.append((rep,f(k[1])))
+                docreps.append((rep,f(k[1],stopwords)))
             docs.append(docreps)
             
         verbose('Loading files')

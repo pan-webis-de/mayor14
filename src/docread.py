@@ -29,24 +29,34 @@
 # -------------------------------------------------------------------------
 
 import re
-import sys
 import os
 import os.path
 import codecs
 from collections import Counter
 
 spaces=re.compile('\W+',re.UNICODE)
-rcapital=re.compile(r'[A-Z][A-Za-z]+',re.UNICODE)
+rcapital=re.compile(u'[\u0391-\u03A9][^ ]+|[A-Z][^ ]+',re.UNICODE)
 #rcapital=re.compile(r'[A-Z][^W]+',re.UNICODE)
-rpar = re.compile('\'''',re.UNICODE)
-#rpar = re.compile('\.\r?\n',re.UNICODE)
-wordpunct=re.compile('\w+\W+',re.UNICODE)
-#wordpunct=re.compile('\w+[.,;?¿]',re.UNICODE)
+rpar = re.compile('\.\r?\n',re.UNICODE)
+renter = re.compile('\r?\n',re.UNICODE)
+#wordpunct=re.compile('\w+\W+',re.UNICODE)
+wordpunct=re.compile('[^ ]+[\[\]().,;?¿]',re.UNICODE)
 rcoma=re.compile(r'\w+,',re.UNICODE)
 rdot=re.compile(r'\w+\.',re.UNICODE)
 rspc=re.compile(r'\w+\d+[/]',re.UNICODE)
 rwspc=re.compile(r'\s',re.UNICODE)
 rnumbers=re.compile(r'\d+',re.UNICODE)
+
+
+def readstopwords(filename):
+    stopwords=[]
+    with codecs.open(filename,'r','utf-8') as file:
+        for line in file:
+            line=line.strip()
+            if len(line)>0 and not line[0]=='#':
+                stopwords.append(line.encode('utf-8'))
+    return stopwords
+
 
 def readdoc(filename):
     try:
@@ -69,95 +79,106 @@ def apply(f,filename):
     with codecs.open(filename,'r','utf-8') as fh:
         return f(fh.read().encode())
 
-def numbers(doc):
+def numbers(doc,sw=[]):
     wds = rnumbers.findall(doc)
+    values=[x.encode('utf-8') for x in wds]
+    doc=Counter(values)
+    com=preprocess(doc,ncutoff=1)
+    return doc,com,values
+
+def capital(doc,sw=[]):
+    wds = rcapital.findall(renter.sub(' ',doc))
+    values=[x.encode('utf-8')[1:] for x in wds]
+    doc=Counter(values)
+    com=preprocess(doc,sw=sw,ncutoff=1)
+    return doc,com,values
+
+def punct(doc,sw=[]):
+    wds = wordpunct.findall(renter.sub(' ',doc.lower()))
+    values=[x.encode('utf-8') for x in wds]
+    doc=Counter(values)
+    com=preprocess(doc,ncutoff=1)
+    return doc,com,values
+
+def bow(doc,sw=[]):
+    wds = spaces.split(renter.sub(' ',doc.lower()))
     doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc,ncommons=0,ncutoff=1)
+    com=preprocess(doc,ncutoff=3,sw=sw)
     return doc,com,[x.encode('utf-8') for x in wds]
 
-def capital(doc):
-    wds = rcapital.findall(doc)
-    doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc,ncommons=1,ncutoff=0)
-    return doc,com,[x.encode('utf-8') for x in wds]
-
-def punct(doc):
-    wds = wordpunct.findall(doc.lower())
-    doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc,ncommons=1,ncutoff=0)
-    return doc,com,[x.encode('utf-8') for x in wds]
-
-def txt(doc):
-    wds = spaces.split(doc.lower())
-    doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc)
-    return doc,com,[x.encode('utf-8') for x in wds]
-
-def letters(doc):
+def letters(doc,sw=[]):
     wds = doc.lower()
-    doc=Counter([x.encode('utf-8') for x in wds])
+    values=[x.encode('utf-8') for x in wds]
+    doc=Counter(values)
     com=preprocess(doc)
-    return doc,com,[x.encode('utf-8') for x in wds]
+    return doc,com,values
 
-def coma(doc):
-    wds = rcoma.findall(doc)
-    doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc,ncommons=1,ncutoff=0)
-    return doc,com,[x.encode('utf-8') for x in wds]
+def coma(doc,sw=[]):
+    wds = rcoma.findall(doc.lower())
+    values=[x.encode('utf-8') for x in wds]
+    doc=Counter(values)
+    com=preprocess(doc,ncutoff=1)
+    return doc,com,values
 
-def dot(doc):
-    wds = rdot.findall(doc)
-    doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc,ncommons=1,ncutoff=0)
-    return doc,com,[x.encode('utf-8') for x in wds]
+def dot(doc,sw=[]):
+    wds = rdot.findall(doc.lower())
+    values=[x.encode('utf-8') for x in wds]
+    doc=Counter(values)
+    com=preprocess(doc,ncutoff=1)
+    return doc,com,values
 
-def sqrbrackets(doc):
+def sqrbrackets(doc,sw=[]):
     wds = rspc.findall(doc)
     doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc,ncommons=1,ncutoff=0)
+    com=preprocess(doc,ncutoff=0)
     return doc,com,[x.encode('utf-8') for x in wds]
 
-def whitespc(doc):
+def whitespc(doc,sw=[]):
     wds = rwspc.findall(doc)
     doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc,ncommons=1,ncutoff=0)
+    com=preprocess(doc,ncutoff=0)
     return doc,com,[x.encode('utf-8') for x in wds]
 
-def bigram(doc):
-    wds = spaces.split(doc.lower())
+def bigram(doc,sw=[]):
+    wds = spaces.split(renter.sub(' ',doc.lower()))
     bigram = zip(wds, wds[1:])
-    doc = Counter(["{0} {1}".format(x.encode('utf-8'),
-                                    y.encode('utf-8')) for x, y in bigram])
-    com=preprocess(doc,ncommons=0,ncutoff=1)
-    return doc,com,[x.encode('utf-8') for x in wds]
+    values=["{0} {1}".format(x.encode('utf-8'),
+                                    y.encode('utf-8')) for x, y in bigram]
+    doc = Counter(values)
+    com=preprocess(doc,ncutoff=0)
+    return doc,com,values
 
-def trigram(doc):
-    wds = spaces.split(doc.lower())
+def trigram(doc,sw=[]):
+    wds = spaces.split(renter.sub(' ',doc.lower()))
     tri = zip(wds, wds[1:], wds[2:])
-    doc = Counter(["{0} {1} {2}".format(x.encode('utf-8'),
+    values = ["{0} {1} {2}".format(x.encode('utf-8'),
                                     y.encode('utf-8'),
-                                    z.encode('utf-8')) for x, y,z in tri])
+                                    z.encode('utf-8')) for x, y,z in tri]
+    doc = Counter(values)
 
-    com=preprocess(doc,ncommons=0,ncutoff=1)
-    return doc,com,[x.encode('utf-8') for x in wds]
+    com=preprocess(doc,ncutoff=0)
+    return doc,com,values
 
-def par(doc):
+def par(doc,sw=[]):
     #pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
     pars = rpar.split(doc.lower())
-    par = Counter() 
+    par = Counter()
+    par['0']=len(pars)
     for k, p in enumerate(pars):
         wds = spaces.split(p)
-        par[str(k)]=len(wds)/5
-        #par[str(k-len(pars))]=len(wds)
-    com=preprocess(par,ncommons=0,ncutoff=0)
+        par[str(k+1)]=len(wds)/10
+        par[str(k-len(pars))]=len(wds)/10
+    com=preprocess(par,ncutoff=0)
     return par,com,[x.encode('utf-8') for x in pars]
 
-def preprocess(doc,ncommons=10,ncutoff=10):
+def preprocess(doc,ncommons=0,ncutoff=3,sw=[]):
     commons=[x for x,c in doc.most_common(ncommons)]
     cutoff=[x for x,c in doc.iteritems() if c <= ncutoff ]
     for c in commons:
         del doc[c]
     for c in cutoff:
+        del doc[c]
+    for c in sw:
         del doc[c]
     return commons
 
@@ -166,15 +187,16 @@ def paragraph(text):
   sep = re.compile('\.')
   return sep.split(text)
 
-representations=[('letters',letters),
+representations=[
+    #('letters',letters),   #X
     ('bigram',bigram),
-    #('trigram',trigram),
-    ('punctuation',punct),
- #   ('numbers',numbers),
+    #('trigram',trigram),   #X
+    #('punctuation',punct), #X
+    ('numbers',numbers),
     ('coma',coma),
-    ('dot',dot),
-    ('bow',txt),
-    ('capital',capital),
+    #('dot',dot),           #X
+    ('bow',bow),
+    #('capital',capital),   #X
     ('par',par),
     ('sqrbrackets',sqrbrackets),
     ('whitespc',whitespc),
