@@ -57,3 +57,70 @@ SP;http://www.milenio.com/cdb/doc/impreso/9175077;CGL;2013
 SP;http://www.milenio.com/cdb/doc/impreso/9174991;CGL;2013
 SP;http://www.milenio.com/cdb/doc/impreso/9174888;CGL;2013
 SP;http://www.jornada.unam.mx/2013/03/15/politica/010o1pol;JHL;2013
+;;
+EN;http://www.chomsky.info/articles/19980515.htm;Noam Chomsky;1998
+EN;http://www.chomsky.info/articles/199809--.htm;Noam Chomsky;1998
+EN;http://www.chomsky.info/articles/199805--.htm;Noam Chomsky;1998
+EN;http://www.chomsky.info/articles/19960423.htm;Noam Chomsky;1996
+EN;http://www.chomsky.info/articles/199606--.htm;Noam Chomsky;1996
+EN;http://www.chomsky.info/articles/19960308.htm;Noam Chomsky;1996
+EN;http://www.chomsky.info/articles/19950730.htm;Noam Chomsky;1995
+EN;http://www.chomsky.info/articles/1995----02.htm;Noam Chomsky;1995
+EN;http://www.chomsky.info/articles/1995----.htm;Noam Chomsky;1995
+EN;http://www.chomsky.info/articles/197311--.htm;Eduard Herman;1996
+;;
+EN;http://www.chomsky.info/articles/20121104.htm;Noam Chomsky;2012
+EN;http://www.chomsky.info/articles/20121005.htm;Noam Chomsky;2012
+EN;http://www.chomsky.info/articles/20121015.htm;Noam Chomsky;2012
+EN;http://www.chomsky.info/articles/20121005.htm;Noam Chomsky;2012
+EN;http://www.chomsky.info/articles/20120903.htm;Noam Chomsky;2012
+EN;http://www.chomsky.info/articles/20120802.htm;Noam Chomsky;2012
+EN;http://www.chomsky.info/articles/20120722.htm;Noam Chomsky;2012
+EN;http://www.chomsky.info/articles/20120606.htm;Noam Chomsky;2012
+EN;http://www.chomsky.info/onchomsky/2002----.htm;David Cromwell;2002
+;;
+EN;http://www.chomsky.info/articles/20120508.htm;Noam Chomsky;2012
+EN;http://www.chomsky.info/articles/20120215.htm;Noam Chomsky;2012
+EN;http://www.chomsky.info/articles/20120215.htm;Noam Chomsky;2012
+EN;http://www.chomsky.info/articles/20110707.htm;Noam Chomsky;2011
+EN;http://www.chomsky.info/articles/20110805.htm;Noam Chomsky;2011
+EN;http://www.chomsky.info/articles/20110824.htm;Noam Chomsky;2011
+EN;http://www.chomsky.info/articles/201105--.htm;Noam Chomsky;2011
+EN;http://www.chomsky.info/articles/20110421.htm;Noam Chomsky;2011
+EN;http://www.chomsky.info/articles/20110309.htm;Noam Chomsky;2011
+;;
+EN;http://www.chomsky.info/articles/20110204.htm;Noam Chomsky;2011
+EN;http://www.chomsky.info/articles/20101206.htm;Noam Chomsky;2010
+EN;http://www.chomsky.info/articles/201002--.htm;Noam Chomsky;2010
+EN;http://www.chomsky.info/articles/20100105.htm;Noam Chomsky;2010
+EN;http://www.chomsky.info/articles/20091203.htm;Noam Chomsky;2009
+EN;http://www.chomsky.info/articles/20091105.htm;Noam Chomsky;2009
+EN;http://www.chomsky.info/articles/20080919.htm;Noam Chomsky;2008
+EN;http://www.chomsky.info/articles/20081019.htm;Noam Chomsky;2008
+EN;http://www.chomsky.info/articles/20070730.htm;Noam Chomsky;2007
+EN;http://www.chomsky.info/articles/19671207.htm;Noam Chomsky;1967
+;;
+EN;http://www.chomsky.info/articles/20110531.htm;Noam Chomsky;2011
+EN;http://www.chomsky.info/letters/20100117.htm;Noam Chomsky;2010
+EN;http://www.chomsky.info/articles/20080809.htm;Noam Chomsky;2008
+EN;http://www.chomsky.info/articles/20070318.htm;Noam Chomsky;2007
+EN;http://www.chomsky.info/articles/20070405.htm;Noam Chomsky;2007
+EN;http://www.chomsky.info/articles/20070515.htm;Noam Chomsky;2007
+EN;http://www.chomsky.info/articles/20050601.htm;Noam Chonsky;2005
+EN;http://www.chomsky.info/articles/20020511.htm;Noam Chomsky;2002
+EN;http://www.chomsky.info/articles/2000----.htm;Noam Chomsky;2000
+EN;http://www.chomsky.info/articles/199607--.htm;Noam Chomsky;1996
+EN;http://www.chomsky.info/articles/19940705.htm;Noam Chomsky;1994
+EN;http://www.chomsky.info/articles/199102--.htm;Noam Chomsky;1991
+EN;http://www.chomsky.info/articles/19900129.htm;Noam Chomsky;1990
+EN;http://www.chomsky.info/articles/198912--.htm;Noam Chomsky;1989
+EN;http://www.chomsky.info/articles/1986----.htm;Noam Chomsky;1986
+;;
+EN;http://www.chomsky.info/articles/19801011.htm;Noam Chomsky;1980
+EN;http://www.chomsky.info/articles/19810228.htm;Noam Chomsky;1981
+EN;http://www.chomsky.info/articles/19770625.htm;Noam Chomsky;1977
+EN;http://www.chomsky.info/articles/19750612.htm;Noam Chomsky;1975
+EN;http://www.chomsky.info/articles/197311--.htm;Noam Chomksy;1973
+EN;http://www.chomsky.info/articles/19700813.htm;Noam Chomsky;1970
+EN;http://www.chomsky.info/articles/19671207.htm;Noam Chomsky;1967
+;;

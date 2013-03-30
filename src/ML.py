@@ -35,7 +35,6 @@ random.seed()
 
 # Suppor vector machine
 from sklearn import svm
-from sklearn import preprocessing
 
 # Linear programming
 from cvxopt import matrix, solvers
@@ -43,7 +42,7 @@ import Weights as W
 
 # Neuronal Networks
 from pybrain.datasets            import ClassificationDataSet
-from pybrain.utilities           import percentError
+#from pybrain.utilities           import percentError
 from pybrain.tools.shortcuts     import buildNetwork
 from pybrain.supervised.trainers import BackpropTrainer
 from pybrain.structure.modules   import SoftmaxLayer,TanhLayer
@@ -189,7 +188,6 @@ def voted(preds):
         return "N"
     if cs_[1.0]==0:
         return "Y"
-    print ">>>>",0.0,cs[0.0]/cs_[0.0],1.0,cs[1.0]/cs_[1.0]
     if cs_[0.0]>=cs_[1.0]:
         return "Y"
     else:

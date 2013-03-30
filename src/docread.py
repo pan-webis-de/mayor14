@@ -49,8 +49,15 @@ rwspc=re.compile(r'\s',re.UNICODE)
 rnumbers=re.compile(r'\d+',re.UNICODE)
 
 def readdoc(filename):
-    with codecs.open(filename,'r','utf-8') as fh:
-        return  fh.read()
+    try:
+        with codecs.open(filename,'r','utf-8') as fh:
+            return  fh.read()
+    except UnicodeDecodeError:
+        try:
+            with codecs.open(filename,'r','ISO-8859-1') as fh:
+                return fh.read()
+        except UnicodeDecodeError:
+            return ""
 
 def prettyprint(filename):
     with codecs.open(filename,'r','utf-8') as fh:
