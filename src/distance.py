@@ -31,7 +31,6 @@
 #import nltk
 from math import sqrt
 from math import pow
-from numpy import array
 
 def jacard(A, B,gbl=None):
     A_=set(A.keys())
@@ -137,7 +136,7 @@ def ledesmaw(A, B,gbl=None):
     commons = A_.intersection(B_)
     
     num=1.0*sum([A[x] + B[x] for x in commons])
-    den=(pow(sum(A.values()),2) + (pow(sum(B.values()),2) - num))
+    den=(pow(sum(A.values()),2) + (pow(sum(B.values()),2)))
     if den==0:
         return 1.0
     else:
@@ -211,13 +210,13 @@ distances=[
 #           ("Sorensen",sorensen),
 #          ("Overlap", overlap),
 # Recomendadas para generalidad
-#           ("Weighted Jacard",jacardw),
-           ("Weighted Sorensen",sorensenw),
-           ("Weighted Ledesma",ledesmaw),
-           ('Weighted h0',h0),
-           ("Weighted Massi",masiw),
-           ("Euclidean", euclidean),
-           ("Overlap", overlapw),
+#            ("Weighted Jacard",jacardw),
+            ("Weighted Sorensen",sorensenw),
+            ("Weighted Ledesma",ledesmaw),
+            ('Weighted h0',h0),
+#            ("Weighted Massi",masiw),
+            ("Euclidean", euclidean),
+#           ("Overlap", overlapw),
            #("Manhattan", manhattan),
-           ("Cosine", cosine)
+            ("Cosine", cosine)
            ]

@@ -103,10 +103,6 @@ def lptest(xdata,ws):
     return y
 
 
-def svmtest(svc,xdata):
-    xdata=np.array(xdata)
-    return svc.predict(xdata) 
-
 def svmtrain(xdata,ydata):
     xdata=np.array(xdata)
     ydata=np.array(ydata)
@@ -135,7 +131,6 @@ def avptrain(xdata,ydata,iters):
     for i in range(iters):
         random.shuffle(xydata)
         for x,y in xydata:
-            x_total=sum(x)
             x=list(enumerate(x))
             score=ws.val(x)
             if score>0.5:

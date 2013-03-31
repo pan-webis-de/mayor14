@@ -311,9 +311,9 @@ if __name__ == "__main__":
                         # Normalization tf
                         # tf logaritmith
                         A.update([(k,(1.0+math.log(v)))
-                                for k,v in doc_[1][0].items()])
+                                for k,v in doc_[1][0].items() if v > 0])
                         B.update([(k,(1.0+math.log(v)))
-                                for k,v in doc[1][0].items()])
+                                for k,v in doc[1][0].items() if v > 0])
                     else:
                         A=doc_[1][0]
                         B=doc[1][0]
@@ -519,13 +519,18 @@ case {2}".format(id,len(docs),posneg(ANS)))
             elif opts.method.startswith('lp'):
                 ws    =  pickle.loads(s)
                 preds = ML.lptest(X_test,ws)
+
+                for x in X_test:
+                    verbose((" ".join([str(x_*w) for x_,w in zip(x,ws)])))
+
+
             elif opts.method.startswith('ann'):
                 ws    =  pickle.loads(s)
                 preds = ML.anntest(X_test,ws)
             
             res=ML.voted(preds)
             info(problems[i][0]," {0} ".format(res))
-            verbose("Predictions "," ".join(["{0}/{1:0.2}".format(posneg(x),y)
+            verbose("Predictions "," ".join(["{0}/{1:0.6}".format(posneg(x),y)
                                                 for x,y in preds]))
 
 

@@ -112,6 +112,7 @@ if __name__ == "__main__":
                 fnd[g[:2]]+=1
             except KeyError:
                 fnd[g[:2]]=1
+            continue
 
 
         if l==sys[g]:
