@@ -79,7 +79,7 @@ def punct(doc,sw=[]):
     com=preprocess(doc,ncutoff=1)
     return doc,com,values
 
-def bow(doc,sw=[]):
+def bow(doc,sw=[],norm=None):
     wds = spaces.split(renter.sub(' ',doc.lower()))
     doc=Counter([x.encode('utf-8') for x in wds])
     com=preprocess(doc,ncutoff=3,sw=sw)

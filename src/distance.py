@@ -49,8 +49,9 @@ def jacardw(A, B):
     A_=set(A.keys())
     B_=set(B.keys())
     commons = A_.intersection(B_)
-    num=sum([A[x]+B[x] for x in commons])*1.0
-    den=sum([A[x] for x in A_])+sum([B[x] for x in B_])
+    full = A_.union(B_)
+    num=sum([min(A[x],B[x]) for x in commons])*1.0
+    den=sum([A[x]+B[x] for x in full])
     if den==0:
         return 1.0
     else:
@@ -94,7 +95,6 @@ def masiw(A, B):
 
 
 
-
 def overlap(A, B):
     A = set(A.elements())
     B = set(B.elements())
@@ -105,36 +105,68 @@ def overlap(A, B):
     else:
         return  1 - (num/den)
 
-
-
-
-
-
-
-def ledesma(A, B,**args):
-    # Variación de Tanimoto
-    vec1=set(A.elements())
-    vec2=set(B.elements())
-    
-    d1d2 = [item for item in vec1 if item in vec2]
-  
-    num=float(len(d1d2))
-    den=(pow(len(vec1),2) + (pow(len(vec2),2) - len(d1d2)))
+def overlapw(A, B):
+    A_=set(A.keys())
+    B_=set(B.keys())
+    commons = A_.intersection(B_)
+    num=sum([min(A[x],B[x]) for x in commons])*1.0
+    den=min(sum([A[x] for x in A_]),sum([B[x] for x in B_]))
     if den==0:
         return 1.0
     else:
         return  1-num/den 
-   
-def sorensen(A, B ,**args):
-    vec1=set(A.elements())
-    vec2=set(B.elements())
- 
-    d1d2 =  len([ item  for item in vec1 if item in vec2 ])
-  
-    if len(vec1) + len(vec2) == 0:
+
+
+def ledesma(A, B,**args):
+    # Variación de Tanimoto
+    A_=set(A.keys())
+    B_=set(B.keys())
+    commons = A_.intersection(B_)
+    
+    num=float(len(commons))
+    den=(pow(len(A_),2) + (pow(len(B_),2) - len(commons)))
+    if den==0:
         return 1.0
-  
-    return 1-float(2.0*d1d2 / (len(vec1) + len(vec2) ) )
+    else:
+        return  1-num/den 
+
+def ledesmaw(A, B,**args):
+    # Variación de Tanimoto
+    A_=set(A.keys())
+    B_=set(B.keys())
+    commons = A_.intersection(B_)
+    
+    num=1.0*sum([A[x] + B[x] for x in commons])
+    den=(pow(sum(A.values()),2) + (pow(sum(B.values()),2) - num))
+    if den==0:
+        return 1.0
+    else:
+        return  1-num/den 
+
+
+def sorensen(A, B ,**args):
+    A_=set(A.keys())
+    B_=set(B.keys())
+    commons = A_.intersection(B_)
+    num=2.0*len(commons)
+    den=len(A_)+len(B_)
+    if den==0:
+        return 1.0
+    else:
+        return  1-num/den 
+
+def sorensenw(A, B):
+    A_=set(A.keys())
+    B_=set(B.keys())
+    commons = A_.intersection(B_)
+    full = A_.union(B_)
+    num=sum([A[x]+B[x] for x in commons])*1.0
+    den=sum([A[x]+B[x] for x in full])
+    if den==0:
+        return 1.0
+    else:
+        return  1-num/den 
+
 
 def dot(a,b):	
 	commons = set(a.keys()).intersection (set(b.keys()))
@@ -150,11 +182,21 @@ def cosine(a,b):
         return 1-num/den 
 
 def manhattan(A,B):
+    A_=set(A.keys())
+    B_=set(B.keys())
+    commons = A_.intersection(B_)
+    full = A_.union(B_) 
     commons = set(A.keys()).union(set(B.keys()))
-    return abs(sum([A[a] - B[a] for a in commons]))
+    num= abs(sum([A[a] - B[a] for a in commons]))
+    den=  abs(sum([A[a] - B[a] for a in full]))
+    if den==0:
+        return 1.0
+    else:
+        return 1-num/den 
+
 
 def euclidean(A,B):
-    commons = set(A.keys()).intersection(set(B.keys()))
+    commons = set(A.keys()).union(set(B.keys()))
     AA=sqrt(sum([(A[a])**2 for a in A.keys()]))
     BB=sqrt(sum([(B[a])**2 for a in B.keys()]))
     if AA*BB == 0.0:
@@ -166,14 +208,17 @@ def euclidean(A,B):
 distances=[
 #           ("Jacard",jacard),
 #           ("Masi",masi),
-           ("Weighted Jacard",jacardw),
-           ('Weighted h0',h0),
-           ("Weighted Masi",masiw),
 #           ("Ledesma",ledesma),
 #           ("Sorensen",sorensen),
-#           ("Euclidean", euclidean),
-#          ("Manhattan", manhattan),
-#          ("Overlap'", overlap_),
 #          ("Overlap", overlap),
-#          ("Cosine", cosine)
+# Recomendadas para generalidad
+#           ("Weighted Jacard",jacardw),
+           ("Weighted Sorensen",sorensenw),
+           ("Weighted Ledesma",ledesmaw),
+           ('Weighted h0',h0),
+           ("Weighted Massi",masiw),
+#           ("Euclidean", euclidean),
+#          ("Overlap", overlapw),
+#          ("Manhattan", manhattan),
+          ("Cosine", cosine)
            ]
