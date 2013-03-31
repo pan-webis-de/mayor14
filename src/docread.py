@@ -37,7 +37,8 @@ from collections import Counter
 spaces=re.compile('\W+',re.UNICODE)
 rcapital=re.compile(u'[\u0391-\u03A9][^ ]+|[A-Z][^ ]+',re.UNICODE)
 #rcapital=re.compile(r'[A-Z][^W]+',re.UNICODE)
-rpar = re.compile('\.\r?\n',re.UNICODE)
+#rpar = re.compile('\.\r?\n',re.UNICODE)
+rpar = re.compile('\'''',re.UNICODE)
 renter = re.compile('\r?\n',re.UNICODE)
 #wordpunct=re.compile('\w+\W+',re.UNICODE)
 wordpunct=re.compile('[^ ]+[\[\]().,;?¿]',re.UNICODE)
@@ -142,11 +143,11 @@ def par(doc,sw=[]):
     #pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
     pars = rpar.split(doc.lower())
     par = Counter()
-    par['0']=len(pars)
+    #par['0']=len(pars)/10
     for k, p in enumerate(pars):
         wds = spaces.split(p)
-        par[str(k+1)]=len(wds)/10
-        par[str(k-len(pars))]=len(wds)/10
+        par[str(k+1)]=len(wds)
+        #par[str(k-len(pars))]=len(wds)/10
     com=preprocess(par,ncutoff=0)
     return par,com,[x.encode('utf-8') for x in pars]
 
@@ -177,7 +178,7 @@ representations=[
     #('dot',dot),           #X
     ('bow',bow),
     #('capital',capital),   #X
-    #('par',par),
+    ('par',par),
     ('sqrbrackets',sqrbrackets),
     ('whitespc',whitespc),
     ]
