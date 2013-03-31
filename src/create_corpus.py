@@ -59,9 +59,11 @@ def extract_links(line,opts={}):
     # TODO: return year
     if len(bits[0])>0:
         url = bits[1].encode('utf-8')
+        verbose(url)
         html = urlopen(url).read()
         raw = "\n".join(filter(minimum,
                         [line.strip() for line in  nltk.clean_html(html).splitlines()]))
+
         return (bits[2].encode('utf-8'), # NAME
                 bits[0].encode('utf-8'), # LANG
                 raw                      # html
