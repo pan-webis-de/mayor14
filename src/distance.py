@@ -33,7 +33,7 @@ from math import sqrt
 from math import pow
 from numpy import array
 
-def jacard(A, B):
+def jacard(A, B,gbl=None):
     A_=set(A.keys())
     B_=set(B.keys())
     commons = A_.intersection(B_)
@@ -45,7 +45,7 @@ def jacard(A, B):
     else:
         return  1-num/den 
 
-def jacardw(A, B):
+def jacardw(A, B,gbl=None):
     A_=set(A.keys())
     B_=set(B.keys())
     commons = A_.intersection(B_)
@@ -58,7 +58,7 @@ def jacardw(A, B):
         return  1-num/den 
 
 
-def h0(A, B):
+def h0(A, B,gbl=None):
     # http://cmp.felk.cvut.cz/~chum/papers/chum_bmvc08.pdf
     commons = set(A.keys()).intersection(set(B.keys()))
     num=sum([min(A[x],B[x]) for x in commons])*1.0
@@ -69,7 +69,7 @@ def h0(A, B):
         return  1-num/den 
 
 
-def masi(A, B):
+def masi(A, B,gbl=None):
     # Equivalent to overlap_
     A_=set(A.keys())
     B_=set(B.keys())
@@ -81,7 +81,7 @@ def masi(A, B):
     else:
         return  1-num/den 
 
-def masiw(A, B):
+def masiw(A, B,gbl=None):
     # Equivalent to overlap_
     A_=set(A.keys())
     B_=set(B.keys())
@@ -95,7 +95,7 @@ def masiw(A, B):
 
 
 
-def overlap(A, B):
+def overlap(A, B,gbl=None):
     A = set(A.elements())
     B = set(B.elements())
     num = len(A.intersection(B)) * 1.0
@@ -105,7 +105,7 @@ def overlap(A, B):
     else:
         return  1 - (num/den)
 
-def overlapw(A, B):
+def overlapw(A, B,gbl=None):
     A_=set(A.keys())
     B_=set(B.keys())
     commons = A_.intersection(B_)
@@ -117,7 +117,7 @@ def overlapw(A, B):
         return  1-num/den 
 
 
-def ledesma(A, B,**args):
+def ledesma(A, B,gbl=None):
     # Variación de Tanimoto
     A_=set(A.keys())
     B_=set(B.keys())
@@ -130,7 +130,7 @@ def ledesma(A, B,**args):
     else:
         return  1-num/den 
 
-def ledesmaw(A, B,**args):
+def ledesmaw(A, B,gbl=None):
     # Variación de Tanimoto
     A_=set(A.keys())
     B_=set(B.keys())
@@ -144,7 +144,7 @@ def ledesmaw(A, B,**args):
         return  1-num/den 
 
 
-def sorensen(A, B ,**args):
+def sorensen(A, B,gbl=None):
     A_=set(A.keys())
     B_=set(B.keys())
     commons = A_.intersection(B_)
@@ -155,7 +155,7 @@ def sorensen(A, B ,**args):
     else:
         return  1-num/den 
 
-def sorensenw(A, B):
+def sorensenw(A, B,gbl=None):
     A_=set(A.keys())
     B_=set(B.keys())
     commons = A_.intersection(B_)
@@ -181,26 +181,25 @@ def cosine(a,b):
     else:
         return 1-num/den 
 
-def manhattan(A,B):
-    A_=set(A.keys())
-    B_=set(B.keys())
-    commons = A_.intersection(B_)
-    full = A_.union(B_) 
+
+def manhattan(A,B,gbl=None):
     commons = set(A.keys()).union(set(B.keys()))
-    num= abs(sum([A[a] - B[a] for a in commons]))
-    den=  abs(sum([A[a] - B[a] for a in full]))
-    if den==0:
+    AA=sum([A[a] for a in A.keys()])
+    BB=sum([B[a] for a in B.keys()])
+    print AA*BB
+    print sum([abs(A[a]-B[a]) for a in commons])
+    if AA*BB == 0.0:
         return 1.0
-    else:
-        return 1-num/den 
+    return 1-sum([abs(A[a]-B[a]) for a in commons])/(AA*BB)
 
 
-def euclidean(A,B):
+
+def euclidean(A,B,gbl=None):
     commons = set(A.keys()).union(set(B.keys()))
     AA=sqrt(sum([(A[a])**2 for a in A.keys()]))
     BB=sqrt(sum([(B[a])**2 for a in B.keys()]))
     if AA*BB == 0.0:
-        return 0.0
+        return 1.0
     return 1-sqrt(sum([(A[a]-B[a])**2 for a in commons]))/(AA*BB)
 
 
@@ -217,8 +216,8 @@ distances=[
            ("Weighted Ledesma",ledesmaw),
            ('Weighted h0',h0),
            ("Weighted Massi",masiw),
-#           ("Euclidean", euclidean),
-#          ("Overlap", overlapw),
-#          ("Manhattan", manhattan),
-          ("Cosine", cosine)
+           ("Euclidean", euclidean),
+           ("Overlap", overlapw),
+           #("Manhattan", manhattan),
+           ("Cosine", cosine)
            ]

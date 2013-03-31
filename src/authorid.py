@@ -33,8 +33,10 @@ import optparse
 import sys
 import os
 import os.path
+import math
 import itertools
 from collections import Counter
+from collections import defaultdict
 
 # Local imports
 import docread
@@ -80,9 +82,9 @@ if __name__ == "__main__":
     p.add_option("-q", "--query",default=None,
             action="store", dest="query",
             help="Query for a document")
-    p.add_option("-u", "--use",default="distances",
-            action="store", dest="modify",
-            help="distances|vectorspace abstrac representation to use")
+    p.add_option("", "--norm",default=False,
+            action="store_true", dest="norm",
+            help="Normalize vector space")
     p.add_option("", "--off",default=[],
             action="append", dest="off",
             help="distances or representations to turn off")
@@ -267,7 +269,18 @@ if __name__ == "__main__":
                     continue
                 docreps.append((rep,f(k[1],stopwords)))
             docs.append(docreps)
-            
+
+        # Extract globals counts of known 
+        docrepg={}
+        docwords=Counter()
+        for idoc,docreps in enumerate(docs):
+            for doc in docreps:
+                try:
+                    docrepg[doc[0]].update(doc[1][0])
+                except KeyError:
+                    docrepg[doc[0]]=Counter(doc[1][0])
+                docwords.update(doc[1][0].keys())
+                
         verbose('Loading files')
         samples_=[]
         classes_=[]
@@ -281,8 +294,30 @@ if __name__ == "__main__":
                 for n,f in distance.distances:
                     if n in opts.off:
                         continue
+                    if opts.norm:
+                        A=defaultdict(int)
+                        B=defaultdict(int)
+                        try:
+                            mw_= doc_[1][1][0][1]
+                        except IndexError:
+                            mw_=1
+                        try:
+                            mw = doc[1][1][0][1]
+                        except IndexError:
+                            mw=1
 
-                    d=f(doc_[1][0],doc[1][0])
+                        idf=math.log(len(docreps))*1.0
+                        idf_=math.log(1)*1.0
+                        # Normalization tf
+                        # tf logaritmith
+                        A.update([(k,(1.0+math.log(v)))
+                                for k,v in doc_[1][0].items()])
+                        B.update([(k,(1.0+math.log(v)))
+                                for k,v in doc[1][0].items()])
+                    else:
+                        A=doc_[1][0]
+                        B=doc[1][0]
+                    d=f(A,B)
                     verbose("{0} distance".format(n).ljust(30),
                             "{0:0.4f}".format(d))
                     feats.append(d)
