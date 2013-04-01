@@ -210,11 +210,11 @@ distances=[
 #           ("Sorensen",sorensen),
 #          ("Overlap", overlap),
 # Recomendadas para generalidad
-#            ("Weighted Jacard",jacardw),
+            ("Weighted Jacard",jacardw),
             ("Weighted Sorensen",sorensenw),
             ("Weighted Ledesma",ledesmaw),
             ('Weighted h0',h0),
-#            ("Weighted Massi",masiw),
+            ("Weighted Massi",masiw),
             ("Euclidean", euclidean),
 #           ("Overlap", overlapw),
            #("Manhattan", manhattan),

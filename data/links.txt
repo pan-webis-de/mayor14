@@ -158,6 +158,18 @@ SP;http://rox-puroscuentos.blogspot.mx/2011/02/cristina-rivera-garza.html;Rx;201
 SP;http://rox-puroscuentos.blogspot.mx/2010/08/mi-perro-spot.html;Rx;2010
 SP;http://rox-puroscuentos.blogspot.mx/2011/01/ricardo-garibay-y-sus-mujeres.html;Rx;2011
 ;;
-
+GR;http://tabooinos.blogspot.gr/2013/03/blog-post_31.html;Irini;2013
+GR;http://tabooinos.blogspot.gr/2013/03/blog-post_22.html;Irini;2013
+GR;http://tabooinos.blogspot.gr/2013/03/blog-post_9140.html:Irini;2013
+GR;http://tabooinos.blogspot.gr/2013/03/blog-post.html;Irini;2013
+GR;http://tabooinos.blogspot.gr/2013/02/nightstorming.html;Irini;2013
+;;
+GR;http://antikleidi.com/2013/03/31/logodosia/;K;2013
+GR;http://antikleidi.com/2013/03/30/wherefrance/;K;2013
+GR;http://hybridees.wordpress.com/2013/03/25/%ce%b3%ce%b5%ce%bd%ce%bd%ce%b1%ce%af%ce%b1-%ce%ae-%ce%bc%ce%bf%ce%b9%cf%81%ce%b1%ce%af%ce%b1-%cf%8c%cf%87%ce%b9-%ce%b7-%ce%bc%cf%85%ce%b8%ce%bf%cf%80%ce%bb%ce%b1%cf%83%ce%af%ce%b1/;I;2013
+;;
+GR;http://panaceada.blogspot.mx/2012/12/blog-post.html;pana;2013
+GR;http://panaceada.blogspot.mx/2013/03/blog-post.html;pana;2013
+;;
 
 
