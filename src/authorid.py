@@ -428,7 +428,7 @@ case {2}".format(id,len(docs),posneg(ANS)))
                     #print " ".join(["{0:.3f}".format(w) for w in ws.w.values()])
                     preds = ML.avptest(X_test,ws)
                 elif opts.method.startswith('ann'):
-                    ws    = ML.anntrain(X_train,Y_train,opts.iters)
+                    ws    = ML.anntrain(X_train,Y_train)#,opts.iters)
                     preds = ML.anntest(X_test,ws)
                 elif opts.method.startswith('lp'):
                     try:
