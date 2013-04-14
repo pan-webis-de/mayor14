@@ -44,6 +44,19 @@ def jacard(A, B,gbl=None):
     else:
         return  1-num/den 
 
+
+def jacard2(A, B,gbl=None):
+    A_=set(A.keys())
+    B_=set(B.keys())
+    commons = A_.intersection(B_)
+    full = A_.union(B_)
+    num=len(commons)
+    den=len(full)
+    if den==0:
+        return 0.88
+    else:
+        return  1-num/den 
+
 def jacardw(A, B,gbl=None):
     A_=set(A.keys())
     B_=set(B.keys())
@@ -58,14 +71,14 @@ def jacardw(A, B,gbl=None):
 
 
 def h0(A, B,gbl=None):
-    # http://cmp.felk.cvut.cz/~chum/papers/chum_bmvc08.pdf
+    # variacion http://cmp.felk.cvut.cz/~chum/papers/chum_bmvc08.pdf
     commons = set(A.keys()).intersection(set(B.keys()))
-    num=sum([min(A[x],B[x]) for x in commons])*1.0
-    den=sum([max(A[x],B[x]) for x in commons])*1.0
+    num=sum([min(A[x],B[x]) for x in commons])
+    den=sum([max(A[x],B[x]) for x in commons])
     if den==0:
-        return 1.0
+        return 0.66
     else:
-        return  1-num/den 
+        return num/den 
 
 
 def masi(A, B,gbl=None):
@@ -85,12 +98,12 @@ def masiw(A, B,gbl=None):
     A_=set(A.keys())
     B_=set(B.keys())
     commons = A_.intersection(B_)
-    num=sum([min(A[x],B[x]) for x in commons])*1.0
+    num=sum([min(A[x],B[x]) for x in commons])*1
     den=max(sum([A[x] for x in A_]),sum([B[x] for x in B_]))
     if den==0:
-        return 1.0
+        return 0.8
     else:
-        return  1-num/den 
+        return num/den 
 
 
 
@@ -198,13 +211,22 @@ def euclidean(A,B,gbl=None):
     AA=sqrt(sum([(A[a])**2 for a in A.keys()]))
     BB=sqrt(sum([(B[a])**2 for a in B.keys()]))
     if AA*BB == 0.0:
-        return 1.0
+        return 0.88
     return 1-sqrt(sum([(A[a]-B[a])**2 for a in commons]))/(AA*BB)
 
+
+def ochiai(A,B,gbl=None):
+    commons = (set(A.keys()).intersection(set(B.keys())))
+    AA = len(A)
+    BB = len(B)
+    if (sqrt(AA*BB)) == 0.0:
+        return 0.8
+    return (len(commons))/ (sqrt(AA*BB))
 
 
 distances=[
 #           ("Jacard",jacard),
+            ("jacard2",jacard2),
 #           ("Masi",masi),
 #           ("Ledesma",ledesma),
 #           ("Sorensen",sorensen),
@@ -215,8 +237,9 @@ distances=[
             ("Weighted Ledesma",ledesmaw),
             ('Weighted h0',h0),
             ("Weighted Massi",masiw),
-            ("Euclidean", euclidean),
-#           ("Overlap", overlapw),
+            ("Euclidean", euclidean),     
+            #("Overlap", overlapw),
            #("Manhattan", manhattan),
-            ("Cosine", cosine)
+            ("Cosine", cosine),
+            #("ochiai",ochiai),
            ]
