@@ -272,15 +272,28 @@ if __name__ == "__main__":
 
         # Extract globals counts of known 
         docrepg={}
+        insrepg={} # saves for unknowns the instances of counts per key
         docwords=Counter()
         for idoc,docreps in enumerate(docs):
             for doc in docreps:
+                # Counts per document 
                 try:
                     docrepg[doc[0]].update(doc[1][0])
                 except KeyError:
                     docrepg[doc[0]]=Counter(doc[1][0])
+                # Instances per document
+                try:
+                    insrepg[doc[0]]
+                except KeyError:
+                    insrepg[doc[0]]={}
+                for k,v in doc[1][0].iteritems():
+                    try:
+                        insrepg[doc[0]][k].append(v)
+                    except:
+                        insrepg[doc[0]][k]=[v]
+                            
                 docwords.update(doc[1][0].keys())
-                
+
         verbose('Loading files')
         samples_=[]
         classes_=[]
@@ -294,6 +307,7 @@ if __name__ == "__main__":
                 for n,f in distance.distances:
                     if n in opts.off:
                         continue
+                    # Normalizing
                     if opts.norm:
                         A=defaultdict(int)
                         B=defaultdict(int)
@@ -317,7 +331,7 @@ if __name__ == "__main__":
                     else:
                         A=doc_[1][0]
                         B=doc[1][0]
-                    d=f(A,B)
+                    d=f(A,B,gbl={'instances':insrepg[doc[0]]})
                     verbose("{0} distance".format(n).ljust(30),
                             "{0:0.4f}".format(d))
                     feats.append(d)

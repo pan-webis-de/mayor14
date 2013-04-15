@@ -31,6 +31,7 @@
 #import nltk
 from math import sqrt
 from math import pow
+import numpy as np
 
 def jacard(A, B,gbl=None):
     A_=set(A.keys())
@@ -171,7 +172,7 @@ def dot(a,b):
 	commons = set(a.keys()).intersection (set(b.keys()))
 	return sum([a[k] * b[k] for k in commons])
 
-def cosine(a,b):
+def cosine(a,b,gbl=None):
     num=dot(a, b)
     den=sqrt(dot(a,a)) * sqrt(dot(b,b))
 
@@ -191,6 +192,24 @@ def manhattan(A,B,gbl=None):
         return 1.0
     return 1-sum([abs(A[a]-B[a]) for a in commons])/(AA*BB)
 
+def mahalanobis(A,B,gbl=None):
+    if not gbl:
+        return 1.0
+    if not gbl.has_key('instances'):
+        return 1.0
+
+    commons = list(set(A.keys()).union(set(B.keys())))
+    AB=np.array([[ A.get(x,0)  for  x in commons],[ B.get(x,0)  
+                    for  x in commons]])
+    if AB.shape[1]==0:
+        return 1.0
+    cov=np.cov(AB.T)
+    dis=np.sqrt(np.dot(np.dot(AB[0]-AB[1],cov),(AB[0]-AB[1]).T))
+    AA=np.sqrt(np.dot(np.dot(AB[0],cov),(AB[0]).T))
+    BB=np.sqrt(np.dot(np.dot(AB[1],cov),(AB[1]).T))
+    if AA*BB == 0.0:
+        return 1.0
+    return dis/(AA*BB)
 
 
 def euclidean(A,B,gbl=None):
@@ -216,7 +235,8 @@ distances=[
             ('Weighted h0',h0),
             ("Weighted Massi",masiw),
             ("Euclidean", euclidean),
-#           ("Overlap", overlapw),
+            ("Mahalanobis", mahalanobis),
+            ("Overlap", overlapw),
            #("Manhattan", manhattan),
             ("Cosine", cosine)
            ]
