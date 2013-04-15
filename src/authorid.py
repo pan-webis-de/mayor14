@@ -96,7 +96,7 @@ if __name__ == "__main__":
             help="Model to save training or to test with [None]")
     p.add_option("", "--method",default="lp",
             action="store", dest="method",
-            help="lp|avp|svm|ann [avp]")
+            help="lp|avp|svm|ann [lp]")
     p.add_option("", "--known_pattern",default=r'known.*\.txt',
             action="store", dest="known",
             help="pattern for known files [known*.txt]")

@@ -42,10 +42,13 @@ import Weights as W
 
 # Neuronal Networks
 from pybrain.datasets            import ClassificationDataSet
+from pybrain.datasets.supervised import SupervisedDataSet
 #from pybrain.utilities           import percentError
 from pybrain.tools.shortcuts     import buildNetwork
+from pybrain.structure.networks  import FeedForwardNetwork
 from pybrain.supervised.trainers import BackpropTrainer
-from pybrain.structure.modules   import SoftmaxLayer,TanhLayer
+from pybrain.structure.connections import FullConnection
+from pybrain.structure.modules   import SoftmaxLayer,TanhLayer,LinearLayer,SigmoidLayer
 
 
 def choice(x):
