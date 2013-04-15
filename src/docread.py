@@ -41,11 +41,12 @@ rpar2 = re.compile(u'[.:].?\r?\n[A-Z]|[.:].?\r?\n[\u0391-\u03A9]',re.UNICODE)
 rterm=re.compile('[.,]',re.UNICODE)
 rpar = re.compile('\'''',re.UNICODE)
 renter = re.compile('\r?\n',re.UNICODE)
+renterer =re.compile('\n',re.UNICODE)
 #wordpunct=re.compile('\w+\W+',re.UNICODE)
 wordpunct=re.compile('[^ ]+[\[\]():"\'.,;?¿]',re.UNICODE)
 rcoma=re.compile(r'\w+,',re.UNICODE)
 rdot=re.compile(r'\w+\.',re.UNICODE)
-rspc=re.compile(r'\w+\d+[/]',re.UNICODE)
+rspc=re.compile(r'[/]',re.UNICODE)
 rwspc=re.compile(r'\s',re.UNICODE)
 rnumbers=re.compile(r'\d+',re.UNICODE)
 
@@ -121,13 +122,19 @@ def whitespc(doc,sw=[]):
     com=preprocess(doc,ncutoff=0,ncommons=0)
     return doc,com,[x.encode('utf-8') for x in wds]
 
+def enter(doc,sw=[]):
+    wds = renterer.findall(doc)
+    doc=Counter([x.encode('utf-8') for x in wds])
+    com=preprocess(doc,ncutoff=0,ncommons=0)
+    return doc,com,[x.encode('utf-8') for x in wds]    
+
 def bigram(doc,sw=[]):
     wds = spaces.split(renter.sub(' ',doc.lower()))
     bigram = zip(wds, wds[1:])
     values=["{0} {1}".format(x.encode('utf-8'),
                                     y.encode('utf-8')) for x, y in bigram]
     doc = Counter(values)
-    com=preprocess(doc,ncutoff=0,ncommons=0)
+    com=preprocess(doc,ncutoff=0,ncommons=1)
     return doc,com,values
 
 def trigram(doc,sw=[]):
@@ -148,20 +155,19 @@ def wordpar(doc,sw=[]):
     #par['0']=len(pars)/10
     for k, p in enumerate(pars):
         wds = spaces.split(p)
-        par[str(k+1)]=len(wds)
-        #par[str(k-len(pars))]=len(wds)/10
+        #par[str(k+1)]=len(wds)
+        par[str(k-len(pars))]=len(wds)
     com=preprocess(par,ncutoff=0,ncommons=0)
     return par,com,[x.encode('utf-8') for x in pars]
 
 
 def sntcpar(doc,sw=[]):
     #pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
-    pars = rpar.split(doc)
+    pars =rpar.split(doc)
     par = Counter()
     #par['0']=len(pars)/10
     for k, p in enumerate(pars):
-        par[str(k+1)]=1
-        #par[str(k-len(pars))]=len(wds)/10
+      par[str(k+1)]=1
     com=preprocess(par,ncutoff=0,ncommons=0)
     return par,com,[x.encode('utf-8') for x in pars]
 
@@ -176,23 +182,24 @@ def preprocess(doc,ncommons=0,ncutoff=0,sw=[]):
         del doc[c]
     for c in sw:
         del doc[c]
-    commons=doc.most_common(10)
+    commons=doc.most_common(5)
     return commons
 
 representations=[
     #('letters',letters),   #X
     ('bigram',bigram),
-    #('trigram',trigram),   #X
-    #('punctuation',punct), #X
+    ('trigram',trigram), 
+    ('punctuation',punct), 
     ('numbers',numbers),
     ('coma',coma),
-    ('dot',dot),           #X
+    ('dot',dot),           
     ('bow',bow),
-    #('capital',capital),   #X
+    ('capital',capital),   
     ('wordpar',wordpar),
     ('sntcpar',sntcpar),
-    #('sqrbrackets',sqrbrackets),
-    ('whitespc',whitespc),
+    ('sqrbrackets',sqrbrackets),
+    #('whitespc',whitespc),    #X
+    #('enter',enter),          #X
     ]
 
 
