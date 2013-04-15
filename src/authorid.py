@@ -82,9 +82,9 @@ if __name__ == "__main__":
     p.add_option("-q", "--query",default=None,
             action="store", dest="query",
             help="Query for a document")
-    p.add_option("", "--norm",default=False,
+    p.add_option("", "--norm",default=True,
             action="store_true", dest="norm",
-            help="Normalize vector space")
+            help="Normalize vector space [True]")
     p.add_option("", "--off",default=[],
             action="append", dest="off",
             help="distances or representations to turn off")
