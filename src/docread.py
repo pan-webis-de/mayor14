@@ -182,7 +182,7 @@ def preprocess(doc,ncommons=0,ncutoff=0,sw=[]):
         del doc[c]
     for c in sw:
         del doc[c]
-    commons=doc.most_common(5)
+    commons=doc.most_common(10)
     return commons
 
 representations=[

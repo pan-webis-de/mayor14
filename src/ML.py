@@ -41,10 +41,10 @@ from cvxopt import matrix, solvers
 import Weights as W
 
 # Neuronal Networks
-from pybrain.datasets            import ClassificationDataSet
+#from pybrain.datasets            import ClassificationDataSet
 from pybrain.datasets.supervised import SupervisedDataSet
 #from pybrain.utilities           import percentError
-from pybrain.tools.shortcuts     import buildNetwork
+#from pybrain.tools.shortcuts     import buildNetwork
 from pybrain.structure.networks  import FeedForwardNetwork
 from pybrain.supervised.trainers import BackpropTrainer
 from pybrain.structure.connections import FullConnection
@@ -64,21 +64,21 @@ def lptrain(xdata,ydata):
         for iy in range(len(xdata[0])):
             # Adding constrains for alpha < 0.5 
             if ydata[ix]==0:
-                A[iy].append(xdata[ix][iy])
-                A[iy].append(-xdata[ix][iy])
+                A[iy].append(xdata[ix][iy]) # <0.5
+                A[iy].append(-xdata[ix][iy])# >0.0
             else:
             # Adding constrains for alpha > 0.5 
-                A[iy].append(-xdata[ix][iy])
-                A[iy].append(xdata[ix][iy])
+                A[iy].append(-xdata[ix][iy])# >0.5
+                A[iy].append(xdata[ix][iy]) # <1.0
     # Adding constrains for 0.0 < alpha < 1.0 
     for iy in range(len(xdata[0])):
         for iy_ in range(len(xdata[0])):
             if iy==iy_:
-                A[iy].append(-1.0)
-                A[iy].append(1.0)
+                A[iy].append(-1.0) # >0.0
+                A[iy].append(1.0) # <1.0
             else:
-                A[iy].append(0.0)
-                A[iy].append(0.0)
+                A[iy].append(0.0) # > 0.0
+                A[iy].append(0.0) # < 0.0
     A=matrix(A)
     B=[]
     # Adding constrains
