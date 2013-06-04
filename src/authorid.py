@@ -189,9 +189,14 @@ if __name__ == "__main__":
 
     # If asked to print information 
     if opts.query:
+        total={}
+        total_={}
+        ttotal=0
+
         verbose('Query information')
         for id,(ks,uks) in problems:
             for k in ks:
+                ttotal+=1
                 if opts.query in k[0]:
                     verbose("--- {0} ---".format(k[0]))
                     verbose("--- original ---")
@@ -204,8 +209,21 @@ if __name__ == "__main__":
                         verbose("--- {0} partition ---".format(n))
                         print >> out, "\n:: ".join(pars)
                         verbose("--- {0} ---".format(n))
+
+
+                        for key,v in rep.items():
+                            if not total.has_key(n):
+                                total[n]=0
+                                total_[n]={}
+                            total[n]+=v
+                            try:
+                                total_[n][key]+=v
+                            except KeyError:
+                                total_[n][key]=v
+
                         for key,v in rep.most_common():
                             verbose('{0} {1}'.format(key.ljust(45),v))
+                
 
          
             for u in uks:
@@ -223,6 +241,10 @@ if __name__ == "__main__":
                         verbose("--- {0} ---".format(n))
                         for key,v in rep.most_common():
                             verbose('{0} {1}'.format(key.ljust(45),v))
+
+            for l,c in total.iteritems():
+                print "{0} {1} {2}".format(l,len(total_[l]),c)
+            print "Total documents",ttotal 
 
 
         sys.exit(0)
