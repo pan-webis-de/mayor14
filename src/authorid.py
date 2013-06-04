@@ -181,8 +181,6 @@ if __name__ == "__main__":
     else:
         info('Stopwords file not found assuming, emtpy',opts.stopwords)
 
-
-
     # load problems or problem
     problems=docread.problems(
         docread.dirproblems(dirname,opts.known,opts.unknown,_ignore))
@@ -192,12 +190,13 @@ if __name__ == "__main__":
         total={}
         total_={}
         ttotal=0
+        tproblems=0
 
         verbose('Query information')
         for id,(ks,uks) in problems:
             for k in ks:
-                ttotal+=1
                 if opts.query in k[0]:
+                    ttotal+=1
                     verbose("--- {0} ---".format(k[0]))
                     verbose("--- original ---")
                     docread.prettyprint(k[0])
@@ -228,6 +227,7 @@ if __name__ == "__main__":
          
             for u in uks:
                 if opts.query in u[0]:
+                    tproblems+=1
                     verbose("--- {0} ---".format(u[0]))
                     verbose("--- original ---")
                     docread.prettyprint(u[0])
@@ -244,7 +244,8 @@ if __name__ == "__main__":
 
             for l,c in total.iteritems():
                 print "{0} {1} {2}".format(l,len(total_[l]),c)
-            print "Total documents",ttotal 
+            print "Total known documents",ttotal 
+            print "Total problems",tproblems
 
 
         sys.exit(0)

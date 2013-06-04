@@ -85,7 +85,7 @@ def punct(doc,sw=[]):
 def bow(doc,sw=[]):
     wds = spaces.split(renter.sub(' ',doc.lower()))
     doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc,ncommons=0,ncutoff=5)
+    com=preprocess(doc,ncommons=0,ncutoff=0,sw=sw)
     return doc,com,[x.encode('utf-8') for x in wds]
 
 def letters(doc,sw=[]):
