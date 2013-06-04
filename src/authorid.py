@@ -482,6 +482,7 @@ case {2}".format(id,len(docs),posneg(ANS)))
                 verbose(pref,"Prediction  ",res)
                 verbose(pref,"GS          ",answers[problems[i][0]])
 
+                info(">>>>",problems[i][0]," {0} ".format(res))
 
             info('Accuracy over all decisions : {0:3.3f}%'.format(100.0*N_Acc_/Total_))
             info('Accuracy over problems : {0:3.3f}%'.format(100.0*N_Acc/Total))
