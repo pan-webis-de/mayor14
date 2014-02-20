@@ -123,10 +123,15 @@ if __name__ == "__main__":
                 tpd[g[:2]]=1
         else:
             fp+=1
+	    fn+=1
             try:
                 fpd[g[:2]]+=1
             except KeyError:
                 fpd[g[:2]]=1
+	    try:
+                fnd[g[:2]]+=1
+            except KeyError:
+                fnd[g[:2]]=1
     info('True positives: ',str(tp))
     info('False positives: ',str(fp))
     info('False negatives: ',str(fn))

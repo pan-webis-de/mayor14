@@ -358,8 +358,10 @@ if __name__ == "__main__":
                     verbose("{0} distance".format(n).ljust(30),
                             "{0:0.4f}".format(d))
                     feats.append(d)
+		    #print d
+		   
                 commons.update(doc[1][1])
-            _tmp=[feats]
+            _tmp=[feats]	  
             # Figures out the language by common words
 #            _tmp=[feats,0,0,0]
 #            if commons['the']>=1:
@@ -374,8 +376,9 @@ if __name__ == "__main__":
 #                _tmp[1]=[0.0 for x in feats]
 #                _tmp[2]=[0.0 for x in feats]
 #                _tmp[3]=feats
-#
-            feats=list(itertools.chain(*_tmp))
+#	    
+#            print _tmp
+	    feats=list(itertools.chain(*_tmp))         
             samples_.append(feats)
             # Creating answers only if TRAINING or DEVELPMENT
             if opts.mode.startswith("train") or opts.mode.startswith("devel"):
