@@ -42,14 +42,16 @@ import Weights as W
 
 # Neuronal Networks
 #from pybrain.datasets            import ClassificationDataSet
-from pybrain.datasets.supervised import SupervisedDataSet
 #from pybrain.utilities           import percentError
 #from pybrain.tools.shortcuts     import buildNetwork
-from pybrain.structure.networks  import FeedForwardNetwork
-from pybrain.supervised.trainers import BackpropTrainer
-from pybrain.structure.connections import FullConnection
-from pybrain.structure.modules   import SoftmaxLayer,TanhLayer,LinearLayer,SigmoidLayer
-
+try:
+    from pybrain.datasets.supervised import SupervisedDataSet
+    from pybrain.structure.networks  import FeedForwardNetwork
+    from pybrain.supervised.trainers import BackpropTrainer
+    from pybrain.structure.connections import FullConnection
+    from pybrain.structure.modules   import SoftmaxLayer,TanhLayer,LinearLayer,SigmoidLayer
+except ImportError:
+    pass
 
 def choice(x):
     if x<=0.5:
