@@ -59,6 +59,43 @@ def posneg(val):
     else:
         return "N"
 
+
+
+def train(method, X_train,Y_train):
+    model=None
+    if method.startswith('svm'):
+        model   = ML.svmtrain(X_train,Y_train)
+    elif method.startswith('avp'):
+        model   = ML.avptrain(X_train,Y_train,opts.iters)
+    elif method.startswith('ann'):
+        model   = ML.anntrain(X_train,Y_train)#,opts.iters)
+    elif method.startswith('lp'):
+        try:
+            model    = ML.lptrain(X_train,Y_train)
+        except TypeError:
+            model = None
+    return model
+
+def predict(method,model, X_test, Y_test):
+    # predict
+    if method.startswith('svm'):
+        preds = ML.svmtest(model,X_test,Y_test)
+    elif method.startswith('avp'):
+        preds = ML.avptest(model,model)
+    elif method.startswith('ann'):
+        preds = ML.anntest(X_test,model)
+    elif method.startswith('lp'):
+        preds = ML.lptest(X_test,model)
+    else:
+        preds = ML.lptest(X_test,[(1.0/15) 
+                    for x in X_test[0]])
+
+
+    res=ML.voted(preds)
+    return preds
+
+
+
 # MAIN program
 if __name__ == "__main__":
 
@@ -276,26 +313,8 @@ if __name__ == "__main__":
                 X_test  = samples[i]
 
                 # Train and test
-                if opts.method.startswith('svm'):
-                    svc   = ML.svmtrain(X_train,Y_train)
-                    preds = ML.svmtest(svc,X_test,Y_test)
-                elif opts.method.startswith('avp'):
-                    ws    = ML.avptrain(X_train,Y_train,opts.iters)
-                    preds = ML.avptest(X_test,ws)
-                elif opts.method.startswith('ann'):
-                    ws    = ML.anntrain(X_train,Y_train)#,opts.iters)
-                    preds = ML.anntest(X_test,ws)
-                elif opts.method.startswith('lp'):
-                    try:
-                        ws    = ML.lptrain(X_train,Y_train)
-                        verbose(" ".join(["{0:.3f}".format(w) 
-                                                        for w in ws]))
-                        preds = ML.lptest(X_test,ws)
-                    except TypeError:
-                        print "ERROR NO MODEL"
-                        preds = ML.lptest(X_test,[(1.0/15) 
-                                                    for x in X_test[0]])
-                # Given de predictions votes for: author or not author
+                model=train(opts.method,X_train,Y_train)
+                preds=predict(opts.method,model,X_test,Y_test)
                 res=ML.voted(preds)
 
                 # Calculate metrics
@@ -345,27 +364,11 @@ if __name__ == "__main__":
             Y_train = classes
             Y_train = list(itertools.chain(*Y_train))
 
-            verbose("Trainning model")
-            if opts.method.startswith('svm'):
-                verbose("Creating a SVM")
-                svc   = ML.svmtrain(X_train,Y_train)
-                s     = pickle.dumps(svc)
-            elif opts.method.startswith('avp'):
-                verbose("Creating an Average Percetron model")
-                ws    = ML.avptrain(X_train,Y_train,opts.iters)
-                s     = pickle.dumps(ws)
-            elif opts.method.startswith('ann'):
-                verbose("Calculating an artificial neural network")
-                ws = ML.anntrain(X_train,Y_train)
-                s = pickle.dumps(ws)
-            elif opts.method.startswith('lp'):
-                verbose("Calculating a linear program")
-                ws    = ML.lptrain(X_train,Y_train)
-                s     = pickle.dumps(ws)
-
+            model =train(opts.method,X_train,Y_train)
+            stream_model = pickle.dumps(model)
             verbose("Saving model into ",opts.model)
-            with open(opts.model,"w") as model:
-                model.write(s)
+            with open(opts.model,"w") as modelf:
+                modelf.write(stream_model)
     # TEST model
     elif opts.mode.startswith("test"):
         # Load model
@@ -376,29 +379,12 @@ if __name__ == "__main__":
         for i in range(len(samples)):
             X_test  = samples[i]
 
-            if opts.method.startswith('svm'):
-                svc   = pickle.loads(s)
-                preds = ML.svmtest(svc,X_test)
-            elif opts.method.startswith('avp'):
-                ws    = pickle.loads(s)
-                preds = ML.avptest(X_test,ws)
-            elif opts.method.startswith('lp'):
-                ws    =  pickle.loads(s)
-                preds = ML.lptest(X_test,ws)
-
-                for x in X_test:
-                    verbose((" ".join([str(x_*w) for x_,w in zip(x,ws)])))
-
-            elif opts.method.startswith('ann'):
-                ws    =  pickle.loads(s)
-                preds = ML.anntest(X_test,ws)
-            
+            model = pickle.loads(s)
+            preds = predict(opts.method,model,X_test,[])
             res=ML.voted(preds)
             info(problems[i][0]," {0} ".format(res))
             verbose("Predictions "," ".join(["{0}/{1:0.6}".format(posneg(x),y)
                                                 for x,y in preds]))
-
-
 
     else:
         info("Error with mode",opts.mode)
