@@ -113,7 +113,6 @@ if __name__ == "__main__":
     # Check the correct mode
     if not opts.mode in ["train","test","devel"]:
         p.error('Mode argument not valid: devel, train  test')
-    verbose("Running in mode:",opts.mode)
 
     # Parameters
     # Patterns for files
@@ -130,6 +129,7 @@ if __name__ == "__main__":
         except:
             p.error('Output parameter could not been open: {0}'\
                     .format(opts.output))
+    verbose("Running in mode:",opts.mode)
 
     # Loading configuration files ----------------------------------------
     # - .ignore   : files to ignore some files
