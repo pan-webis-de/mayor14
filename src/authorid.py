@@ -361,23 +361,23 @@ if __name__ == "__main__":
 		    #print d
 		   
                 commons.update(doc[1][1])
-            _tmp=[feats]	  
+            #_tmp=[feats]	  
             # Figures out the language by common words
-#            _tmp=[feats,0,0,0]
-#            if commons['the']>=1:
-#                _tmp[1]=feats
-#                _tmp[2]=[0.0 for x in feats]
-#                _tmp[3]=[0.0 for x in feats]
-#            elif commons['el']>=1:
-#                _tmp[1]=[0.0 for x in feats]
-#                _tmp[2]=feats
-#                _tmp[3]=[0.0 for x in feats]
-#            else:
-#                _tmp[1]=[0.0 for x in feats]
-#                _tmp[2]=[0.0 for x in feats]
-#                _tmp[3]=feats
-#	    
-#            print _tmp
+            _tmp=[0,0,0]
+            if commons['the']>=1:
+                _tmp[0]=feats
+                _tmp[1]=[0.0 for x in feats]
+                _tmp[2]=[0.0 for x in feats]
+            elif commons['el']>=1:
+                _tmp[0]=[0.0 for x in feats]
+                _tmp[1]=feats
+                _tmp[2]=[0.0 for x in feats]
+            else:
+                _tmp[0]=[0.0 for x in feats]
+                _tmp[1]=[0.0 for x in feats]
+                _tmp[2]=feats
+	    
+
 	    feats=list(itertools.chain(*_tmp))         
             samples_.append(feats)
             # Creating answers only if TRAINING or DEVELPMENT
