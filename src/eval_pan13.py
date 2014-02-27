@@ -94,6 +94,10 @@ if __name__ == "__main__":
     gs = docread.loadanswers(args[0])
     sys = docread.loadanswers(args[1])
 
+    probas = docread.loadproba(args[1])
+    
+   
+      
     tp=0
     fp=0
     fn=0
@@ -102,6 +106,11 @@ if __name__ == "__main__":
     fnd={}
     recall={}
 
+   
+
+       
+    
+   
     for g,l in gs.iteritems():
         #TP
         try:
@@ -132,6 +141,31 @@ if __name__ == "__main__":
                 fnd[g[:2]]+=1
             except KeyError:
                 fnd[g[:2]]=1
+    
+
+
+    total=0
+    sin_contestar=0
+    for pb in probas:
+      if int(pb) == '0.5':
+         sin_contestar=sin_contestar+1
+      total=total+1
+			
+    indice=0
+    totales={}
+    for ln in tpd:
+       totales[indice]=tpd[ln]+fpd[ln]+fnd[ln]
+       indice=indice+1
+    
+    aux=0   
+    lenguas_sin={}
+    for jn in totales:
+      lenguas_sin[jn]=0;
+      for kn in range(aux,jn):
+	if probas[kn]=='0.5':
+          lenguas_sin[kn]=lenguas_sin[kn]+1
+      aux=jn+1
+	
     info('True positives: ',str(tp))
     info('False positives: ',str(fp))
     info('False negatives: ',str(fn))
@@ -146,8 +180,12 @@ if __name__ == "__main__":
         recall=100.0*tp/(tp+fn)
     else:
         recall=0.0
+  
+   
+    c=100.0*(1/float(total))*(tp+(sin_contestar*tp/float(total)))
     info('Precision : {0:3.3f}%'.format(pres))
     info('Recall    : {0:3.3f}%'.format(recall))
+    info('c@1       : {0:3.3f}%'.format(c))
     if pres> 0.0 and recall > 0.0:
         info('F1-score  : {0:3.3f}%'.format(2*pres*recall/(pres+recall)))
     else:
@@ -159,6 +197,7 @@ if __name__ == "__main__":
     langs.update(tpd.keys())
     langs.update(fpd.keys())
     langs.update(fnd.keys())
+    indice=0
     for lang in langs:
         info('-----',lang)
         try:
@@ -181,9 +220,13 @@ if __name__ == "__main__":
             recall=100.0*tp/(tp+fn)
         else:
             recall=0.0
-        info('Precision : {0:3.3f}%'.format(pres))
+        
+	c=100.0*(1/float(totales[indice]))*(tp+(lenguas_sin[indice]*tp/float(totales[indice])))
+	info('Precision : {0:3.3f}%'.format(pres))
         info('Recall    : {0:3.3f}%'.format(recall))
-        if pres> 0.0 and recall > 0.0:
+        info('c@1       : {0:3.3f}%'.format(c))
+        indice=indice+1
+	if pres> 0.0 and recall > 0.0:
             info('F1-score  : {0:3.3f}%'.format(2*pres*recall/(pres+recall)))
         else:
             info('F1-score  : {0:3.3f}%'.format(0.0))

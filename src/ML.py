@@ -210,3 +210,18 @@ def voted(preds):
         return "Y"
     else:
         return "N"
+
+def proba(preds):
+    cs={0.0:0.0, 1.0:0.0}
+    cs_={0.0:0, 1.0:0}
+    
+    for pred,val in preds:
+        if pred==0.0:
+            cs[pred]+=(0.5-val)
+        else:
+            cs[pred]+=(val-0.5)
+        cs_[pred]+=1
+
+    return float(cs_[0.0])/float(cs_[0.0]+cs_[1.0])    
+
+

@@ -273,3 +273,18 @@ def loadanswers(filename,ignore=[]):
             if not m.group(1) in ignore:
                 answers[m.group(1)]=m.group(2)
     return answers
+
+def loadproba(filename,ignore=[]):
+    """Loads probabilities file"""
+    #r_answer=re.compile(r"[^\w]*(\w*) (Y|N)$")
+    answers={}
+    i=0
+    for line in open(filename):
+        line=line.strip()
+        if len(line)==0 or not line.startswith("proba"):
+            continue
+       
+        r_answer=line.split(' ')
+	answers[i]=r_answer[1]
+        i=i+1
+    return answers

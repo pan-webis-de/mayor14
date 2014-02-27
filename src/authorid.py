@@ -91,7 +91,7 @@ def predict(method,model, X_test, Y_test):
                     for x in X_test[0]])
 
 
-    res=ML.voted(preds)
+   
     return preds
 
 
@@ -244,6 +244,7 @@ if __name__ == "__main__":
         for idoc,docreps in enumerate(docs):
             verbose('Comparing with: {0}'.format(ks[idoc][0]))
             feats=[]
+	    commons=Counter()
             for doc,doc_ in zip(docreps,docreps_): 
                 verbose("-- {0} --".format(doc_[0]))
                 for n,f in distance.distances:
@@ -305,7 +306,8 @@ if __name__ == "__main__":
             Total_=0.0
             N_Acc_=0
             # leave-one-out crossvalidation
-            for i in range(len(samples)):
+            sin_contestar=0
+	    for i in range(len(samples)):
 
                 # Creates train corpus for cross validation
                 info('Model for ',str(i))
@@ -321,6 +323,7 @@ if __name__ == "__main__":
                 model=train(opts.method,X_train,Y_train)
                 preds=predict(opts.method,model,X_test,Y_test)
                 res=ML.voted(preds)
+                prob= ML.proba(preds)
 
                 # Calculate metrics
                 if res==answers[problems[i][0]]:
@@ -348,16 +351,22 @@ if __name__ == "__main__":
                 verbose(pref,"GSs         "," ".join([posneg(x) for x in Y_test]))
                 verbose(pref,"Prediction  ",res)
                 verbose(pref,"GS          ",answers[problems[i][0]])
-
+                verbose(pref,"probability  ",str(prob))
                 info(">>>>",problems[i][0]," {0} ".format(res))
+		
+		if prob =="0.5":
+		  sin_contestar=sin_contestar+1
 
-            # Print metric for the whole samples
-            info('Accuracy over all decisions : {0:3.3f}%'.format(100.0*N_Acc_/Total_))
+	    # Print metric for the whole samples
+
+	    c=100.0*(1/float(Total))*(tp+(sin_contestar*tp/float(Total)))
+	    info('Accuracy over all decisions : {0:3.3f}%'.format(100.0*N_Acc_/Total_))
             info('Accuracy over problems : {0:3.3f}%'.format(100.0*N_Acc/Total))
             pres=100.0*tp/(tp+fp)
             recall=100.0*tp/(tp+fn)
             info('Precision : {0:3.3f}%'.format(pres))
-            info('Recall    : {0:3.3f}%'.format(recall))
+            info('c@1       : {0:3.3f}%'.format(c))
+	    info('Recall    : {0:3.3f}%'.format(recall))
             info('F1-score  : {0:3.3f}%'.format(2*pres*recall/(pres+recall)))
         # Trains and saves the model
         elif opts.mode.startswith("train"):
@@ -376,6 +385,7 @@ if __name__ == "__main__":
                 modelf.write(stream_model)
     # TEST model
     elif opts.mode.startswith("test"):
+      
         # Load model
         import pickle
         with open(opts.model,"r") as model:
@@ -387,10 +397,14 @@ if __name__ == "__main__":
             model = pickle.loads(s)
             preds = predict(opts.method,model,X_test,[])
             res=ML.voted(preds)
+            prob= ML.proba(preds)
+ 	    #info('Model for ',str(i))
+            
             info(problems[i][0]," {0} ".format(res))
+	    info("probability ",str(prob))
             verbose("Predictions "," ".join(["{0}/{1:0.6}".format(posneg(x),y)
                                                 for x,y in preds]))
-
+       
     else:
         info("Error with mode",opts.mode)
 
