@@ -94,10 +94,7 @@ if __name__ == "__main__":
     gs = docread.loadanswers(args[0])
     sys = docread.loadanswers(args[1])
 
-    probas = docread.loadproba(args[1])
-    
-   
-      
+    #probas = docread.loadproba(args[1])
     tp=0
     fp=0
     fn=0
@@ -106,16 +103,9 @@ if __name__ == "__main__":
     fnd={}
     recall={}
 
-   
-
-       
-    
-   
     for g,l in gs.iteritems():
-        #TP
-        try:
-            sys[g]
-        except KeyError:
+        # False negative, there is no anwer or prob is 0.5 
+        if not sys.has_key(g) or sys[g]==0.5:
             fn+=1
             try:
                 fnd[g[:2]]+=1
@@ -123,8 +113,13 @@ if __name__ == "__main__":
                 fnd[g[:2]]=1
             continue
 
-
-        if l==sys[g]:
+        # Checking the answer
+        if sys[g]<0.5:
+            res='N'
+        else:
+            res='Y'
+        
+        if res==l:
             tp+=1
             try:
                 tpd[g[:2]]+=1
@@ -146,8 +141,8 @@ if __name__ == "__main__":
 
     total=0
     sin_contestar=0
-    for pb in probas:
-      if int(pb) == '0.5':
+    for g,pb in sys.iteritems():
+      if float(pb) == '0.5':
          sin_contestar=sin_contestar+1
       total=total+1
 			
@@ -181,7 +176,7 @@ if __name__ == "__main__":
     else:
         recall=0.0
   
-   
+    print total 
     c=100.0*(1/float(total))*(tp+(sin_contestar*tp/float(total)))
     info('Precision : {0:3.3f}%'.format(pres))
     info('Recall    : {0:3.3f}%'.format(recall))

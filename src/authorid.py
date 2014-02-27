@@ -400,10 +400,10 @@ if __name__ == "__main__":
             prob= ML.proba(preds)
  	    #info('Model for ',str(i))
             
-            info(problems[i][0]," {0} ".format(res))
-	    info("probability ",str(prob))
+            info(problems[i][0]," {0} ".format(prob))
             verbose("Predictions "," ".join(["{0}/{1:0.6}".format(posneg(x),y)
                                                 for x,y in preds]))
+	    verbose("probability ",str(prob))
        
     else:
         info("Error with mode",opts.mode)

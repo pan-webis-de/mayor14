@@ -262,7 +262,7 @@ def readdoc(filename):
 
 def loadanswers(filename,ignore=[]):
     """Loads answers file"""
-    r_answer=re.compile(r"[^\w]*(\w*) (Y|N)$")
+    r_answer=re.compile(r"[^\w]*(\w*) +(.*)$")
     answers={}
     for line in open(filename):
         line=line.strip()
@@ -271,7 +271,12 @@ def loadanswers(filename,ignore=[]):
         m=r_answer.match(line)
         if m:
             if not m.group(1) in ignore:
-                answers[m.group(1)]=m.group(2)
+                try:
+                    answers[m.group(1)]=float(m.group(2))
+                except ValueError:
+                    answers[m.group(1)]=m.group(2)
+                    
+
     return answers
 
 def loadproba(filename,ignore=[]):
