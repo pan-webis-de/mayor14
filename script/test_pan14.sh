@@ -3,9 +3,9 @@
 traindir=
 lang=all
 genre=all
-model=pan14.model
+model=all_all_authorid.model
 
-echo "Running training authorid"
+echo "Running testing authorid"
 while getopts i:l:g:o:m: opt; do
 	case $opt in
 	i)

@@ -126,7 +126,7 @@ if __name__ == "__main__":
     p.add_argument("--off",default=[],
             action="append", dest="off",
             help="distances or representations to turn off")
-    p.add_argument( "--model",default="pan14.model",
+    p.add_argument( "--model",default=".",
             action="store", dest="model",
             help="Model to save training or to test with [None]")
     p.add_argument("--method",default="lp",
