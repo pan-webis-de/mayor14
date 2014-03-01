@@ -50,6 +50,34 @@ rspc=re.compile(r'[/]',re.UNICODE)
 rwspc=re.compile(r'\s',re.UNICODE)
 rnumbers=re.compile(r'\d+',re.UNICODE)
 
+# Codes for problems
+codes={
+    'en': {
+        'essays': re.compile('^EE'),
+        'novels': re.compile('^EN'),
+        'all': re.compile('^E')
+        },
+    'nl': {
+        'essays': re.compile('^DE'),
+        'reviews': re.compile('^DR'),
+        'all': re.compile('^D')
+        },
+    'gr': {
+        'news': re.compile('^GR'),
+        'all': re.compile('^GR')
+        },
+    'es': {
+        'news': re.compile('^SP'),
+        'all': re.compile('^SP')
+        },
+    'all': {
+        'all': re.compile('.*')
+    }
+}
+
+
+
+
 
 def prettyprint(filename):
     with codecs.open(filename,'r','utf-8') as fh:
@@ -208,10 +236,11 @@ def problems(dirproblems_):
                 for id,(ks,uks) in dirproblems_ ]    
 
 def dirproblems(dirname, rknown  =r"known.*\.txt",
-                         runknown=r"unknown.*\.txt",ignore=[]):
+                         runknown=r"unknown.*\.txt",ignore=[],code=re.compile('.*')):
     """Loads the directories containing problems"""
     dirnames=[(x,"{0}/{1}".format(dirname,x)) for x in os.listdir(dirname)  
                 if not x in ignore and
+                   code.match(x) and
                    os.path.isdir("{0}/{1}".format(dirname,x))]
     dirnames.sort()
     problems=[]
@@ -260,13 +289,15 @@ def readdoc(filename):
 
 
 
-def loadanswers(filename,ignore=[]):
+def loadanswers(filename,ignore=[],code=re.compile('.*')):
     """Loads answers file"""
     r_answer=re.compile(r"[^\w]*(\w*) +(.*)$")
     answers={}
     for line in open(filename):
         line=line.strip()
         if len(line)==0:
+            continue
+        if not code.match(line):
             continue
         m=r_answer.match(line)
         if m:

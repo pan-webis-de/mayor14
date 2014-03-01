@@ -35,6 +35,7 @@ import os
 import os.path
 import math
 import itertools
+import re
 from collections import Counter
 from collections import defaultdict
 
@@ -58,7 +59,6 @@ def posneg(val):
         return "Y"
     else:
         return "N"
-
 
 
 def train(method, X_train,Y_train):
@@ -96,6 +96,9 @@ def predict(method,model, X_test, Y_test):
 
 
 
+codes=docread.codes
+
+
 # MAIN program
 if __name__ == "__main__":
 
@@ -114,33 +117,27 @@ if __name__ == "__main__":
     p.add_argument("-m", "--mode",default='test',
             action="store", dest="mode",
             help="test|train|devel [test]")
-    p.add_argument("--norm",default=True,
-            action="store_true", dest="norm",
-            help="Normalize vector space [True]")
+    p.add_argument("--language",default='all',
+            action="store", dest="language",
+            help="Language to process [all]")
+    p.add_argument("--genre",default='all',
+            action="store", dest="genre",
+            help="Genre to process [all]")
     p.add_argument("--off",default=[],
             action="append", dest="off",
             help="distances or representations to turn off")
-    p.add_argument("-i", "--iters",default=100,type=int,
-            action="store", dest="iters",
-            help="Number of iterations for avg [10]")
     p.add_argument( "--model",default="pan14.model",
             action="store", dest="model",
             help="Model to save training or to test with [None]")
     p.add_argument("--method",default="lp",
             action="store", dest="method",
             help="lp|avp|svm|ann [lp]")
-    p.add_argument("--show-figures", default=False,
-            action="store_true", dest="showf",
-            help="Shows figures [None]")
-    p.add_argument("--figures", default=None,
-            action="store", dest="figures",
-            help="Save figures in directory [None]")
     p.add_argument("--stopwords", default="data/stopwords.txt",
             action="store", dest="stopwords",
             help="List of stop words [data/stopwords.txt]")
-    p.add_argument("--answers", default="Answers.txt",
+    p.add_argument("--answers", default="answers.txt",
             action="store", dest="answers",
-            help="Answers file [Answers.txt]")
+            help="Answers file [answers.txt]")
     p.add_argument("-v", "--verbose",
             action="store_true", dest="verbose",
             help="Verbose mode [Off]")
@@ -193,7 +190,8 @@ if __name__ == "__main__":
     # load problems or problem
     verbose('Loading files')
     problems=docread.problems(
-        docread.dirproblems(dirname,known_pattern,unknown_pattern,_ignore))
+        docread.dirproblems(dirname,known_pattern,unknown_pattern,_ignore,
+                    code=codes[opts.language][opts.genre]))
 
    
     # Loading answers file only for DEVELOPMENT OR TRAINNING MODE
@@ -203,7 +201,8 @@ if __name__ == "__main__":
         else:
             answers_file="{0}/{1}".format(args[0],opts.answers)
         verbose('Loading answer file: {0}'.format(answers_file))
-        answers = docread.loadanswers(answers_file,_ignore)
+        answers = docread.loadanswers(answers_file,_ignore,
+                code=codes[opts.language][opts.genre])
 
         # Checking for consistency
         if not len(problems) == len(answers):
@@ -260,21 +259,21 @@ if __name__ == "__main__":
 		    #print d
 		   
                 commons.update(doc[1][1])
-            #_tmp=[feats]	  
+            _tmp=[feats]	  
             # Figures out the language by common words
-            _tmp=[0,0,0]
-            if commons['the']>=1:
-                _tmp[0]=feats
-                _tmp[1]=[0.0 for x in feats]
-                _tmp[2]=[0.0 for x in feats]
-            elif commons['el']>=1:
-                _tmp[0]=[0.0 for x in feats]
-                _tmp[1]=feats
-                _tmp[2]=[0.0 for x in feats]
-            else:
-                _tmp[0]=[0.0 for x in feats]
-                _tmp[1]=[0.0 for x in feats]
-                _tmp[2]=feats
+            #_tmp=[0,0,0]
+            #if commons['the']>=1:
+            #    _tmp[0]=feats
+            #    _tmp[1]=[0.0 for x in feats]
+            #    _tmp[2]=[0.0 for x in feats]
+            #elif commons['el']>=1:
+            #    _tmp[0]=[0.0 for x in feats]
+            #    _tmp[1]=feats
+            #    _tmp[2]=[0.0 for x in feats]
+            #else:
+            #    _tmp[0]=[0.0 for x in feats]
+            #    _tmp[1]=[0.0 for x in feats]
+            #    _tmp[2]=feats
 	    
 
 	    feats=list(itertools.chain(*_tmp))         
