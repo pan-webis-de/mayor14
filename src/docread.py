@@ -53,22 +53,22 @@ rnumbers=re.compile(r'\d+',re.UNICODE)
 # Codes for problems
 codes={
     'en': {
-        'essays': re.compile('^EE'),
-        'novels': re.compile('^EN'),
-        'all': re.compile('^E')
+        'essays': re.compile('^[^\w]*EE'),
+        'novels': re.compile('^[^\w]*EN'),
+        'all': re.compile('^[^\w]*E')
         },
     'nl': {
-        'essays': re.compile('^DE'),
-        'reviews': re.compile('^DR'),
-        'all': re.compile('^D')
+        'essays': re.compile('^[^\w]*DE'),
+        'reviews': re.compile('^[^\w]*DR'),
+        'all': re.compile('^[^\w]*D')
         },
     'gr': {
-        'news': re.compile('^GR'),
-        'all': re.compile('^GR')
+        'news': re.compile('^[^\w]*GR'),
+        'all': re.compile('^[^\w]*GR')
         },
     'es': {
-        'news': re.compile('^SP'),
-        'all': re.compile('^SP')
+        'news': re.compile('^[^\w]*SP'),
+        'all': re.compile('^[^\w]*SP')
         },
     'all': {
         'all': re.compile('.*')
@@ -306,7 +306,6 @@ def loadanswers(filename,ignore=[],code=re.compile('.*')):
                     answers[m.group(1)]=float(m.group(2))
                 except ValueError:
                     answers[m.group(1)]=m.group(2)
-                    
 
     return answers
 
