@@ -3,7 +3,7 @@
 traindir=
 lang=all
 genre=all
-model=pan14.model
+model=.
 
 echo "Running training authorid"
 while getopts i:l:g:o: opt; do

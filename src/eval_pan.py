@@ -57,28 +57,18 @@ codes=docread.codes
 
 # MAIN
 if __name__ == "__main__":
-    usage="""%prog gsfile sysfile
-
-        Evaluates the labelling againt a Gold standard labelling
-
-        gsfile : Gold standard label.ing
-        sysfile: Sistem labelling
-
-
-"""
-
     version="%prog 0.1"
 
     # Command line options
-    p = argparse.ArgumentParser(usage=usage,version=version)
+    p = argparse.ArgumentParser("Evaluation script for author identification")
     p.add_argument("GS",
             action="store", help="File with GS answers")
     p.add_argument("SYS",
             action="store", help="File with SYS answers")
-    p.add_argument("--language",default='all',
+    p.add_argument("-l","--language",default='all',
             action="store", dest="language",
             help="Language to process [all]")
-    p.add_argument("--genre",default='all',
+    p.add_argument("-g","--genre",default='all',
             action="store", dest="genre",
             help="Genre to process [all]")
     p.add_argument("-o", "--output",default=None,
@@ -100,7 +90,7 @@ if __name__ == "__main__":
 
     gs = docread.loadanswers(opts.GS,code=codes[opts.language][opts.genre])
     sys = docread.loadanswers(opts.SYS,code=codes[opts.language][opts.genre])
-
+    
     #probas = docread.loadproba(args[1])
     tp=0
     fp=0

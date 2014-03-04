@@ -297,7 +297,7 @@ def loadanswers(filename,ignore=[],code=re.compile('.*')):
         line=line.strip()
         if len(line)==0:
             continue
-        if not code.match(line):
+        if code.match(line) is None:
             continue
         m=r_answer.match(line)
         if m:
