@@ -3,7 +3,7 @@
 testdir=
 lang=all
 genre=all
-model=.
+model=all_all_authorid.model 
 
 echo "Running testing authorid"
 while getopts i:l:g:o:m: opt; do
@@ -27,4 +27,4 @@ while getopts i:l:g:o:m: opt; do
 done
 
 
-python src/authorid.py -m test --language ${lang} --genre ${genre} --model ${model}/${lang}_${genre}_authorid.model ${testdir} ${testdir} > ${outdir}/answers.txt
+python src/authorid.py -m test --language ${lang} --genre ${genre} --model ${model}  ${testdir} ${testdir} > ${outdir}/answers.txt
