@@ -8,7 +8,7 @@
 # {'EN04' : {'total: {'worda':4,'wordb':2,'wordc':3}, 'know01.txt': {'worda':2} ,'unknow.txt' : {'wordc':1} } }
 #
 
-import random,glob, sys,os, getopt
+import math,random,glob, sys,os, getopt
 import docread as dr
 import numpy as np
 
@@ -61,7 +61,37 @@ def langPercent(directory):
 #	Sample of list to be selected
 #
 def getSelection(counter, selection):
-	return {element : counter[element] for element in selection }
+	return {element : counter[element] for element in selection if counter[element] > 0}
+
+
+def mergeKnows(path):
+	problem = dr.problems ( dr.dirproblems ( path) )
+	merge_file = ""
+	unknown_file = ""
+
+	for dirname , (known,unknown) in problem:
+		for file in known:
+			merge_file = merge_file + file[1]
+
+		for ufile in unknown: 
+			unknown_file = unknown_file + ufile[1]
+
+	return {'known' : merge_file , 'unknown' : unknown_file}
+
+def getIdsToSample(text, selected_lang):
+	percent = lang[selected_lang]['percent']
+	count = dr.bow(text)
+	sample = int( math.ceil( len( count[0] ) * percent ) )
+	selection = random.sample(count[0] , sample)
+	return selection
+
+def getFromText( idwords, text):
+	count_file = dr.bow( text)
+	return getSelection( count_file[0] , idwords)
+
+def getFromFile( idwords, path):
+	count_file = dr.bow ( dr.readdoc(path) )
+	return getSelection( count_file[0] , idwords)
 
 #
 # Function
@@ -80,8 +110,8 @@ def getSelection(counter, selection):
 # Path of the files
 #
 def getSample(path):
-	problems = dr.problems(dr.dirproblems(path,r".*\.txt"))
-	
+	#problems = dr.problems(dr.dirproblems(path,r".*\.txt"))
+	problems = dr.problems ( dr.dirproblems ( path ) )
 	data = {}
 	for dirname, (files,unknow) in problems:
 		data[dirname]={}
