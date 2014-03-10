@@ -8,7 +8,7 @@ import create_sample as sample
 import distance
 
 dbylang = {
-	'SP' :  distance.jacard2
+	'SP' :  {'method' : distance.jacard2 , 'times' : 10 } 
 }
 
 def getImposterSample(lang, seed,genre,imposters, output):
@@ -32,35 +32,42 @@ def getImposterSample(lang, seed,genre,imposters, output):
 		imposter.doImposter( current_problem, imposters_problem , lang, num_imposters)	
 
 		file_problems = sample.mergeKnows(seed)	
-		id_words = sample.getIdsToSample( file_problems["known"] , lang) 
 		
-		imposters_files = os.listdir(imposters_problem)
+		method = dbylang[lang]['method']
+		times  = dbylang[lang]['times']	
+                imposters_files = os.listdir(imposters_problem)
+		score = 0		
 
-		known_sample = sample.getFromText( id_words, file_problems["known"] )
+		for k in range(1, times):
+			id_words = sample.getIdsToSample( file_problems["known"] , lang) 
+			imposters_files = os.listdir(imposters_problem)
 
-		unkown_sample = sample.getFromText( id_words , file_problems["unknown"] ) 
+			known_sample = sample.getFromText( id_words, file_problems["known"] )
+			unkown_sample = sample.getFromText( id_words , file_problems["unknown"] ) 
 
-		method = dbylang[lang] 
-		score = 0	
-		for imposter_file in imposters_files :
-			imposter_sample = sample.getFromFile( id_words,  os.path.join(imposters_problem,imposter_file) )
+			for imposter_file in imposters_files :
+				imposter_sample = sample.getFromFile( id_words,  os.path.join(imposters_problem,imposter_file) )
 		
-			dk_di = method(known_sample, imposter_sample)
-			dk_du = method(known_sample, unkown_sample)
+				dk_di = method(known_sample, imposter_sample)
+				dk_du = method(known_sample, unkown_sample)
 			
-			du_di = method(unkown_sample, imposter_sample)
-			du_dk = method(unkown_sample, known_sample)			
-			#print "imposter %s " % imposter_file	
-			#print "DK - DU %s " % dk_du 
-			#print "DU - DK %s " % du_dk
-			#print "DK - DI %s " % dk_di
-			#print "DU - DI %s " % du_di	
-			if  dk_du * du_dk < dk_di * du_di :
-				score += 1/float(len(imposters_files))
+				du_di = method(unkown_sample, imposter_sample)
+				du_dk = method(unkown_sample, known_sample)			
+				#print "imposter %s " % imposter_file	
+				#print "DK - DU %s " % dk_du 
+				#print "DU - DK %s " % du_dk
+				#print "DK - DI %s " % dk_di
+				#print "DU - DI %s " % du_di	
+				if  dk_du * du_dk < dk_di * du_di :
+					#score += 1/ float( len(imposters_files) * times )
+					score += 1/ float( times * len(imposters_files) ) 
 
 		#print len(imposters_files)	
-		print score
-
+		print "Score %s" % score
+		result = "N"
+		if ( score > 0.5):
+			result = "Y"
+		print "Result %s " % result
 
 def main(argv):
 
