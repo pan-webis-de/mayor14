@@ -32,7 +32,7 @@ from BeautifulSoup import BeautifulSoup
 #	Name of the language, used to get the stop word list
 #
 lang = {
-	'SP': {'imposters': 30,'langsearch':'es', 'min' : 50, 'max':70, 'lang':'Spanish'},
+	'SP': {'imposters': 300,'langsearch':'es', 'min' : 50, 'max':70, 'lang':'Spanish'},
 	'EN': {'imposters': 50,'langsearch':'en', 'min' : 50, 'max':80, 'lang':'English'},
 	'GR': {'imposters': 50,'langsearch':'el', 'min' : 50, 'max':90, 'lang':'Greek'},
 	'DE': {'imposters': 50,'langsearch':'nl', 'min' : 60, 'max':70, 'lang':'Dutch'},

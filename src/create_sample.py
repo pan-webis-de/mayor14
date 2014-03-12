@@ -25,7 +25,7 @@ import numpy as np
 #	Percent of search
 #
 lang = {
-	'SP': {'percent': 0.40},
+	'SP': {'percent': 0.10},
 	'EN': {'percent': 0.01},
 	'GR': {'percent': 0.30},
 	'DE': {'percent': 0.80},
@@ -62,7 +62,7 @@ def langPercent(directory):
 #
 def getSelection(counter, selection):
 	return {element : counter[element] for element in selection if counter[element] > 0}
-
+	#return {element : counter[element] for element in selection}
 
 def mergeKnows(path):
 	problem = dr.problems ( dr.dirproblems ( path) )
