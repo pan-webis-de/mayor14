@@ -9,7 +9,7 @@
 # python src/imposters_generator.py --lang en --seed training/ --output enimposters --imposters 150
 #
 
-import os,re, sys, glob, codecs, requests, getopt, justext , shutil
+import os,re, sys, glob, codecs, requests, getopt, justext , shutil, time
 import numpy as np
 from BeautifulSoup import BeautifulSoup
 
@@ -32,7 +32,7 @@ from BeautifulSoup import BeautifulSoup
 #	Name of the language, used to get the stop word list
 #
 lang = {
-	'SP': {'imposters': 300,'langsearch':'es', 'min' : 50, 'max':70, 'lang':'Spanish'},
+	'SP': {'imposters': 1500,'langsearch':'es', 'min' : 50, 'max':70, 'lang':'Spanish'},
 	'EN': {'imposters': 50,'langsearch':'en', 'min' : 50, 'max':80, 'lang':'English'},
 	'GR': {'imposters': 50,'langsearch':'el', 'min' : 50, 'max':90, 'lang':'Greek'},
 	'DE': {'imposters': 50,'langsearch':'nl', 'min' : 60, 'max':70, 'lang':'Dutch'},
@@ -96,31 +96,35 @@ def getCorpus(html, stopwords, lmin, lmax):
 def doSearch(query, selection, stopwords, path):	
 	print "Generated query : %s " % query
 	search = 'https://www.google.com/search?q=%s&lr=lang_%s' % (query, selection['langsearch'])
-
-	r = requests.get(search, verify = False )
-	bs = BeautifulSoup(r.text)
-
-	for result in bs.findAll('h3','r'):
-		a = result.find('a')
-		href =re.split(r'\/(.*)\?q=(.*)\&sa',a.get('href'))
-
-		try :	
-			#We verify if the link is an url and it is not a file	
-			if href[1] == 'url' and any( href[2].upper().endswith(ext) for ext in ('.XLS','.XLSX','.PDF','.DOC')) == False :
-				
-				source = requests.get(href[2])
-				corpus = getCorpus(source.text, stopwords, selection['min'], selection['max'])
-
-				if corpus : 
-					size = len(glob.glob(path+"/*.txt")) + 1
-					number = "%04d"% size
 	
-					print "Creating imposter : %s - %s" % (number,href[2])
-					imposter = open(path+"/imposter"+number+".txt","w")
-					imposter.write(corpus)
-					imposter.close()
-		except:
-			isfile = 1
+	try:
+		r = requests.get(search,timeout=5, verify = False )
+		bs = BeautifulSoup(r.text)
+
+		for result in bs.findAll('h3','r'):
+			a = result.find('a')
+			href =re.split(r'\/(.*)\?q=(.*)\&sa',a.get('href'))
+
+			try :	
+				#We verify if the link is an url and it is not a file	
+				if href[1] == 'url' and any( href[2].upper().endswith(ext) for ext in ('.XLS','.XLSX','.PDF','.DOC')) == False :
+				
+					source = requests.get(href[2])
+					corpus = getCorpus(source.text, stopwords, selection['min'], selection['max'])
+
+					if corpus : 
+						size = len(glob.glob(path+"/*.txt")) + 1
+						number = "%04d"% size
+	
+						print "Creating imposter : %s - %s" % (number,href[2])
+						imposter = open(path+"/imposter"+number+".txt","w")
+						imposter.write(corpus)
+						imposter.close()
+			except:
+				isfile = 1
+	except:
+		time.sleep(10)
+		doSearch(query,selection,stopwords,path)
 
 #
 # Function

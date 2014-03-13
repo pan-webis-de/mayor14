@@ -7,8 +7,14 @@ import imposter
 import create_sample as sample
 import distance
 
+import pymongo
+from pymongo import MongoClient
+client = MongoClient('localhost',27017)
+db = client.authorid
+
 dbylang = {
-	'SP' :  {'impostersample': 300,'method' : distance.jacard2 , 'times' : 80 } 
+	#'SP' : {'method' : distance.jacard2, 'impostersample' : 220 , 'times' : 5, 'corpuspercent' : 0.60 , 'score' : 0.63 }
+	'SP' : {'methodname': 'jacard2','method' : distance.jacard2, 'impostersample' : 220 , 'times' : 35, 'corpuspercent' : 0.80 , 'score' : 0.63 }
 }
 
 def getImposterSample(lang, seed,genre,imposters, output, doImposter):
@@ -23,42 +29,45 @@ def getImposterSample(lang, seed,genre,imposters, output, doImposter):
 		attackproblems = allproblems
 
 	if doImposter == True :
-		for problem in attackproblems:
+		for problem in sorted(attackproblems):
 			current_problem = seed+problem
                 	imposters_problem = os.path.join(imposters,problem)
                 	imposter.doImposter( current_problem, imposters_problem , lang, num_imposters)
 
+	#attackproblems = ['SP002']
 
-	#attackproblems = ['SP100','SP002','SP001','SP007']
-	#attackproblems = ['SP100']
+	method = dbylang[lang]['method']
+	methodname = dbylang[lang]['methodname']
+	times  = dbylang[lang]['times']
+	matchscore = dbylang[lang]['score']
+	percentlang = dbylang[lang]['corpuspercent']
+	imposters_sample = dbylang[lang]['impostersample']
 
+	results = []
 	for problem in sorted(attackproblems):
 		current_problem =   seed+problem
 		imposters_problem = os.path.join(imposters,problem)
 		print "Solving : " + current_problem
 		#print "Imposters : "+ imposters_problem
 		
-		file_problems = sample.mergeKnows(seed)	
+		file_problems = sample.getFiles(seed)	
 		
-		method = dbylang[lang]['method']
-		times  = dbylang[lang]['times']	
-               	imposters_sample = dbylang[lang]['impostersample']
-
+		#method = dbylang[lang]['method']
+		#times  = dbylang[lang]['times']	
+               	#matchscore = dbylang[lang]['score']
+		#percentlang = dbylang[lang]['corpuspercent']
+		#imposters_sample = dbylang[lang]['impostersample']
+		
 		imposters_files = os.listdir(imposters_problem)
-
-		#for k in range(1, times):
-		#id_words = sample.getIdsToSample( file_problems["known"] , lang) 
-		#imposters_files = os.listdir(imposters_problem)
-
-		#known_sample = sample.getFromText( id_words, file_problems["known"] )
-		#unkown_sample = sample.getFromText( id_words , file_problems["unknown"] ) 
 
 		score = 0
 		for K in range(1, times):
-			id_words = sample.getIdsToSample( file_problems["known"] , lang) 
+			id_words = sample.getIdsToSample( file_problems["merged"] , lang , percentlang) 
                 	imposters_files = os.listdir(imposters_problem)
+			
+			known_file = random.sample( file_problems["known"] , 1)[0]
 
-                	known_sample = sample.getFromText( id_words, file_problems["known"] )
+                	known_sample = sample.getFromText( id_words, known_file )
                		unkown_sample = sample.getFromText( id_words , file_problems["unknown"] ) 
 
 			random_imposters_files = random.sample(imposters_files, imposters_sample)
@@ -84,17 +93,35 @@ def getImposterSample(lang, seed,genre,imposters, output, doImposter):
 				#print "DU - DI %s " % du_di	
 				#print "DK_DI * DU_DI %f " % (du_di*dk_di)
 				if  dk_du * du_dk >  dk_di * du_di :
-					score += 1/ float( (times-1))
+					#score += 1/ float( (times-1))
 					#score += 1/ float( len(imposters_files[:1]) )
-					#score += 1/ float( (times-1) * len(imposters_files) ) 
+					score += 1/ float( (times-1) * len(random_imposters_files) ) 
 
 
 		#print len(imposters_files)	
 		print "Score %s" % score
 		result = "N"
-		if ( score > 0.5):
-			result = '\033[92m'+"Y"+'\033[0m'
+		if ( score > matchscore):
+			result = "Y"
 		print "Result %s " % result
+		print "\n"
+		obj = {
+			"text" : current_problem , 
+			"score" : score , 
+			"result" : result
+		} 
+		results.append(obj)
+
+	experiment = {
+		"lang" : lang,
+		"method" : methodname,
+		"imposters" : imposters_sample,
+		"times": times,	
+		"score" : matchscore,
+		"percentcorpus" : percentlang,
+		"results" : results
+	}	
+	db.experiment.insert(experiment)
 
 def main(argv):
 
@@ -106,13 +133,13 @@ def main(argv):
 	doImposters = False
 	
 	try:
-		opts, args = getopt.getopt(argv, "hi:o:",["lang=","seed=","genre=","output=","imposters="])
+		opts, args = getopt.getopt(argv, "hi:o:",["lang=","seed=","genre=","output=","imposters=","doimposters="])
 	except getopt.GetoptError:
 		print "Usage"
 
 	for opt, arg in opts:
                 if opt == '-h':
-                        print "imposter.py --lang [DU|EN|GR|SP] --seed <directory> --genre=[ESSAYS|REVIEWS|NOVELS|NEWSPAPER] --output <directory> --imposters <directory>"
+                        print "imposter.py --lang [DU|EN|GR|SP] --seed <directory> --genre=[ESSAYS|REVIEWS|NOVELS|NEWSPAPER] --output <directory> --imposters <directory> --doimposters=[TRUE|FALSE]"
                         sys.exit()
                 elif opt in("--l","--lang"):
                         mainlang = arg
@@ -124,6 +151,8 @@ def main(argv):
                         output  = arg
                 elif opt in("--i","--imposters"):
                         imposters  = arg
+		elif opt in("--d","--doimposters"):
+			doImposters = True
 	
 	try:
 		getImposterSample(mainlang, seed, genre, imposters, output, doImposters)			

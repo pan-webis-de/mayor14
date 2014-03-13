@@ -25,7 +25,7 @@ import numpy as np
 #	Percent of search
 #
 lang = {
-	'SP': {'percent': 0.10},
+	'SP': {'percent': 0.80},
 	'EN': {'percent': 0.01},
 	'GR': {'percent': 0.30},
 	'DE': {'percent': 0.80},
@@ -64,22 +64,22 @@ def getSelection(counter, selection):
 	return {element : counter[element] for element in selection if counter[element] > 0}
 	#return {element : counter[element] for element in selection}
 
-def mergeKnows(path):
+def getFiles(path):
 	problem = dr.problems ( dr.dirproblems ( path) )
 	merge_file = ""
 	unknown_file = ""
-
+	known_files = []
 	for dirname , (known,unknown) in problem:
 		for file in known:
 			merge_file = merge_file + file[1]
-
+			known_files.append ( file[1]+"" )
 		for ufile in unknown: 
 			unknown_file = unknown_file + ufile[1]
 
-	return {'known' : merge_file , 'unknown' : unknown_file}
+	return {'merged' : merge_file , 'known' : known_files, 'unknown' : unknown_file}
 
-def getIdsToSample(text, selected_lang):
-	percent = lang[selected_lang]['percent']
+def getIdsToSample(text, selected_lang, percent):
+	#percent = lang[selected_lang]['percent']
 	count = dr.bow(text)
 	sample = int( math.ceil( len( count[0] ) * percent ) )
 	selection = random.sample(count[0] , sample)
@@ -109,7 +109,7 @@ def getFromFile( idwords, path):
 # path(string)
 # Path of the files
 #
-def getSample(path):
+def getSample(path , langPercent):
 	#problems = dr.problems(dr.dirproblems(path,r".*\.txt"))
 	problems = dr.problems ( dr.dirproblems ( path ) )
 	data = {}
