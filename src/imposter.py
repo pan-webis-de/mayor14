@@ -124,7 +124,9 @@ def doSearch(query, selection, stopwords, path):
 				isfile = 1
 	except:
 		time.sleep(10)
-		doSearch(query,selection,stopwords,path)
+		print "Error"
+		#doSearch(query,selection,stopwords,path)
+
 
 #
 # Function
@@ -196,7 +198,10 @@ def doImposter(seed,out,mainlang,imposters):
 	print "Max imposters : %s" % imposters
 	while created <= int(imposters) :
         	query = ' '.join( np.random.choice( cleanwords, word_choice) )
-		doSearch(query, selection, stopwords, output)
+		try:
+			doSearch(query, selection, stopwords, output)
+		except:
+			print "Error"
 		created = len(glob.glob(output+"/*.txt"))
 
 def main(argv):

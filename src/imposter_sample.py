@@ -6,6 +6,7 @@ import docread as dr
 import imposter
 import create_sample as sample
 import distance
+import time
 
 import pymongo
 from pymongo import MongoClient
@@ -13,8 +14,7 @@ client = MongoClient('localhost',27017)
 db = client.authorid
 
 dbylang = {
-	#'SP' : {'method' : distance.jacard2, 'impostersample' : 220 , 'times' : 5, 'corpuspercent' : 0.60 , 'score' : 0.63 }
-	'SP' : {'methodname': 'jacard2','method' : distance.jacard2, 'impostersample' : 220 , 'times' : 35, 'corpuspercent' : 0.80 , 'score' : 0.63 }
+	'SP' : {'methodname': 'jacard2','method' : distance.jacard2, 'impostersample' : 230 , 'times' : 5, 'corpuspercent' : 0.80 , 'score' : 0.63 }
 }
 
 def getImposterSample(lang, seed,genre,imposters, output, doImposter):
@@ -34,30 +34,23 @@ def getImposterSample(lang, seed,genre,imposters, output, doImposter):
                 	imposters_problem = os.path.join(imposters,problem)
                 	imposter.doImposter( current_problem, imposters_problem , lang, num_imposters)
 
-	#attackproblems = ['SP002']
-
-	method = dbylang[lang]['method']
-	methodname = dbylang[lang]['methodname']
-	times  = dbylang[lang]['times']
-	matchscore = dbylang[lang]['score']
-	percentlang = dbylang[lang]['corpuspercent']
+	method           = dbylang[lang]['method']
+	methodname       = dbylang[lang]['methodname']
+	times            = dbylang[lang]['times']
+	matchscore       = dbylang[lang]['score']
+	percentlang      = dbylang[lang]['corpuspercent']
 	imposters_sample = dbylang[lang]['impostersample']
 
 	results = []
+	start 	= time.time()
 	for problem in sorted(attackproblems):
-		current_problem =   seed+problem
+
+		current_problem   =   seed+problem
 		imposters_problem = os.path.join(imposters,problem)
-		print "Solving : " + current_problem
-		#print "Imposters : "+ imposters_problem
+		
+		print "Solving : " + current_problem		
 		
 		file_problems = sample.getFiles(seed)	
-		
-		#method = dbylang[lang]['method']
-		#times  = dbylang[lang]['times']	
-               	#matchscore = dbylang[lang]['score']
-		#percentlang = dbylang[lang]['corpuspercent']
-		#imposters_sample = dbylang[lang]['impostersample']
-		
 		imposters_files = os.listdir(imposters_problem)
 
 		score = 0
@@ -67,59 +60,46 @@ def getImposterSample(lang, seed,genre,imposters, output, doImposter):
 			
 			known_file = random.sample( file_problems["known"] , 1)[0]
 
-                	known_sample = sample.getFromText( id_words, known_file )
-               		unkown_sample = sample.getFromText( id_words , file_problems["unknown"] ) 
+                	known_sample  = sample.getFromText( id_words, known_file )
+               		unkown_sample = sample.getFromText( id_words, file_problems["unknown"] ) 
 
 			random_imposters_files = random.sample(imposters_files, imposters_sample)
+
 			for imposter_file in random_imposters_files :
 				imposter_sample = sample.getFromFile( id_words,  os.path.join(imposters_problem,imposter_file) )
 	
-				#print "DK_DI"	
 				dk_di = method(known_sample, imposter_sample)
-
-				#print "DK_DU"
 				dk_du = method(known_sample, unkown_sample)
-			
-				#print "DU_DI"
 				du_di = method(unkown_sample, imposter_sample)
-				#print "DU_DK"
 				du_dk = method(unkown_sample, known_sample)			
-			
-				#print "imposter %s " % imposter_file	
-				#print "DK - DU %s " % dk_du 
-				#print "DU - DK %s " % du_dk
-				#print "DK_DU* DU_DK %f" % (dk_du*du_dk) 
-				#print "DK - DI %s " % dk_di
-				#print "DU - DI %s " % du_di	
-				#print "DK_DI * DU_DI %f " % (du_di*dk_di)
+
 				if  dk_du * du_dk >  dk_di * du_di :
-					#score += 1/ float( (times-1))
-					#score += 1/ float( len(imposters_files[:1]) )
 					score += 1/ float( (times-1) * len(random_imposters_files) ) 
 
 
-		#print len(imposters_files)	
 		print "Score %s" % score
 		result = "N"
 		if ( score > matchscore):
 			result = "Y"
 		print "Result %s " % result
-		print "\n"
-		obj = {
-			"text" : current_problem , 
-			"score" : score , 
-			"result" : result
-		} 
-		results.append(obj)
 
+		obj = {
+			"text"  : problem , 
+			"score" : score , 
+			"result": result
+		}
+		results.append(obj)
+	
+	took = time.time() - start
 	experiment = {
-		"lang" : lang,
-		"method" : methodname,
-		"imposters" : imposters_sample,
-		"times": times,	
-		"score" : matchscore,
+		"lang"    	: lang,
+		"method" 	: methodname,
+		"imposters" 	: imposters_sample,
+		"times"		: times,
+		"took" 		: took,	
+		"score" 	: matchscore,
 		"percentcorpus" : percentlang,
-		"results" : results
+		"results" 	: results
 	}	
 	db.experiment.insert(experiment)
 
