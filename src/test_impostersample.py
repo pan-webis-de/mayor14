@@ -2,7 +2,7 @@
 # -*- coding: utf-8
 
 import random , sys
-import threading, multiprocessing
+
 from time import sleep
 
 import imposter_sample as imsa
@@ -46,10 +46,7 @@ def doThr():
 	db.experiment.insert(r)	
 
 
-cpus = multiprocessing.cpu_count()
-for k in range(1,2):
-	for c in range(1,cpus):
-		print "++++++ CPU %s ++++++" % c
-        	th  = threading.Thread( target=doThr, args=[] )
-		th.start()
-		sleep(1)	
+for k in range(1,1000):
+	doThr()
+
+
