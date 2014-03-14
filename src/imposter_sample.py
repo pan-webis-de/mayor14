@@ -8,17 +8,17 @@ import create_sample as sample
 import distance
 import time
 
-import pymongo
-from pymongo import MongoClient
-client = MongoClient('localhost',27017)
-db = client.authorid
+#import pymongo
+#from pymongo import MongoClient
+#client = MongoClient('localhost',27017)
+#db = client.authorid
 
 dbylang = {
-	'SP' : {'methodname': 'jacard2','method' : distance.jacard2, 'impostersample' : 230 , 'times' : 5, 'corpuspercent' : 0.80 , 'score' : 0.63 }
+	'SP' : {'methodname': 'jacard2','method' : distance.jacard2, 'impostersample' : 230 , 'times' : 5, 'corpuspercent' : 0.60 , 'score' : 0.63 }
 }
 
-def getImposterSample(lang, seed,genre,imposters, output, doImposter):
-	
+def getImposterSample(lang, seed,genre,imposters, doImposter , externalOpts):
+	start = time.clock()	
 	num_imposters = imposter.lang[lang]['imposters']
 
 	allproblems = os.listdir(seed)
@@ -33,16 +33,19 @@ def getImposterSample(lang, seed,genre,imposters, output, doImposter):
 			current_problem = seed+problem
                 	imposters_problem = os.path.join(imposters,problem)
                 	imposter.doImposter( current_problem, imposters_problem , lang, num_imposters)
-
-	method           = dbylang[lang]['method']
-	methodname       = dbylang[lang]['methodname']
-	times            = dbylang[lang]['times']
-	matchscore       = dbylang[lang]['score']
-	percentlang      = dbylang[lang]['corpuspercent']
-	imposters_sample = dbylang[lang]['impostersample']
+	opts = dbylang
+	if externalOpts != False: 	
+		opts = externalOpts
+	 
+	method           = opts[lang]['method']
+	methodname       = opts[lang]['methodname']
+	times            = opts[lang]['times']
+	matchscore       = opts[lang]['score']
+	percentlang      = opts[lang]['corpuspercent']
+	imposters_sample = opts[lang]['impostersample']
 
 	results = []
-	start 	= time.time()
+
 	for problem in sorted(attackproblems):
 
 		current_problem   =   seed+problem
@@ -90,7 +93,7 @@ def getImposterSample(lang, seed,genre,imposters, output, doImposter):
 		}
 		results.append(obj)
 	
-	took = time.time() - start
+	took = time.clock() - start
 	experiment = {
 		"lang"    	: lang,
 		"method" 	: methodname,
@@ -100,8 +103,9 @@ def getImposterSample(lang, seed,genre,imposters, output, doImposter):
 		"score" 	: matchscore,
 		"percentcorpus" : percentlang,
 		"results" 	: results
-	}	
-	db.experiment.insert(experiment)
+	}
+	return experiment	
+	#db.experiment.insert(experiment)
 
 def main(argv):
 
@@ -135,7 +139,7 @@ def main(argv):
 			doImposters = True
 	
 	try:
-		getImposterSample(mainlang, seed, genre, imposters, output, doImposters)			
+		getImposterSample(mainlang, seed, genre, imposters, doImposters, False)			
 	except ValueError:
 		print ValueError
 
