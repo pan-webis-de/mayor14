@@ -29,7 +29,7 @@ print score
 lang = 'SP' 
 seed = 'data/pan14mini/'
 genre = ''
-imposters = 'data/resultsmini'
+imposters = 'data/impostersmini'
 
 
 def doThr():
