@@ -9,7 +9,7 @@
 # python src/imposters_generator.py --lang en --seed training/ --output enimposters --imposters 150
 #
 
-import os,re, sys, glob, codecs, requests, getopt, justext , shutil
+import os,re, sys, glob, codecs, requests, getopt, justext , shutil, time
 import numpy as np
 from BeautifulSoup import BeautifulSoup
 
@@ -32,10 +32,10 @@ from BeautifulSoup import BeautifulSoup
 #	Name of the language, used to get the stop word list
 #
 lang = {
-	'SP': {'langsearch':'es', 'min' : 50, 'max':70, 'lang':'Spanish'},
-	'EN': {'langsearch':'en', 'min' : 50, 'max':80, 'lang':'English'},
-	'GR': {'langsearch':'el', 'min' : 50, 'max':90, 'lang':'Greek'},
-	'DE': {'langsearch':'nl', 'min' : 60, 'max':70, 'lang':'Dutch'},
+	'SP': {'imposters': 1500,'langsearch':'es', 'min' : 50, 'max':70, 'lang':'Spanish'},
+	'EN': {'imposters': 50,'langsearch':'en', 'min' : 50, 'max':80, 'lang':'English'},
+	'GR': {'imposters': 50,'langsearch':'el', 'min' : 50, 'max':90, 'lang':'Greek'},
+	'DE': {'imposters': 50,'langsearch':'nl', 'min' : 60, 'max':70, 'lang':'Dutch'},
 }
 
 #
@@ -96,32 +96,37 @@ def getCorpus(html, stopwords, lmin, lmax):
 def doSearch(query, selection, stopwords, path):	
 	print "Generated query : %s " % query
 	search = 'https://www.google.com/search?q=%s&lr=lang_%s' % (query, selection['langsearch'])
-
-	r = requests.get(search)
-	bs = BeautifulSoup(r.text)
-
-	for result in bs.findAll('h3','r'):
-		a = result.find('a')
-		href =re.split(r'\/(.*)\?q=(.*)\&sa',a.get('href'))
-
-		try :	
-			#We verify if the link is an url and it is not a file	
-			if href[1] == 'url' and any( href[2].upper().endswith(ext) for ext in ('.XLS','.XLSX','.PDF','.DOC')) == False :
-				
-				source = requests.get(href[2])
-				corpus = getCorpus(source.text, stopwords, selection['min'], selection['max'])
-
-				if corpus : 
-					size = len(glob.glob(path+"/*.txt")) + 1
-					number = "%04d"% size
 	
-					print "Creating imposter : %s - %s" % (number,href[2])
+	try:
+		r = requests.get(search,timeout=5, verify = False )
+		bs = BeautifulSoup(r.text)
 
-					imposter = open(path+"/imposter"+number+".txt","w")
-					imposter.write(corpus)
-					imposter.close()
-		except:
-			isfile = 1
+		for result in bs.findAll('h3','r'):
+			a = result.find('a')
+			href =re.split(r'\/(.*)\?q=(.*)\&sa',a.get('href'))
+
+			try :	
+				#We verify if the link is an url and it is not a file	
+				if href[1] == 'url' and any( href[2].upper().endswith(ext) for ext in ('.XLS','.XLSX','.PDF','.DOC')) == False :
+				
+					source = requests.get(href[2])
+					corpus = getCorpus(source.text, stopwords, selection['min'], selection['max'])
+
+					if corpus : 
+						size = len(glob.glob(path+"/*.txt")) + 1
+						number = "%04d"% size
+	
+						print "Creating imposter : %s - %s" % (number,href[2])
+						imposter = open(path+"/imposter"+number+".txt","w")
+						imposter.write(corpus)
+						imposter.close()
+			except:
+				isfile = 1
+	except:
+		time.sleep(10)
+		print "Error"
+		#doSearch(query,selection,stopwords,path)
+
 
 #
 # Function
@@ -147,10 +152,13 @@ def doSearch(query, selection, stopwords, path):
 #
 
 def doImposter(seed,out,mainlang,imposters):
+	
 	# We find all the TXT of the LANG directory 
 	# /PATH/LANG/*.TXT
-	path    = seed+mainlang+"*/*.txt"
-	files   = glob.glob(path)
+	#path    = seed+mainlang+"*/*.txt"
+
+	path = seed+"/*.txt"
+	files = glob.glob(path)
 
 	# Numbers of files to be chosen. This file are mixed to get random words
 	file_choice = 3
@@ -161,8 +169,10 @@ def doImposter(seed,out,mainlang,imposters):
 
 	selection = lang[mainlang]
 
+
 	# Random selection of the files to be mixed
 	randomfiles = np.random.choice(files, file_choice)
+
 
 	for single_file in randomfiles:
 		textwords = ''.join( [line.strip() for line in codecs.open(single_file,'r','utf-8')] ).split()
@@ -172,20 +182,26 @@ def doImposter(seed,out,mainlang,imposters):
 	
 	# After choose a text, we elimiate all the stop words of the variable
 	cleanwords = [word for word in words if word not in set(stopwords)]	
-	
+
 	# Creation of ouput directory
-	output = os.path.join(out,mainlang)
+	# output = os.path.join(out,mainlang)
+	output = out 
 	if not os.path.exists(output):
 		os.makedirs(output)
-	else: 
-		shutil.rmtree(out)
-		os.makedirs(output)		
+	# ERASE 
+	#else: 
+	#	shutil.rmtree(out)
+	#	os.makedirs(output)		
 		
+
 	created = 0
 	print "Max imposters : %s" % imposters
 	while created <= int(imposters) :
         	query = ' '.join( np.random.choice( cleanwords, word_choice) )
-		doSearch(query, selection, stopwords, output)
+		try:
+			doSearch(query, selection, stopwords, output)
+		except:
+			print "Error"
 		created = len(glob.glob(output+"/*.txt"))
 
 def main(argv):

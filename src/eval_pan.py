@@ -29,7 +29,7 @@
 # -------------------------------------------------------------------------
 
 # System libraries
-import optparse
+import argparse
 import sys
 import os
 import docread
@@ -53,34 +53,31 @@ def loadfile(filename):
             labeling[bits[0]]=bits[1]
     return labeling
 
+codes=docread.codes
 
 # MAIN
 if __name__ == "__main__":
-    usage="""%prog gsfile sysfile
-
-        Evaluates the labelling againt a Gold standard labelling
-
-        gsfile : Gold standard label.ing
-        sysfile: Sistem labelling
-
-
-"""
-
     version="%prog 0.1"
 
     # Command line options
-    p = optparse.OptionParser(usage=usage,version=version)
-    p.add_option("-o", "--output",default=None,
+    p = argparse.ArgumentParser("Evaluation script for author identification")
+    p.add_argument("GS",
+            action="store", help="File with GS answers")
+    p.add_argument("SYS",
+            action="store", help="File with SYS answers")
+    p.add_argument("-l","--language",default='all',
+            action="store", dest="language",
+            help="Language to process [all]")
+    p.add_argument("-g","--genre",default='all',
+            action="store", dest="genre",
+            help="Genre to process [all]")
+    p.add_argument("-o", "--output",default=None,
             action="store", dest="output",
             help="Output [STDOUT]")
-    p.add_option("-v", "--verbose",
+    p.add_argument( "--verbose",
             action="store_true", dest="verbose",
             help="Verbose mode [Off]")
-    opts, args = p.parse_args()
-
-    # Arguments 
-    if not len(args) == 2:
-        p.error('Wrong number of arguments')
+    opts = p.parse_args()
 
     # Parameters
     out = sys.stdout
@@ -91,9 +88,9 @@ if __name__ == "__main__":
             p.error('Output parameter could not been open: {0}'\
                     .format(opts.output))
 
-    gs = docread.loadanswers(args[0])
-    sys = docread.loadanswers(args[1])
-
+    gs = docread.loadanswers(opts.GS,code=codes[opts.language][opts.genre])
+    sys = docread.loadanswers(opts.SYS,code=codes[opts.language][opts.genre])
+    
     #probas = docread.loadproba(args[1])
     tp=0
     fp=0

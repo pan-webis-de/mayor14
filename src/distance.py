@@ -43,7 +43,7 @@ def jacard(A, B,gbl=None):
     if den==0:
         return 1.0
     else:
-        return  1-num/den 
+        return  1-float(num)/float(den) 
 
 
 def jacard2(A, B,gbl=None):
@@ -54,9 +54,9 @@ def jacard2(A, B,gbl=None):
     num=len(commons)
     den=len(full)
     if den==0:
-        return 0.88
+        return float(0.88)
     else:
-        return  1-num/den 
+        return  1-float(num)/float(den) 
 
 def jacardw(A, B,gbl=None):
     A_=set(A.keys())
