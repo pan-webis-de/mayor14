@@ -53,9 +53,10 @@ rnumbers=re.compile(r'\d+',re.UNICODE)
 
 def prettyprint(filename):
     with codecs.open(filename,'r','utf-8') as fh:
-        for line in fh:
-            line=line.strip()
-            print line.encode('utf-8')
+        pass
+        #for line in fh:
+            #line=line.strip()
+            #print line.encode('utf-8')
 
 def none(docs,filename):
     return None
