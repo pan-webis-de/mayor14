@@ -42,14 +42,16 @@ import Weights as W
 
 # Neuronal Networks
 #from pybrain.datasets            import ClassificationDataSet
-from pybrain.datasets.supervised import SupervisedDataSet
 #from pybrain.utilities           import percentError
 #from pybrain.tools.shortcuts     import buildNetwork
-from pybrain.structure.networks  import FeedForwardNetwork
-from pybrain.supervised.trainers import BackpropTrainer
-from pybrain.structure.connections import FullConnection
-from pybrain.structure.modules   import SoftmaxLayer,TanhLayer,LinearLayer,SigmoidLayer
-
+try:
+    from pybrain.datasets.supervised import SupervisedDataSet
+    from pybrain.structure.networks  import FeedForwardNetwork
+    from pybrain.supervised.trainers import BackpropTrainer
+    from pybrain.structure.connections import FullConnection
+    from pybrain.structure.modules   import SoftmaxLayer,TanhLayer,LinearLayer,SigmoidLayer
+except ImportError:
+    pass
 
 def choice(x):
     if x<=0.5:
@@ -208,3 +210,18 @@ def voted(preds):
         return "Y"
     else:
         return "N"
+
+def proba(preds):
+    cs={0.0:0.0, 1.0:0.0}
+    cs_={0.0:0, 1.0:0}
+    
+    for pred,val in preds:
+        if pred==0.0:
+            cs[pred]+=(0.5-val)
+        else:
+            cs[pred]+=(val-0.5)
+        cs_[pred]+=1
+
+    return float(cs_[0.0])/float(cs_[0.0]+cs_[1.0])    
+
+

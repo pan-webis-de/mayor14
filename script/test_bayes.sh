@@ -8,5 +8,5 @@ then
 	exit 1
 fi
 len=$(($#-2))
-python src/authorid.py ${@:1:$len} ${@: -2} > ${@: -1}/answers.txt
-echo "Saving results to" ${@: -1}/answers.txt
+python src/authorid_bayes.py ${@:1:$len} ${@: -2} > ${@: -1}/answers_bayes.txt
+echo "Saving results to" ${@: -1}/answers_bayes.txt

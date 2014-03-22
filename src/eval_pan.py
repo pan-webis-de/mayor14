@@ -29,7 +29,7 @@
 # -------------------------------------------------------------------------
 
 # System libraries
-import optparse
+import argparse
 import sys
 import os
 import docread
@@ -53,34 +53,31 @@ def loadfile(filename):
             labeling[bits[0]]=bits[1]
     return labeling
 
+codes=docread.codes
 
 # MAIN
 if __name__ == "__main__":
-    usage="""%prog gsfile sysfile
-
-        Evaluates the labelling againt a Gold standard labelling
-
-        gsfile : Gold standard label.ing
-        sysfile: Sistem labelling
-
-
-"""
-
     version="%prog 0.1"
 
     # Command line options
-    p = optparse.OptionParser(usage=usage,version=version)
-    p.add_option("-o", "--output",default=None,
+    p = argparse.ArgumentParser("Evaluation script for author identification")
+    p.add_argument("GS",
+            action="store", help="File with GS answers")
+    p.add_argument("SYS",
+            action="store", help="File with SYS answers")
+    p.add_argument("-l","--language",default='all',
+            action="store", dest="language",
+            help="Language to process [all]")
+    p.add_argument("-g","--genre",default='all',
+            action="store", dest="genre",
+            help="Genre to process [all]")
+    p.add_argument("-o", "--output",default=None,
             action="store", dest="output",
             help="Output [STDOUT]")
-    p.add_option("-v", "--verbose",
+    p.add_argument( "--verbose",
             action="store_true", dest="verbose",
             help="Verbose mode [Off]")
-    opts, args = p.parse_args()
-
-    # Arguments 
-    if not len(args) == 2:
-        p.error('Wrong number of arguments')
+    opts = p.parse_args()
 
     # Parameters
     out = sys.stdout
@@ -91,9 +88,10 @@ if __name__ == "__main__":
             p.error('Output parameter could not been open: {0}'\
                     .format(opts.output))
 
-    gs = docread.loadanswers(args[0])
-    sys = docread.loadanswers(args[1])
-
+    gs = docread.loadanswers(opts.GS,code=codes[opts.language][opts.genre])
+    sys = docread.loadanswers(opts.SYS,code=codes[opts.language][opts.genre])
+    
+    #probas = docread.loadproba(args[1])
     tp=0
     fp=0
     fn=0
@@ -103,10 +101,8 @@ if __name__ == "__main__":
     recall={}
 
     for g,l in gs.iteritems():
-        #TP
-        try:
-            sys[g]
-        except KeyError:
+        # False negative, there is no anwer or prob is 0.5 
+        if not sys.has_key(g) or sys[g]==0.5:
             fn+=1
             try:
                 fnd[g[:2]]+=1
@@ -114,8 +110,13 @@ if __name__ == "__main__":
                 fnd[g[:2]]=1
             continue
 
-
-        if l==sys[g]:
+        # Checking the answer
+        if sys[g]<0.5:
+            res='N'
+        else:
+            res='Y'
+        
+        if res==l:
             tp+=1
             try:
                 tpd[g[:2]]+=1
@@ -123,10 +124,40 @@ if __name__ == "__main__":
                 tpd[g[:2]]=1
         else:
             fp+=1
+	    fn+=1
             try:
                 fpd[g[:2]]+=1
             except KeyError:
                 fpd[g[:2]]=1
+	    try:
+                fnd[g[:2]]+=1
+            except KeyError:
+                fnd[g[:2]]=1
+    
+
+
+    total=0
+    sin_contestar=0
+    for g,pb in sys.iteritems():
+      if float(pb) == '0.5':
+         sin_contestar=sin_contestar+1
+      total=total+1
+			
+    indice=0
+    totales={}
+    for ln in tpd:
+       totales[indice]=tpd[ln]+fpd[ln]+fnd[ln]
+       indice=indice+1
+    
+    aux=0   
+    lenguas_sin={}
+    for jn in totales:
+      lenguas_sin[jn]=0;
+      for kn in range(aux,jn):
+	if probas[kn]=='0.5':
+          lenguas_sin[kn]=lenguas_sin[kn]+1
+      aux=jn+1
+	
     info('True positives: ',str(tp))
     info('False positives: ',str(fp))
     info('False negatives: ',str(fn))
@@ -141,8 +172,12 @@ if __name__ == "__main__":
         recall=100.0*tp/(tp+fn)
     else:
         recall=0.0
+  
+    print total 
+    c=100.0*(1/float(total))*(tp+(sin_contestar*tp/float(total)))
     info('Precision : {0:3.3f}%'.format(pres))
     info('Recall    : {0:3.3f}%'.format(recall))
+    info('c@1       : {0:3.3f}%'.format(c))
     if pres> 0.0 and recall > 0.0:
         info('F1-score  : {0:3.3f}%'.format(2*pres*recall/(pres+recall)))
     else:
@@ -154,6 +189,7 @@ if __name__ == "__main__":
     langs.update(tpd.keys())
     langs.update(fpd.keys())
     langs.update(fnd.keys())
+    indice=0
     for lang in langs:
         info('-----',lang)
         try:
@@ -176,9 +212,13 @@ if __name__ == "__main__":
             recall=100.0*tp/(tp+fn)
         else:
             recall=0.0
-        info('Precision : {0:3.3f}%'.format(pres))
+        
+	c=100.0*(1/float(totales[indice]))*(tp+(lenguas_sin[indice]*tp/float(totales[indice])))
+	info('Precision : {0:3.3f}%'.format(pres))
         info('Recall    : {0:3.3f}%'.format(recall))
-        if pres> 0.0 and recall > 0.0:
+        info('c@1       : {0:3.3f}%'.format(c))
+        indice=indice+1
+	if pres> 0.0 and recall > 0.0:
             info('F1-score  : {0:3.3f}%'.format(2*pres*recall/(pres+recall)))
         else:
             info('F1-score  : {0:3.3f}%'.format(0.0))

@@ -50,6 +50,34 @@ rspc=re.compile(r'[/]',re.UNICODE)
 rwspc=re.compile(r'\s',re.UNICODE)
 rnumbers=re.compile(r'\d+',re.UNICODE)
 
+# Codes for problems
+codes={
+    'en': {
+        'essays': re.compile('^[^\w]*EE'),
+        'novels': re.compile('^[^\w]*EN'),
+        'all': re.compile('^[^\w]*E')
+        },
+    'nl': {
+        'essays': re.compile('^[^\w]*DE'),
+        'reviews': re.compile('^[^\w]*DR'),
+        'all': re.compile('^[^\w]*D')
+        },
+    'gr': {
+        'news': re.compile('^[^\w]*GR'),
+        'all': re.compile('^[^\w]*GR')
+        },
+    'es': {
+        'news': re.compile('^[^\w]*SP'),
+        'all': re.compile('^[^\w]*SP')
+        },
+    'all': {
+        'all': re.compile('.*')
+    }
+}
+
+
+
+
 
 def prettyprint(filename):
     with codecs.open(filename,'r','utf-8') as fh:
@@ -209,10 +237,11 @@ def problems(dirproblems_):
                 for id,(ks,uks) in dirproblems_ ]    
 
 def dirproblems(dirname, rknown  =r"known.*\.txt",
-                         runknown=r"unknown.*\.txt",ignore=[]):
+                         runknown=r"unknown.*\.txt",ignore=[],code=re.compile('.*')):
     """Loads the directories containing problems"""
     dirnames=[(x,"{0}/{1}".format(dirname,x)) for x in os.listdir(dirname)  
                 if not x in ignore and
+                   code.match(x) and
                    os.path.isdir("{0}/{1}".format(dirname,x))]
     dirnames.sort()
     problems=[]
@@ -261,16 +290,37 @@ def readdoc(filename):
 
 
 
-def loadanswers(filename,ignore=[]):
+def loadanswers(filename,ignore=[],code=re.compile('.*')):
     """Loads answers file"""
-    r_answer=re.compile(r"[^\w]*(\w*) (Y|N)$")
+    r_answer=re.compile(r"[^\w]*(\w*) +(.*)$")
     answers={}
     for line in open(filename):
         line=line.strip()
         if len(line)==0:
             continue
+        if code.match(line) is None:
+            continue
         m=r_answer.match(line)
         if m:
             if not m.group(1) in ignore:
-                answers[m.group(1)]=m.group(2)
+                try:
+                    answers[m.group(1)]=float(m.group(2))
+                except ValueError:
+                    answers[m.group(1)]=m.group(2)
+
+    return answers
+
+def loadproba(filename,ignore=[]):
+    """Loads probabilities file"""
+    #r_answer=re.compile(r"[^\w]*(\w*) (Y|N)$")
+    answers={}
+    i=0
+    for line in open(filename):
+        line=line.strip()
+        if len(line)==0 or not line.startswith("proba"):
+            continue
+       
+        r_answer=line.split(' ')
+	answers[i]=r_answer[1]
+        i=i+1
     return answers
