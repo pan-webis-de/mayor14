@@ -32,10 +32,10 @@ from BeautifulSoup import BeautifulSoup
 #	Name of the language, used to get the stop word list
 #
 lang = {
-	'SP': {'imposters': 1500,'langsearch':'es', 'min' : 50, 'max':70, 'lang':'Spanish'},
-	'EN': {'imposters': 50,'langsearch':'en', 'min' : 50, 'max':80, 'lang':'English'},
-	'GR': {'imposters': 50,'langsearch':'el', 'min' : 50, 'max':90, 'lang':'Greek'},
-	'DE': {'imposters': 50,'langsearch':'nl', 'min' : 60, 'max':70, 'lang':'Dutch'},
+	'ES': {'imposters': 1500,'langsearch':'es', 'min' : 50, 'max':70, 'lang':'Spanish'},
+	'EN': {'imposters': 1200,'langsearch':'en', 'min' : 50, 'max':80, 'lang':'English'},
+	'GR': {'imposters': 1300,'langsearch':'el', 'min' : 50, 'max':90, 'lang':'Greek'},
+	'NL': {'imposters': 1100,'langsearch':'nl', 'min' : 60, 'max':70, 'lang':'Dutch'},
 }
 
 #
@@ -213,12 +213,12 @@ def main(argv):
 	try:
 		opts, args = getopt.getopt(argv,"hi:o:",["lang=","seed=","output=","imposters="])
 	except getopt.GetoptError:
-		print "Usage : imposter.py --lang [SP|EN|GR|DE]--seed <directory> --output <directory> --imposters <number>"
+		print "Usage : imposter.py --lang [ES|EN|GR|NL]--seed <directory> --output <directory> --imposters <number>"
 		sys.exit(2)
 
 	for opt, arg in opts:
 		if opt == '-h':
-			print "imposter.py --lang [SP|EN!GR|DE] --seed <directory> --output <directory> --imposters <number>"
+			print "imposter.py --lang [ES|EN|GR|NL] --seed <directory> --output <directory> --imposters <number>"
 			sys.exit()
 		elif opt in("--l","--lang"):
 			mainlang = arg
