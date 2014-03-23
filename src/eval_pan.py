@@ -5,14 +5,14 @@
 # ----------------------------------------------------------------------
 # Ivan Vladimir Meza-Ruiz/ ivanvladimir at turing.iimas.unam.mx
 # 2013/IIMAS/UNAM
+# Ángel Toledo
+# 2013/FC/UNAM
 # Paola Ledesma 
 # 2013/ENAH
 # Gibran Fuentes
 # 2013/IIMAS/UNAM
 # Gabriela Jasso
 # 2013/FI/UNAM
-# Ángel Toledo
-# 2013/FC/UNAM
 # ----------------------------------------------------------------------
 # authorid.py is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -31,8 +31,54 @@
 # System libraries
 import argparse
 import sys
-import os
 import docread
+import numpy
+
+
+def calc_data(sample,results):
+    tp=float(len([i for (i,j) in zip(sample,results) if i==j and i=='Y']))
+    fn=float(len([i for (i,j) in zip(sample,results) if i!=j and j=='Y']))
+    fp=float(len([i for (i,j) in zip(sample,results) if i!=j and j=='N']))
+    tn=float(len([i for (i,j) in zip(sample,results) if i==j and j=='N']))
+    if tp+fp > 0.0:
+        tpr=float(tp*1.0/(tp+fn))
+    else:
+        tpr=0.0
+    if tp+fn > 0.0:
+        fpr=1-float(tn*1.0/(fp+tn))
+    else:
+        fpr=0.0
+    return (round(tpr,3),round(fpr,3))
+
+    
+def calculate_answers(probs,threshold):
+    answers=[]
+    for prob in probs:
+        if prob>=threshold:
+            answers.append('Y')
+        else:
+            answers.append('N')
+    return answers
+
+def create_points(steps,probs,results):
+    points=[]
+    for i in range(steps+1):
+        n_threshold=i*(1.0/steps)
+        answers=calculate_answers(probs,n_threshold)
+        data=calc_data(answers,results)
+        points.append(data)
+    return fix_points(points)
+
+
+def fix_points(points):
+    points=sorted(points,key=lambda points:points[1])
+    points=sorted(points,key=lambda points:points[0])
+    return points
+
+
+def calculate_AUC(points):
+    x,y=zip(*points)
+    return 100*numpy.trapz(x,y)
 
 def verbose(*args):
     if opts.verbose:
@@ -98,10 +144,16 @@ if __name__ == "__main__":
     tpd={}
     fpd={}
     fnd={}
+    keys={}
     recall={}
 
     for g,l in gs.iteritems():
-        # False negative, there is no anwer or prob is 0.5 
+        # False negative, there is no anwer or prob is 0.5
+        try:
+            keys[g[:2]].append(g)
+        except KeyError:        
+            keys[g[:2]]=[g]
+    
         if not sys.has_key(g) or sys[g]==0.5:
             fn+=1
             try:
@@ -157,6 +209,8 @@ if __name__ == "__main__":
 	if probas[kn]=='0.5':
           lenguas_sin[kn]=lenguas_sin[kn]+1
       aux=jn+1
+
+
 	
     info('True positives: ',str(tp))
     info('False positives: ',str(fp))
@@ -172,16 +226,23 @@ if __name__ == "__main__":
         recall=100.0*tp/(tp+fn)
     else:
         recall=0.0
-  
-    print total 
-    c=100.0*(1/float(total))*(tp+(sin_contestar*tp/float(total)))
+ 
+
+    keys_full=sys.keys()
+    points=create_points(100,[sys[x] for x in keys_full],
+                            [gs[x] for x in keys_full])
+    auc=calculate_AUC(points)
+
+    c=100.0*(1/float(total))*(tp+(sin_contestar*tp*1.0/float(total))) 
     info('Precision : {0:3.3f}%'.format(pres))
     info('Recall    : {0:3.3f}%'.format(recall))
-    info('c@1       : {0:3.3f}%'.format(c))
     if pres> 0.0 and recall > 0.0:
         info('F1-score  : {0:3.3f}%'.format(2*pres*recall/(pres+recall)))
     else:
         info('F1-score  : {0:3.3f}%'.format(0.0))
+    info('AUC       : {0:3.3f}%'.format(auc))
+    info('c@1       : {0:3.3f}%'.format(c))
+    info('Rank      : {0:3.3f}%'.format(c*auc/100))
 
 
     info('==========')
@@ -212,17 +273,23 @@ if __name__ == "__main__":
             recall=100.0*tp/(tp+fn)
         else:
             recall=0.0
-        
-	c=100.0*(1/float(totales[indice]))*(tp+(lenguas_sin[indice]*tp/float(totales[indice])))
+    
+        points=create_points(20,[sys[x] for x in keys[lang]],
+                            [gs[x] for x in keys[lang]])
+        auc=calculate_AUC(points)
+
+        c=100.0*(1/float(totales[indice]))*(tp+(lenguas_sin[indice]*tp*1.0/float(totales[indice])))
 	info('Precision : {0:3.3f}%'.format(pres))
         info('Recall    : {0:3.3f}%'.format(recall))
-        info('c@1       : {0:3.3f}%'.format(c))
         indice=indice+1
 	if pres> 0.0 and recall > 0.0:
             info('F1-score  : {0:3.3f}%'.format(2*pres*recall/(pres+recall)))
         else:
             info('F1-score  : {0:3.3f}%'.format(0.0))
-
+        info('AUC       : {0:3.3f}%'.format(auc))
+        info('c@1       : {0:3.3f}%'.format(c))
+        info('Rank      : {0:3.3f}%'.format(c*auc/100))
+    
 
 
 
