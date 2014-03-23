@@ -177,6 +177,26 @@ def trigram(doc,sw=[]):
     com=preprocess(doc,ncutoff=0)
     return doc,com,values
 
+
+def ngram(doc,sw=[],ngram=3):
+    wds = [w.encode('utf-8') for w in spaces.split(renter.sub(' ',doc.lower()))]
+
+    doc=Counter([])
+    for n in range(ngram):
+        args=[]
+        pat=[]
+        for j in range(n+1):
+            args.append(wds[j:])
+            pat.append('{{{0}}}'.format(j))
+        val= zip(*args)
+        values = [" ".join(pat).format(*v) for v in val]
+        doc.update(values)
+
+    com=preprocess(doc,ncutoff=2)
+    return doc,com,values
+
+
+
 def wordpar(doc,sw=[]):
     #pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
     pars = rpar.split(doc.lower())
