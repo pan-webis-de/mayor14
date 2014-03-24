@@ -199,7 +199,7 @@ if __name__ == "__main__":
         if opts.Answers:
             answers_file=opts.Answers
         else:
-            answers_file="{0}/{1}".format(args[0],opts.answers)
+            answers_file="{0}/{1}".format(dirname,opts.answers)
         verbose('Loading answer file: {0}'.format(answers_file))
         answers = docread.loadanswers(answers_file,_ignore,
                 code=codes[opts.language][opts.genre])

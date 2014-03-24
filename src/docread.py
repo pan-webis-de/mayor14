@@ -192,7 +192,7 @@ def ngram(doc,sw=[],ngram=3):
         values = [" ".join(pat).format(*v) for v in val]
         doc.update(values)
 
-    com=preprocess(doc,ncutoff=2)
+    com=preprocess(doc)
     return doc,com,values
 
 
