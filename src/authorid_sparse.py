@@ -120,6 +120,9 @@ if __name__ == "__main__":
     p.add_argument("--model",default=".",
             action="store", dest="model",
             help="Model to save training or to test with [None]")
+    p.add_argument("--cvs",default=False,
+            action="store_true", dest="csv",
+            help="Save matrices into a .csv file [False]")
     p.add_argument("--method",default="lp",
             action="store", dest="method",
             help="lp|avp|svm|ann [lp]")
@@ -155,6 +158,14 @@ if __name__ == "__main__":
             p.error('Output parameter could not been open: {0}'\
                     .format(opts.output))
     verbose("Running in mode:",opts.mode)
+
+    if opts.csv:
+        import csv
+        file_A=open("A.csv","w")
+        csv_A=csv.writer(file_A,delimiter=',',quotechar=",")
+        file_b=open("b.csv","w")
+        csv_b=csv.writer(file_b,delimiter=',',quotechar=",")
+
 
     # Loading configuration files ----------------------------------------
     # - .ignore   : files to ignore some files
@@ -262,7 +273,14 @@ if __name__ == "__main__":
                     print id, "0.2"
             except ValueError:
                 print id, "0.5"
-                
+            if opts.csv:
+                m,n=A.size
+                vals=[]
+                for val in range(m*n):
+                    vals.append(A[val])
+                csv_A.writerow([id,11,m,n]+vals)
+                m,n=y.size
+                csv_b.writerow([id,11,m,n]+[x for x in y])
 
 	   
 
