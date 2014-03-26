@@ -12,7 +12,7 @@ dbylang = {
         'EN' : {'method' : distance.jacard2, 'impostersample' : 230 , 'times' : 10, 'corpuspercent' : 0.75 , 'score' : 0.63 },
         'GR' : {'method' : distance.jacard2, 'impostersample' : 300 , 'times' : 20, 'corpuspercent' : 0.70 , 'score' : 0.63 },
         'NL' : {'method' : distance.jacard2, 'impostersample' : 330 , 'times' : 15, 'corpuspercent' : 0.50 , 'score' : 0.64 },
-	'ES' : {'method' : distance.jacard2, 'impostersample' : 450 , 'times' : 5, 'corpuspercent' : 0.70 , 'score' : 0.62 },
+	'ES' : {'method' : distance.jacard2, 'impostersample' : 450 , 'times' : 5,  'corpuspercent' : 0.70, 'score' : 0.62 },
 }
 
 directories = {
@@ -139,12 +139,11 @@ def main(argv):
 	try:
 		getImposterSample(mainlang, seed, genre, imposters, doImposters)			
 	except ValueError:
-		#print ValueError
 		print "error"
 
 if __name__ == "__main__" :
 	try: 
 		main(sys.argv[1:])
 	except ValueError:
-		print "BAD :D"
+		print "BAD, Try again"
 
