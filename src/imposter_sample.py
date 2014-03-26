@@ -9,10 +9,10 @@ import distance
 import time
 
 dbylang = {
-        'EN' : {'method' : distance.jacard2, 'impostersample' : 230 , 'times' : 10, 'corpuspercent' : 0.75 , 'score' : 0.63 },
-        'GR' : {'method' : distance.jacard2, 'impostersample' : 300 , 'times' : 20, 'corpuspercent' : 0.70 , 'score' : 0.63 },
-        'NL' : {'method' : distance.jacard2, 'impostersample' : 330 , 'times' : 15, 'corpuspercent' : 0.50 , 'score' : 0.64 },
-	'ES' : {'method' : distance.jacard2, 'impostersample' : 450 , 'times' : 1,  'corpuspercent' : 0.70, 'score' : 0.5 },
+        'EN' : {'num_imposters': 1000, 'method' : distance.jacard2, 'impostersample' : 230 , 'times' : 10, 'corpuspercent' : 0.75 , 'score' : 0.63 },
+        'GR' : {'num_imposters': 1000, 'method' : distance.jacard2, 'impostersample' : 300 , 'times' : 20, 'corpuspercent' : 0.70 , 'score' : 0.63 },
+        'NL' : {'num_imposters': 1000, 'method' : distance.jacard2, 'impostersample' : 330 , 'times' : 15, 'corpuspercent' : 0.50 , 'score' : 0.64 },
+	'ES' : {'num_imposters': 1000, 'method' : distance.jacard2, 'impostersample' : 450 , 'times' : 1,  'corpuspercent' : 0.70, 'score' : 0.5 },
 }
 
 directories_bygenre = {
@@ -50,6 +50,7 @@ def getOptions(lang):
 		'score'		: dbylang[lang]['score'],
 		'percentlang'	: dbylang[lang]['corpuspercent'],
 		'imp_sample'	: dbylang[lang]['impostersample'],	 
+		'num_imposters' : dbylang[lang]['num_imposters']
 	}
 	return opt
 
@@ -75,13 +76,26 @@ def getImposterSample(lang, seed, genre, imposters, uOptions, doImposter):
 
 	if doImposter == True :
 		if lang!= "":
-			num_imposters = imposter.lang[lang]['imposters']
+			opts = getOptions(lang)
+			mlang  = lang
+			if uOptions != False:
+				opts = changeOptions(opts,uOptions)				
+			num_imposters = opts['num_imposters']
 
 		for problem in sorted(attackproblems):
-			current_problem = seed+problem
-                	imposters_problem = os.path.join(imposters,problem)
-                	imposter.doImposter( current_problem, imposters_problem , lang, num_imposters)
-	
+			if lang == "":
+				mlang = getLang(problem[0:2])
+				opts = getOptions(mlang)
+				if uOptions != False:
+					opts = changeOptions(opts,uOptions)
+
+				num_imposters = opts['num_imposters']
+
+			current_problem = os.path.join(seed,problem)
+			imposters_problem = os.path.join(imposters,problem)
+                	imposter.doImposter( current_problem, imposters_problem , mlang, num_imposters)
+		sys.exit(-1)
+			
 	if lang!="" :	
 		opts = getOptions(lang)
 		if uOptions != False :
@@ -156,7 +170,7 @@ def main(argv):
 	score 		= ""
 	
 	try:
-		opts, args = getopt.getopt(argv, "hi:o:",["lang=","seed=","genre=","output=","imposters=","doimposters=","is=","rp=","co=","sc="])
+		opts, args = getopt.getopt(argv, "hi:o:",["lang=","seed=","genre=","output=","imposters=","doimposters=","mi=","is=","rp=","co=","sc="])
 	except getopt.GetoptError:
 		print "Usage"
 
@@ -184,14 +198,16 @@ def main(argv):
 			corpus = float(arg)
 		elif opt in("--sc"):
 			score = float(arg)
+		elif opt in("--mi"):
+			externalOptions = {"num_imposters" : int(arg)}
 	
 	if sample!="" and times !="" and corpus !="" and score!="":
 		externalOptions = {"imp_sample" : sample , "times": times, "corpuspercent" : corpus , "score": score}
 
 	try:
 		getImposterSample(mainlang, seed, genre, imposters, externalOptions,doImposters)			
-	except ValueError:
-		print "error"
+	except ValueError as e:
+		print e
 
 if __name__ == "__main__" :
 	try: 

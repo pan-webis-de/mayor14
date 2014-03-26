@@ -108,8 +108,8 @@ def doSearch(query, selection, stopwords, path):
 			try :	
 				#We verify if the link is an url and it is not a file	
 				if href[1] == 'url' and any( href[2].upper().endswith(ext) for ext in ('.XLS','.XLSX','.PDF','.DOC')) == False :
-				
-					source = requests.get(href[2])
+
+					source = requests.get(href[2],timeout=5)
 					corpus = getCorpus(source.text, stopwords, selection['min'], selection['max'])
 
 					if corpus : 
@@ -123,7 +123,7 @@ def doSearch(query, selection, stopwords, path):
 			except:
 				isfile = 1
 	except:
-		time.sleep(10)
+		time.sleep(1)
 		print "Error"
 		#doSearch(query,selection,stopwords,path)
 
@@ -166,13 +166,10 @@ def doImposter(seed,out,mainlang,imposters):
 	word_choice = 3
 
 	words   = []
-
 	selection = lang[mainlang]
-
 
 	# Random selection of the files to be mixed
 	randomfiles = np.random.choice(files, file_choice)
-
 
 	for single_file in randomfiles:
 		textwords = ''.join( [line.strip() for line in codecs.open(single_file,'r','utf-8')] ).split()
