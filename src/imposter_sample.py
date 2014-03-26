@@ -12,18 +12,36 @@ dbylang = {
         'EN' : {'method' : distance.jacard2, 'impostersample' : 230 , 'times' : 10, 'corpuspercent' : 0.75 , 'score' : 0.63 },
         'GR' : {'method' : distance.jacard2, 'impostersample' : 300 , 'times' : 20, 'corpuspercent' : 0.70 , 'score' : 0.63 },
         'NL' : {'method' : distance.jacard2, 'impostersample' : 330 , 'times' : 15, 'corpuspercent' : 0.50 , 'score' : 0.64 },
-	'ES' : {'method' : distance.jacard2, 'impostersample' : 450 , 'times' : 5,  'corpuspercent' : 0.70, 'score' : 0.62 },
+	'ES' : {'method' : distance.jacard2, 'impostersample' : 450 , 'times' : 1,  'corpuspercent' : 0.70, 'score' : 0.5 },
 }
 
-directories = {
+directories_bygenre = {
 	'ENNOVELS'    	: 'EN',
 	'ENESSAYS'    	: 'EE',
 	'NLESSAYS'    	: 'DE',
 	'NLREVIEWS'  	: 'DR',
 	'GRNEWS'	: 'GR',
-	'SPNEWS' 	: 'SP',
+	'ESNEWS' 	: 'SP',
 }
 
+directories_bylang = {
+	'ES'		: 'S',
+	'GR'		: 'G',
+	'NL'		: 'D',
+	'EN'		: 'E',
+}
+langofdirectory = {
+	'EN'		: 'EN',
+	'EE'		: 'EN',
+	'DE'		: 'NL',
+	'DR'		: 'NL',
+	'GR'		: 'GR',
+	'SP'		: 'ES',
+}
+
+
+def getLang (directory):
+	return langofdirectory[directory]
 
 def getOptions(lang):
 	opt = {
@@ -35,12 +53,22 @@ def getOptions(lang):
 	}
 	return opt
 
-def getImposterSample(lang, seed,genre,imposters, doImposter):
+
+def changeOptions(opts, otheropts):
+	for k in otheropts.keys():
+		opts[k] = otheropts[k]
+	return opts
+
+def getImposterSample(lang, seed, genre, imposters, uOptions, doImposter):
 	start = time.clock()	
 	allproblems = os.listdir(seed)
 	
-	if lang !="" and genre!="":
-		startlang = directories[lang+genre]		
+	if lang !="":
+		if genre != "":	
+			startlang = directories_bygenre[lang+genre]
+		else:
+			startlang = directories_bylang[lang]
+
 		attackproblems = [d for d in allproblems if d.startswith(startlang)]
 	else:
 		attackproblems = allproblems
@@ -56,9 +84,11 @@ def getImposterSample(lang, seed,genre,imposters, doImposter):
 	
 	if lang!="" :	
 		opts = getOptions(lang)
-	
+		if uOptions != False :
+			opts = changeOptions(opts,uOptions)
+
 	results = []
-	
+
 	f = open('answers_imposters.txt','w')
 
 	global_problems = sample.getFiles(seed)
@@ -71,8 +101,14 @@ def getImposterSample(lang, seed,genre,imposters, doImposter):
 		imposters_files = os.listdir(imposters_problem)
 
 		score = 0
-		imposters_files = os.listdir(imposters_problem)
-		for K in range(1, opts['times']):
+		
+		if lang == "":
+			l = getLang(problem[0:2])
+			opts = getOptions(l)
+			if uOptions != False:
+				opts = changeOptions(opts,uOptions)
+		
+		for K in range(0, opts['times']):
 			id_words = sample.getIdsToSample( file_problems["merged"] , lang , opts['percentlang'])
 
 			known_file = random.sample( file_problems["known"] , 1)[0]
@@ -93,29 +129,34 @@ def getImposterSample(lang, seed,genre,imposters, doImposter):
 				du_dk = _method(unkown_sample, known_sample)
 
 				if  dk_du * du_dk >  dk_di * du_di :
-					score += 1/ float( (opts['times']-1) * len(random_imposters_files) ) 
+					score += 1/ float( (opts['times']) * len(random_imposters_files) ) 
 
 		result = "N"
-		resultpercent = "0.2"
 		if ( score > opts['score']):
 			result = "Y"
-			resultpercent="0.8"
 
-		print "%s %s %f" %  (problem, result,score)
-		f.write(problem+" "+resultpercent+"\n")
+		strToPrint = "%s %s %f" %  (problem, result,score)
+		strToFile = "%s %f " % (problem, score)
+		f.write(strToFile+"\n")
+		print strToPrint
 	return 0
 
 def main(argv):
 
-	mainlang = ""
-	seed = ""
-	genre = ""
-	imposters ="imposters"
-	output = "output"
-	doImposters = False
+	mainlang 	= ""
+	seed 		= ""
+	genre 		= ""
+	imposters 	="imposters"
+	output 		= "output"
+	doImposters 	= False
+	externalOptions = False
+	sample 		= ""
+	times 		= ""
+	corpus 		= ""
+	score 		= ""
 	
 	try:
-		opts, args = getopt.getopt(argv, "hi:o:",["lang=","seed=","genre=","output=","imposters=","doimposters="])
+		opts, args = getopt.getopt(argv, "hi:o:",["lang=","seed=","genre=","output=","imposters=","doimposters=","is=","rp=","co=","sc="])
 	except getopt.GetoptError:
 		print "Usage"
 
@@ -123,21 +164,32 @@ def main(argv):
                 if opt == '-h':
                         print "imposter.py --lang [NL|EN|GR|ES] --seed <directory> --genre=[ESSAYS|REVIEWS|NOVELS|NEWS] --output <directory> --imposters <directory> --doimposters=[TRUE|FALSE]"
                         sys.exit()
-                elif opt in("--l","--lang"):
+                elif opt in("--lang"):
                         mainlang = arg.upper()
-                elif opt in("--s","--seed"):
+                elif opt in("--seed"):
                         seed = arg
-		elif opt in("--g","--genre"):
+		elif opt in("--genre"):
 			genre = arg.upper()
-                elif opt in("--o","--output"):
+                elif opt in("--output"):
                         output  = arg
-                elif opt in("--i","--imposters"):
+                elif opt in("--imposters"):
                         imposters  = arg
-		elif opt in("--d","--doimposters"):
+		elif opt in("--doimposters"):
 			doImposters = True
+		elif opt in("--is"):
+			sample = int(arg)
+		elif opt in("--rp"):
+			times = int(arg)
+		elif opt in("--co"):
+			corpus = float(arg)
+		elif opt in("--sc"):
+			score = float(arg)
 	
+	if sample!="" and times !="" and corpus !="" and score!="":
+		externalOptions = {"imp_sample" : sample , "times": times, "corpuspercent" : corpus , "score": score}
+
 	try:
-		getImposterSample(mainlang, seed, genre, imposters, doImposters)			
+		getImposterSample(mainlang, seed, genre, imposters, externalOptions,doImposters)			
 	except ValueError:
 		print "error"
 
