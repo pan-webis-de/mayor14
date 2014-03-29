@@ -27,10 +27,10 @@ import os
 import os.path
 import sklearn.preprocessing as preprocessing
 import numpy as np
-import itertools
 import random
 from collections import Counter
-from cvxopt import matrix
+from oct2py import octave
+octave.addpath('src/octave')
 
 # Local imports
 import docread
@@ -246,43 +246,55 @@ if __name__ == "__main__":
             # Normalizing the data
             A=preprocessing.normalize(example_vectors,axis=0)
             A=A.T
-            A=matrix(A)
-            y=matrix(unknown)
+            y=np.matrix(unknown)
+            y=y.T 
+            nu=0.001
+            tol=0.001
+            stopCrit=3
+            x_0, nIter = octave.SolveHomotopy(A, y, 'lambda', nu, 'tolerance', tol, 'stoppingcriterion', stopCrit);
+            # Calculating residuals
+            residuals=[]
+            for i in range(len(examples)/4):
+                if sum([x for x in x_0[i*4:(i+1)*4]])==0:
+                    residuals.append(3000)
+                    continue
+                d_i= [0.0 for x in x_0[:i*4]]+\
+                     [x for x in x_0[i*4:(i+1)*4]]+\
+                     [0.0 for x in x_0[(i+1)*4:]]
+                d_i=np.matrix(d_i)
+                d_i=d_i.T
+                r_is=y-A*d_i
+                r_is=np.array(r_is)
+                r_is_2=sum(r_is**2)
+                r_i=np.sqrt(r_is_2[0])
+                residuals.append(r_i)
+            identity=np.argmin(residuals)
+            if identity==0:
+                print id, "0.7"
+            else:
+                print id, "0.2"
+#            except ValueError:
+#                print id, "0.5"
+#            if opts.csv:
+#                m,n=A.size
+#                vals=[]
+#                for val in range(m*n):
+#                    vals.append(A[val])
+#                csv_A.writerow([id,11,m,n]+vals)
+#                m,n=y.size
+#                csv_b.writerow([id,11,m,n]+[x for x in y])
+#
+	
+#            A=A.T
+#            A=matrix(A)
+#            y=matrix(unknown)
             # Solve l1
-            from l1 import l1
-            from cvxopt import solvers
-            solvers.options['show_progress'] = False
-            try:
-                x_0 = l1(A,y)
-                # Calculating residuals
-                residuals=[]
-                for i in range(len(examples)/4):
-                    d_i= [0.0 for x in x_0[:i*4]]+\
-                         [x for x in x_0[i*4:(i+1)*4]]+\
-                         [0.0 for x in x_0[(i+1)*4:]]
-
-                    d_i=matrix(d_i)
-                    r_is=y-A*d_i
-                    r_is_2=sum(r_is**2)
-                    r_i=np.sqrt(r_is_2)
-                    residuals.append(r_i)
-                identity=np.argmin(residuals)
-                if identity==0:
-                    print id, "0.7"
-                else:
-                    print id, "0.2"
-            except ValueError:
-                print id, "0.5"
-            if opts.csv:
-                m,n=A.size
-                vals=[]
-                for val in range(m*n):
-                    vals.append(A[val])
-                csv_A.writerow([id,11,m,n]+vals)
-                m,n=y.size
-                csv_b.writerow([id,11,m,n]+[x for x in y])
-
-	   
+#            from l1 import l1
+#            from cvxopt import solvers
+#            solvers.options['show_progress'] = False
+#            try:
+#                x_0 = l1(A,y)
+   
 
     # TRAINING - Save examples
     elif opts.mode.startswith("train"):
