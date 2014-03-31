@@ -117,9 +117,21 @@ if __name__ == "__main__":
     p.add_argument("--off",default=[],
             action="append", dest="off",
             help="distances or representations to turn off")
+    p.add_argument("--imposters",default=10,type=int,
+            action="store", dest="imposters",
+            help="Total of imposter per auhtor [10]")
+    p.add_argument("--documents",default=4,type=int,
+            action="store", dest="documents",
+            help="Documents per author [4]")
+    p.add_argument("--percentage",default=.60,type=float,
+            action="store", dest="percentage",
+            help="Sampling percentage [.6]")
     p.add_argument("--model",default=".",
             action="store", dest="model",
             help="Model to save training or to test with [None]")
+    p.add_argument("--random",default=True,
+            action="store_false", dest="random",
+            help="Use random seed [True]")
     p.add_argument("--cvs",default=False,
             action="store_true", dest="csv",
             help="Save matrices into a .csv file [False]")
@@ -136,6 +148,9 @@ if __name__ == "__main__":
             action="store_true", dest="verbose",
             help="Verbose mode [Off]")
     opts = p.parse_args()
+
+    if not opts.random:
+        random.seed(9111978)
 
     # Managing configurations  --------------------------------------------
     # Check the correct mode
@@ -227,14 +242,15 @@ if __name__ == "__main__":
 
             #Extracting Examples
             examples= []
-            for i in range(4):
-                examples.append(muestreo(master_author))
+            for i in range(opts.documents):
+                examples.append(muestreo(master_author,percentage=opts.percentage))
 
             # Adding imposters
-            master_impostors=get_master_impostors(id,10,problems)
+            master_impostors=get_master_impostors(id,opts.imposters,problems)
             for master_impostor in master_impostors:
-                 for i in range(4):
-                    examples.append(muestreo(master_impostor))
+                 for i in range(opts.documents):
+                    examples.append(muestreo(master_impostor,percentage=opts.percentage))
+
 
             # Sparce algorithm
             # Proyecting examples into a vector
@@ -248,53 +264,41 @@ if __name__ == "__main__":
             A=A.T
             y=np.matrix(unknown)
             y=y.T 
-            nu=0.001
+            nu=0.002
             tol=0.001
             stopCrit=3
             x_0, nIter = octave.SolveHomotopy(A, y, 'lambda', nu, 'tolerance', tol, 'stoppingcriterion', stopCrit);
             # Calculating residuals
             residuals=[]
-            for i in range(len(examples)/4):
-                if sum([x for x in x_0[i*4:(i+1)*4]])==0:
-                    residuals.append(3000)
+            residuals_=[]
+            for i in range(len(examples)/opts.documents):
+                n=opts.documents
+                if sum([x for x in x_0[i*n:(i+1)*n]])==0:
+                    residuals.append(300000)
                     continue
-                d_i= [0.0 for x in x_0[:i*4]]+\
-                     [x for x in x_0[i*4:(i+1)*4]]+\
-                     [0.0 for x in x_0[(i+1)*4:]]
-                d_i=np.matrix(d_i)
-                d_i=d_i.T
+                d_i= [[0.0 for x in x_0[:i*n]]+\
+                     [x for x in x_0[i*n:(i+1)*n]]+\
+                     [0.0 for x in x_0[(i+1)*n:]]]
                 r_is=y-A*d_i
                 r_is=np.array(r_is)
                 r_is_2=sum(r_is**2)
                 r_i=np.sqrt(r_is_2[0])
                 residuals.append(r_i)
+                residuals_.append(r_i)
             identity=np.argmin(residuals)
-            if identity==0:
-                print id, "0.7"
+            avg=np.average(residuals_)
+            max=np.max(residuals_)
+            min=np.min(residuals_)
+            if max-min == 0:
+                prob=0.0
             else:
-                print id, "0.2"
-#            except ValueError:
-#                print id, "0.5"
-#            if opts.csv:
-#                m,n=A.size
-#                vals=[]
-#                for val in range(m*n):
-#                    vals.append(A[val])
-#                csv_A.writerow([id,11,m,n]+vals)
-#                m,n=y.size
-#                csv_b.writerow([id,11,m,n]+[x for x in y])
-#
-	
-#            A=A.T
-#            A=matrix(A)
-#            y=matrix(unknown)
-            # Solve l1
-#            from l1 import l1
-#            from cvxopt import solvers
-#            solvers.options['show_progress'] = False
-#            try:
-#                x_0 = l1(A,y)
-   
+                prob=(max-avg)/(max-min)
+            lower=[x for x in residuals if x <= avg]
+            if identity==0:
+                print id, float(1-prob)
+            else:
+                print id, float(prob)
+      
 
     # TRAINING - Save examples
     elif opts.mode.startswith("train"):
