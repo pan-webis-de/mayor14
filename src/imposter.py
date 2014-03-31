@@ -32,10 +32,10 @@ from BeautifulSoup import BeautifulSoup
 #	Name of the language, used to get the stop word list
 #
 lang = {
-	'SP': {'imposters': 1500,'langsearch':'es', 'min' : 50, 'max':70, 'lang':'Spanish'},
-	'EN': {'imposters': 50,'langsearch':'en', 'min' : 50, 'max':80, 'lang':'English'},
-	'GR': {'imposters': 50,'langsearch':'el', 'min' : 50, 'max':90, 'lang':'Greek'},
-	'DE': {'imposters': 50,'langsearch':'nl', 'min' : 60, 'max':70, 'lang':'Dutch'},
+	'ES': {'imposters': 1500,'langsearch':'es', 'min' : 50, 'max':70, 'lang':'Spanish'},
+	'EN': {'imposters': 1200,'langsearch':'en', 'min' : 50, 'max':80, 'lang':'English'},
+	'GR': {'imposters': 1300,'langsearch':'el', 'min' : 50, 'max':90, 'lang':'Greek'},
+	'NL': {'imposters': 1100,'langsearch':'nl', 'min' : 60, 'max':70, 'lang':'Dutch'},
 }
 
 #
@@ -108,8 +108,8 @@ def doSearch(query, selection, stopwords, path):
 			try :	
 				#We verify if the link is an url and it is not a file	
 				if href[1] == 'url' and any( href[2].upper().endswith(ext) for ext in ('.XLS','.XLSX','.PDF','.DOC')) == False :
-				
-					source = requests.get(href[2])
+
+					source = requests.get(href[2],timeout=5)
 					corpus = getCorpus(source.text, stopwords, selection['min'], selection['max'])
 
 					if corpus : 
@@ -123,7 +123,7 @@ def doSearch(query, selection, stopwords, path):
 			except:
 				isfile = 1
 	except:
-		time.sleep(10)
+		time.sleep(1)
 		print "Error"
 		#doSearch(query,selection,stopwords,path)
 
@@ -166,13 +166,10 @@ def doImposter(seed,out,mainlang,imposters):
 	word_choice = 3
 
 	words   = []
-
 	selection = lang[mainlang]
-
 
 	# Random selection of the files to be mixed
 	randomfiles = np.random.choice(files, file_choice)
-
 
 	for single_file in randomfiles:
 		textwords = ''.join( [line.strip() for line in codecs.open(single_file,'r','utf-8')] ).split()
@@ -213,12 +210,12 @@ def main(argv):
 	try:
 		opts, args = getopt.getopt(argv,"hi:o:",["lang=","seed=","output=","imposters="])
 	except getopt.GetoptError:
-		print "Usage : imposter.py --lang [SP|EN|GR|DE]--seed <directory> --output <directory> --imposters <number>"
+		print "Usage : imposter.py --lang [ES|EN|GR|NL]--seed <directory> --output <directory> --imposters <number>"
 		sys.exit(2)
 
 	for opt, arg in opts:
 		if opt == '-h':
-			print "imposter.py --lang [SP|EN!GR|DE] --seed <directory> --output <directory> --imposters <number>"
+			print "imposter.py --lang [ES|EN|GR|NL] --seed <directory> --output <directory> --imposters <number>"
 			sys.exit()
 		elif opt in("--l","--lang"):
 			mainlang = arg

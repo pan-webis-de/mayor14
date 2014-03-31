@@ -27,7 +27,7 @@ import numpy as np
 lang = {
 	'SP': {'percent': 0.80},
 	'EN': {'percent': 0.01},
-	'GR': {'percent': 0.30},
+	'NL': {'percent': 0.30},
 	'DE': {'percent': 0.80},
 	'DR': {'percent': 0.70},
 	'EE': {'percent': 0.30},
@@ -64,19 +64,16 @@ def getSelection(counter, selection):
 	return {element : counter[element] for element in selection if counter[element] > 0}
 	#return {element : counter[element] for element in selection}
 
-def getFiles(path):
-	problem = dr.problems ( dr.dirproblems ( path) )
-	merge_file = ""
-	unknown_file = ""
-	known_files = []
-	for dirname , (known,unknown) in problem:
-		for file in known:
-			merge_file = merge_file + file[1]
-			known_files.append ( file[1]+"" )
-		for ufile in unknown: 
-			unknown_file = unknown_file + ufile[1]
+def processFile ( files , problem):
+	p = files[problem]
+	return {'merged' : ' '.join(p['known']) , 'known' : p['known'] , 'unknown' : p['unknown'][0]}
 
-	return {'merged' : merge_file , 'known' : known_files, 'unknown' : unknown_file}
+def getFiles(path):
+	p = dr.dirproblems(path)
+	problems = {}	
+	for id , (ks,uks) in p : 
+		problems[id] = {'known':[ dr.readdoc(k) for k in ks ], 'unknown': [dr.readdoc(u) for u in uks]}
+	return problems
 
 def getIdsToSample(text, selected_lang, percent):
 	#percent = lang[selected_lang]['percent']
