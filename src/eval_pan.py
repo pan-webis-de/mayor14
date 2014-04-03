@@ -252,7 +252,6 @@ if __name__ == "__main__":
     langs.update(fnd.keys())
     indice=0
     for lang in langs:
-        info('-----',lang)
         try:
             tp=tpd[lang]
         except KeyError:
@@ -273,23 +272,27 @@ if __name__ == "__main__":
             recall=100.0*tp/(tp+fn)
         else:
             recall=0.0
-    
-        points=create_points(20,[sys[x] for x in keys[lang]],
-                            [gs[x] for x in keys[lang]])
-        auc=calculate_AUC(points)
+   
+        sys_lang=[sys[x] for x in keys[lang] if sys.has_key(x)]
+        gs_lang=[gs[x] for x in keys[lang] if sys.has_key(x)]
+        if len(sys_lang)>0:
+            info('-----',lang)
+            points=create_points(20,sys_lang,
+                                gs_lang)
+            auc=calculate_AUC(points)
 
-        c=100.0*(1/float(totales[indice]))*(tp+(lenguas_sin[indice]*tp*1.0/float(totales[indice])))
-	info('Precision : {0:3.3f}%'.format(pres))
-        info('Recall    : {0:3.3f}%'.format(recall))
-        indice=indice+1
-	if pres> 0.0 and recall > 0.0:
-            info('F1-score  : {0:3.3f}%'.format(2*pres*recall/(pres+recall)))
-        else:
-            info('F1-score  : {0:3.3f}%'.format(0.0))
-        info('AUC       : {0:3.3f}%'.format(auc))
-        info('c@1       : {0:3.3f}%'.format(c))
-        info('Rank      : {0:3.3f}%'.format(c*auc/100))
-    
+            c=100.0*(1/float(totales[indice]))*(tp+(lenguas_sin[indice]*tp*1.0/float(totales[indice])))
+            info('Precision : {0:3.3f}%'.format(pres))
+            info('Recall    : {0:3.3f}%'.format(recall))
+            indice=indice+1
+            if pres> 0.0 and recall > 0.0:
+                info('F1-score  : {0:3.3f}%'.format(2*pres*recall/(pres+recall)))
+            else:
+                info('F1-score  : {0:3.3f}%'.format(0.0))
+            info('AUC       : {0:3.3f}%'.format(auc))
+            info('c@1       : {0:3.3f}%'.format(c))
+            info('Rank      : {0:3.3f}%'.format(c*auc/100))
+        
 
 
 
