@@ -166,6 +166,17 @@ def bigram(doc,sw=[]):
     com=preprocess(doc,ncutoff=0,ncommons=1)
     return doc,com,values
 
+def bigrampref(doc,sw=[]):
+    wds = spaces.split(renter.sub(' ',doc.lower()))
+    bigram = zip(wds, wds[1:])
+    values=["{0} {1}".format(x.encode('utf-8')[:3],
+                                    y.encode('utf-8')[:3]) for x, y in bigram]
+    doc = Counter(values)
+    com=preprocess(doc,ncutoff=0,ncommons=1)
+    return doc,com,values
+
+
+
 def trigram(doc,sw=[]):
     wds = spaces.split(renter.sub(' ',doc.lower()))
     tri = zip(wds, wds[1:], wds[2:])

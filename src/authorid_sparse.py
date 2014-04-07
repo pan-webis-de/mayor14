@@ -28,6 +28,7 @@ import os.path
 import sklearn.preprocessing as preprocessing
 import numpy as np
 import random
+import itertools
 from collections import Counter
 from oct2py import octave
 octave.addpath('src/octave')
@@ -44,18 +45,21 @@ def info(*args):
     """ Function to print info"""
     print >> out, "".join(args)
 
-def muestreo(counter,percentage=.80):
-   list_counter=list(counter.elements())
-   random.shuffle(list_counter)
-   
-   size=len(list_counter)
-   final_list=list_counter[0:int(size*percentage)]  
-  
-   final_count=Counter(final_list)  
-   return final_count
+def muestreo(counter,reps,percentage=.80):
+    final_count={}
+    for rep in reps:
+       list_counter=list(counter[rep].elements())
+       random.shuffle(list_counter)
+       
+       size=len(list_counter)
+       final_list=list_counter[0:int(size*percentage)]  
+      
+       final_count[rep]=Counter(final_list)  
+    return final_count
 
 def get_master_impostors(id,n,problems,sw=[]):
     master_impostors=[]
+    lens=[]
     pat=id[:2]
     ids_candidates=[]
     for id_,(ks,uks) in problems:
@@ -65,27 +69,39 @@ def get_master_impostors(id,n,problems,sw=[]):
     
     for id_,(ks,uks) in problems:
         if id_ in ids_candidates[:n]:
-            master_candidate=Counter()
+            master_candidate={}
             for doc in ks:
-                ngram=docread.ngram(doc[1])[0]
-                master_candidate.update(ngram)
+                for repname in opts.reps:
+                    try:
+                        exec("f=docread.{0}".format(repname))
+                        rep=f(doc[1])[0]
+                        try:
+                            master_candidate[repname].update(rep)
+                        except KeyError:
+                            master_candidate[repname]=Counter(rep)
+                    except:
+                        pass
+
             master_impostors.append(master_candidate)
-    return master_impostors
+            lens.append(len(ks))
+    return master_impostors,lens
  
 
-def proyect_into_vectors(exmamples,unknown, nmost=200):
-    full=Counter()
-    for example in examples:
-        full.update(example)
-    full.update(unknown)
+def proyect_into_vectors(examples,unknown,reps,lens,nmost=100):
+    vectors=[[] for e in examples]
+    uvec=[]
+    for rep in reps:
+        full=Counter()
+        for example in examples:
+            full.update(example[rep])
+        full.update(unknown[rep])
 
-    idx=[p[0] for p in full.most_common()[:100]]
-    vectors=[]
-    for example in examples:
-        arr=[1.0*example[k] for k in idx]
-        vectors.append(arr)
-    return vectors,[1.0*unknown[k] for k in idx]
-
+        idx=[p[0] for p in full.most_common()[:nmost]]
+        for i,example in enumerate(examples):
+            arr=[1.0*example[rep][k]/lens[i] for k in idx]
+            vectors[i].append(arr)
+        uvec.append([1.0*unknown[rep][k] for k in idx])
+    return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
 
 codes=docread.codes
 
@@ -114,18 +130,18 @@ if __name__ == "__main__":
     p.add_argument("--genre",default='all',
             action="store", dest="genre",
             help="Genre to process [all]")
-    p.add_argument("--off",default=[],
-            action="append", dest="off",
-            help="distances or representations to turn off")
+    p.add_argument("-r","--rep",default=['ngram'],
+            action="append", dest="reps",
+            help="adds representation to process")
     p.add_argument("--imposters",default=10,type=int,
             action="store", dest="imposters",
             help="Total of imposter per auhtor [10]")
-    p.add_argument("--documents",default=4,type=int,
+    p.add_argument("--documents",default=5,type=int,
             action="store", dest="documents",
-            help="Documents per author [4]")
-    p.add_argument("--percentage",default=.60,type=float,
+            help="Documents per author [5]")
+    p.add_argument("--percentage",default=.95,type=float,
             action="store", dest="percentage",
-            help="Sampling percentage [.6]")
+            help="Sampling percentage [.95]")
     p.add_argument("--model",default=".",
             action="store", dest="model",
             help="Model to save training or to test with [None]")
@@ -229,36 +245,56 @@ if __name__ == "__main__":
     if opts.mode.startswith("devel"):
 	#Iterating over problems
         for id,(ks,uks) in problems:
-            master_author=Counter()
-            master_unknown=Counter()
+            master_author={}
+            master_unknown={}
      
             for filename,doc in ks:
-                ngram=docread.ngram(doc)[0]
-                master_author.update(ngram)
+                for repname in opts.reps:
+                    try:
+                        exec("f=docread.{0}".format(repname))
+                        rep=f(doc)[0]
+                        try:
+                            master_author[repname].update(rep)
+                        except KeyError:
+                            master_author[repname]=Counter(rep)
+                    except:
+                        pass
 
             for filename,doc in uks:
-                ngram=docread.ngram(doc)[0]
-                master_unknown.update(ngram)
+                 for repname in opts.reps:
+                    try:
+                        exec("f=docread.{0}".format(repname))
+                        rep=f(doc)[0]
+                        try:
+                            master_unknown[repname].update(rep)
+                        except KeyError:
+                            master_unknown[repname]=Counter(rep)
+                    except:
+                        pass
+
 
             #Extracting Examples
             examples= []
+            lens=[]
             for i in range(opts.documents):
-                examples.append(muestreo(master_author,percentage=opts.percentage))
+                examples.append(muestreo(master_author,opts.reps,percentage=opts.percentage))
+                lens.append(len(ks))
 
             # Adding imposters
-            master_impostors=get_master_impostors(id,opts.imposters,problems)
-            for master_impostor in master_impostors:
+            master_impostors,len_impostors=get_master_impostors(id,opts.imposters,problems)
+            for j,master_impostor in enumerate(master_impostors):
+                 len_impostor=len_impostors[j]
                  for i in range(opts.documents):
-                    examples.append(muestreo(master_impostor,percentage=opts.percentage))
+                     examples.append(muestreo(master_impostor,opts.reps,percentage=opts.percentage))
+                     lens.append(len_impostor)
 
 
             # Sparce algorithm
             # Proyecting examples into a vector
-            example_vectors,unknown=proyect_into_vectors(examples,master_unknown)
+            ks=(len(ks),)
+            example_vectors,unknown=proyect_into_vectors(examples,master_unknown,opts.reps,lens)
             # Creating matrix A
             # First samples represent to author, rest impostors
-            A=np.array(example_vectors)
-            tolerance=0.01
             # Normalizing the data
             A=preprocessing.normalize(example_vectors,axis=0)
             A=A.T
