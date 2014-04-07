@@ -67,8 +67,10 @@ def ngrams_test(docs,i):
 	
       return count_aux
 
-def muestreo(counter,percentage=.80):
+def muestreo(counter,seed,percentage):
+   
    list_counter=list(counter.elements())
+   random.seed(seed)
    random.shuffle(list_counter)
    
    size=len(list_counter)
@@ -78,7 +80,7 @@ def muestreo(counter,percentage=.80):
    return final_count
 
 
-def get_impostor(id,n, problems,sw=[]):
+def get_impostor(id,n, problems,seed,sw=[]):
     candidates=[]
     pat=id[:2]
     docs=Counter()
@@ -86,6 +88,7 @@ def get_impostor(id,n, problems,sw=[]):
     for id_,(ks,uks) in problems:
         if id_.startswith(pat) and id != id_:
             ids_candidates.append(id_)
+    random.seed(seed)
     random.shuffle(ids_candidates)
     
     for id_,(ks,uks) in problems:
@@ -94,6 +97,7 @@ def get_impostor(id,n, problems,sw=[]):
                 candidates.append(doc[1])
  
     candiates=list(itertools.chain(*candidates))
+    random.seed(seed)
     random.shuffle(candiates)
     for can in candidates[:n]:
         docs.update(Counter(dict(docread.ngram(can,sw=sw)[1])))
@@ -125,6 +129,11 @@ if __name__ == "__main__":
     p.add_argument("--language",default='all',
             action="store", dest="language",
             help="Language to process [all]")
+
+    p.add_argument("--percentage",default='0.6',
+            action="store", dest="percentage",
+            help="percentage to process")
+
     p.add_argument("--genre",default='all',
             action="store", dest="genre",
             help="Genre to process [all]")
@@ -225,19 +234,87 @@ if __name__ == "__main__":
 
                 count_aux=Counter()		
                 for filename,doc in ks:
-                    ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=2)
-                    count_aux.update(ngram)
-		counter_final1=muestreo(count_aux)
-		counter_final2=muestreo(count_aux)
+	            if id.find("DE")>=0:
+                       ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
+                       count_aux.update(ngram)
+		       punct=Counter(dict(docread.punct(doc,sw=stopwords)[1]))
+		       count_aux.update(punct)
+		       coma=Counter(dict(docread.coma(doc,sw=stopwords)[1]))
+		       count_aux.update(coma)
+                       prg="0.90"
+		    if id.find("GR")>=0:
+                       ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
+                       count_aux.update(ngram)
+		       punct=Counter(dict(docread.punct(doc,sw=stopwords)[1]))
+		       count_aux.update(punct)
+		       prg="0.95"
+ 		    if id.find("EE")>=0:
+                       ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
+                       count_aux.update(ngram)
+                       prg="0.70"
+	            if id.find("SP")>=0:
+                       ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
+                       count_aux.update(ngram)
+                       prg="0.70"
+ 		    if id.find("EN")>=0:
+                       ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
+                       count_aux.update(ngram)
+		       
+                       prg="0.85"
+		    if id.find("DR")>=0:
+                       ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
+                       count_aux.update(ngram)
+		       punct=Counter(dict(docread.punct(doc,sw=stopwords)[1]))
+		       count_aux.update(punct)
+		       coma=Counter(dict(docread.coma(doc,sw=stopwords)[1]))
+		       count_aux.update(coma)
+                       prg="0.75"
+		  
+
+		
+		opts.percentage=prg
+		counter_final1=muestreo(count_aux,10,float(opts.percentage))
+		counter_final2=muestreo(count_aux,50,float(opts.percentage))
 		knows_intersection = (counter_final1 & counter_final2)
 	
                 
-                impostor=get_impostor(id,len(ks),problems,sw=stopwords)
-		counter_imposter1=muestreo(impostor)
-		counter_imposter2=muestreo(impostor)
+                impostor=get_impostor(id,len(ks),problems,40,sw=stopwords)
+		counter_imposter1=muestreo(impostor,10,float(opts.percentage))
+		counter_imposter2=muestreo(impostor,50,float(opts.percentage))
 		intersection_imposter = (counter_imposter1 & counter_imposter2)
+
+		counter_uks=Counter()
+                if id.find("DE")>=0:
+                       ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
+                       counter_uks.update(ngram)
+		       punct=Counter(dict(docread.punct(uks[0][1],sw=stopwords)[1]))
+		       counter_uks.update(punct)
+		       coma=Counter(dict(docread.coma(uks[0][1],sw=stopwords)[1]))
+		       counter_uks.update(coma)
+		if id.find("GR")>=0:
+                       ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
+                       counter_uks.update(ngram)
+		       punct=Counter(dict(docread.punct(uks[0][1],sw=stopwords)[1]))
+		       counter_uks.update(punct)
+	        if id.find("EE")>=0:
+                       ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
+                       counter_uks.update(ngram)
+	        if id.find("SP")>=0:
+                       ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
+                       counter_uks.update(ngram)                   
+ 		if id.find("EN")>=0:
+                       ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
+                       counter_uks.update(ngram)
+		
+		if id.find("DR")>=0:
+                       ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
+                       counter_uks.update(ngram)
+		       punct=Counter(dict(docread.punct(uks[0][1],sw=stopwords)[1]))
+		       counter_uks.update(punct)
+		       coma=Counter(dict(docread.coma(uks[0][1],sw=stopwords)[1]))
+		       counter_uks.update(coma)
+
 	
-		counter_uks=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
 		set_uks = set(counter_uks.keys()) #elementos sin repeticion
 
 		#Bayes
