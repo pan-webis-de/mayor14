@@ -276,8 +276,8 @@ if __name__ == "__main__":
             if opts.csv:
                 m,n=A.size
                 vals=[]
-                for val in range(m*n):
-                    vals.append(A[val])
+                for val in A:
+                    vals.append(val)
                 csv_A.writerow([id,11,m,n]+vals)
                 m,n=y.size
                 csv_b.writerow([id,11,m,n]+[x for x in y])
