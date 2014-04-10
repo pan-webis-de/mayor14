@@ -240,26 +240,33 @@ if __name__ == "__main__":
 		       punct=Counter(dict(docread.punct(doc,sw=stopwords)[1]))
 		       count_aux.update(punct)
 		       coma=Counter(dict(docread.coma(doc,sw=stopwords)[1]))
-		       count_aux.update(coma)
+	   	       count_aux.update(coma)
+		    
                        prg="0.90"
 		    if id.find("GR")>=0:
                        ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
                        count_aux.update(ngram)
 		       punct=Counter(dict(docread.punct(doc,sw=stopwords)[1]))
 		       count_aux.update(punct)
+		     
 		       prg="0.95"
  		    if id.find("EE")>=0:
                        ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
                        count_aux.update(ngram)
+		       bigrampref=Counter(dict(docread.bigrampref(doc,sw=stopwords)[1]))
+		       count_aux.update(bigrampref)
+  		    
                        prg="0.70"
 	            if id.find("SP")>=0:
                        ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
                        count_aux.update(ngram)
+		       enter=Counter(dict(docread.enter(doc,sw=stopwords)[1]))
+                       count_aux.update(enter)
                        prg="0.70"
  		    if id.find("EN")>=0:
                        ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
                        count_aux.update(ngram)
-		       
+		
                        prg="0.85"
 		    if id.find("DR")>=0:
                        ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
@@ -268,6 +275,7 @@ if __name__ == "__main__":
 		       count_aux.update(punct)
 		       coma=Counter(dict(docread.coma(doc,sw=stopwords)[1]))
 		       count_aux.update(coma)
+		      
                        prg="0.75"
 		  
 
@@ -291,21 +299,28 @@ if __name__ == "__main__":
 		       counter_uks.update(punct)
 		       coma=Counter(dict(docread.coma(uks[0][1],sw=stopwords)[1]))
 		       counter_uks.update(coma)
+		 
 		if id.find("GR")>=0:
                        ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
                        counter_uks.update(ngram)
 		       punct=Counter(dict(docread.punct(uks[0][1],sw=stopwords)[1]))
 		       counter_uks.update(punct)
+		
 	        if id.find("EE")>=0:
                        ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
                        counter_uks.update(ngram)
+		       bigrampref=Counter(dict(docread.bigrampref(uks[0][1],sw=stopwords)[1]))
+		       counter_uks.update(bigrampref)
+		    
 	        if id.find("SP")>=0:
                        ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
-                       counter_uks.update(ngram)                   
+                       counter_uks.update(ngram)      
+		       enter=Counter(dict(docread.enter(uks[0][1],sw=stopwords)[1]))
+                       counter_uks.update(enter)
  		if id.find("EN")>=0:
                        ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
                        counter_uks.update(ngram)
-		
+		      
 		if id.find("DR")>=0:
                        ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
                        counter_uks.update(ngram)
@@ -313,6 +328,7 @@ if __name__ == "__main__":
 		       counter_uks.update(punct)
 		       coma=Counter(dict(docread.coma(uks[0][1],sw=stopwords)[1]))
 		       counter_uks.update(coma)
+		       
 
 	
 		set_uks = set(counter_uks.keys()) #elementos sin repeticion
