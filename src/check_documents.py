@@ -153,6 +153,8 @@ class AuthorIdCLI(cmd.Cmd):
         exec("f=docread.{0}".format(args[0]))
         if len(args)==1:
             args=range(lks+1)
+        else:
+            args=args[1:]
 
 
         for i in args:
