@@ -141,11 +141,15 @@ if __name__ == "__main__":
     tp=0
     fp=0
     fn=0
+    total=0
+    sin_contestar=0
     tpd={}
     fpd={}
     fnd={}
+    totals={}
     keys={}
     recall={}
+    lenguas_sin={}
 
     for g,l in gs.iteritems():
         # False negative, there is no anwer or prob is 0.5
@@ -153,19 +157,31 @@ if __name__ == "__main__":
             keys[g[:2]].append(g)
         except KeyError:        
             keys[g[:2]]=[g]
-    
+        
+        try:
+            totals[g[:2]]+=1
+        except KeyError:
+            totals[g[:2]]=1
+            
+        total=total+1
+   
         if not sys.has_key(g) or sys[g]==0.5:
             fn+=1
             try:
                 fnd[g[:2]]+=1
             except KeyError:
                 fnd[g[:2]]=1
+            sin_contestar=sin_contestar+1
+            try:
+                lenguas_sin[g[:2]]+=1
+            except KeyError:
+                lenguas_sin[g[:2]]=1
             continue
 
         # Checking the answer
         if sys[g]<0.5:
             res='N'
-        else:
+        elif sys[g]>0.5:
             res='Y'
         
         if res==l:
@@ -185,36 +201,19 @@ if __name__ == "__main__":
                 fnd[g[:2]]+=1
             except KeyError:
                 fnd[g[:2]]=1
-    
-
-
-    total=0
-    sin_contestar=0
-    for g,pb in sys.iteritems():
-      if float(pb) == '0.5':
-         sin_contestar=sin_contestar+1
-      total=total+1
-			
-    indice=0
-    totales={}
-    for ln in tpd:
-       totales[indice]=tpd[ln]+fpd[ln]+fnd[ln]
-       indice=indice+1
-    
-    aux=0   
-    lenguas_sin={}
-    for jn in totales:
-      lenguas_sin[jn]=0;
-      for kn in range(aux,jn):
-	if probas[kn]=='0.5':
-          lenguas_sin[kn]=lenguas_sin[kn]+1
-      aux=jn+1
+    langs=set([])
+    langs.update(tpd.keys())
+    langs.update(fpd.keys())
+    langs.update(fnd.keys())
+		
 
 
 	
     info('True positives: ',str(tp))
     info('False positives: ',str(fp))
     info('False negatives: ',str(fn))
+    info('Without ans    : ',str(sin_contestar))
+    info('Total          : ',str(total))
     info('==========')
     info('Accuracy  : {0:3.3f}%'.format(100.0*tp/len(gs)))
     info('==========')
@@ -246,10 +245,6 @@ if __name__ == "__main__":
 
 
     info('==========')
-    langs=set([])
-    langs.update(tpd.keys())
-    langs.update(fpd.keys())
-    langs.update(fnd.keys())
     indice=0
     for lang in langs:
         try:
@@ -272,7 +267,13 @@ if __name__ == "__main__":
             recall=100.0*tp/(tp+fn)
         else:
             recall=0.0
-   
+  
+        try:
+            sin_contestar=lenguas_sin[lang]
+        except KeyError:
+            sin_contestar=0
+        total=totals[lang]
+
         sys_lang=[sys[x] for x in keys[lang] if sys.has_key(x)]
         gs_lang=[gs[x] for x in keys[lang] if sys.has_key(x)]
         if len(sys_lang)>0:
@@ -281,7 +282,7 @@ if __name__ == "__main__":
                                 gs_lang)
             auc=calculate_AUC(points)
 
-            c=100.0*(1/float(totales[indice]))*(tp+(lenguas_sin[indice]*tp*1.0/float(totales[indice])))
+            c=100.0*(1/float(total))*(tp+(sin_contestar*tp*1.0/float(total))) 
             info('Precision : {0:3.3f}%'.format(pres))
             info('Recall    : {0:3.3f}%'.format(recall))
             indice=indice+1
