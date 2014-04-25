@@ -6,7 +6,7 @@
 # Ivan V. Meza
 # 2014/IIMAS, México
 # ----------------------------------------------------------------------
-# authorid_bayes.py is free software: you can redistribute it and/or modify
+# authorid_sparse.py is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
@@ -31,6 +31,7 @@ import random
 import itertools
 from collections import Counter
 from oct2py import octave
+from oct2py.utils import Oct2PyError
 octave.addpath('src/octave')
 
 # Local imports
@@ -48,16 +49,24 @@ def info(*args):
 def muestreo(counter,reps,percentage=.80):
     final_count={}
     for rep in reps:
-       list_counter=list(counter[rep].elements())
-       random.shuffle(list_counter)
+        
+        if len(counter[rep].keys()) < 120:
+            percentage_=1.0
+        else:
+            percentage_=percentage
+
+        list_counter=list(counter[rep].elements())
+        random.shuffle(list_counter)
        
-       size=len(list_counter)
-       final_list=list_counter[0:int(size*percentage)]  
+        size=len(list_counter)
+        final_list=list_counter[0:int(size*percentage_)]  
       
-       final_count[rep]=Counter(final_list)  
+        final_count[rep]=Counter(final_list)  
     return final_count
 
-def get_master_impostors(id,n,problems,sw=[]):
+def get_master_impostors(id,n,problems,sw=[],mode="test"):
+    if mode.startswith("test"):
+        id=id+"___"
     master_impostors=[]
     lens=[]
     pat=id[:2]
@@ -75,19 +84,19 @@ def get_master_impostors(id,n,problems,sw=[]):
                     try:
                         exec("f=docread.{0}".format(repname))
                         rep=f(doc[1])[0]
-                        try:
-                            master_candidate[repname].update(rep)
-                        except KeyError:
-                            master_candidate[repname]=Counter(rep)
                     except:
-                        pass
+                        rep=Counter()
+                    try:
+                        master_candidate[repname].update(rep)
+                    except KeyError:
+                        master_candidate[repname]=Counter(rep)
 
             master_impostors.append(master_candidate)
             lens.append(len(ks))
     return master_impostors,lens
  
 
-def proyect_into_vectors(examples,unknown,reps,lens,nmost=100):
+def proyect_into_vectors(examples,full_voca,unknown,reps,lens,nmost=120):
     vectors=[[] for e in examples]
     uvec=[]
     for rep in reps:
@@ -95,18 +104,128 @@ def proyect_into_vectors(examples,unknown,reps,lens,nmost=100):
         for example in examples:
             full.update(example[rep])
         full.update(unknown[rep])
-
         idx=[p[0] for p in full.most_common()[:nmost]]
         for i,example in enumerate(examples):
-            arr=[1.0*example[rep][k]/lens[i] for k in idx]
+            arr=[1.0*example[rep][k] for k in idx]
             vectors[i].append(arr)
         uvec.append([1.0*unknown[rep][k] for k in idx])
     return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
 
 codes=docread.codes
 
-# MAIN program
-# if __name__ == "__main__
+
+def process_corpus(problems,impostor_problems,opts,mode):
+	#Iterating over problems
+        for id,(ks,uks) in problems:
+            master_author={}
+            master_unknown={}
+            full_voca={}
+     
+            for filename,doc in ks:
+                for repname in opts.reps:
+                    try:
+                        exec("f=docread.{0}".format(repname))
+                        rep=f(doc)[0]
+                    except:
+                        rep=Counter()
+                    try:
+                        master_author[repname].update(rep)
+                    except KeyError:
+                        master_author[repname]=Counter(rep)
+                    try:
+                        full_voca[repname].update(rep)
+                    except KeyError:
+                        full_voca[repname]=Counter(rep)
+
+            for filename,doc in uks:
+                 for repname in opts.reps:
+                    try:
+                        exec("f=docread.{0}".format(repname))
+                        rep=f(doc)[0]
+                    except:
+                        rep=Counter()
+                    try:
+                        master_unknown[repname].update(rep)
+                    except KeyError:
+                        master_unknown[repname]=Counter(rep)
+                    try:
+                        full_voca[repname].update(rep)
+                    except KeyError:
+                        full_voca[repname]=Counter(rep)
+
+            results=[]
+            iters=opts.iters
+            for iter in range(iters):
+                #Extracting Examples
+                examples= []
+                lens=[]
+                for i in range(opts.documents):
+                    examples.append(muestreo(master_author,opts.reps,percentage=opts.percentage))
+                    lens.append(len(ks))
+
+                # Adding imposters
+                master_impostors,len_impostors=get_master_impostors(id,opts.imposters,impostor_problems,mode)
+                for j,master_impostor in enumerate(master_impostors):
+                     len_impostor=len_impostors[j]
+                     for i in range(opts.documents):
+                         examples.append(muestreo(master_impostor,opts.reps,percentage=opts.percentage))
+                         lens.append(len_impostor)
+
+                sample_unknown=muestreo(master_unknown,opts.reps,percentage=opts.percentage)
+
+                # Sparce algorithm
+                # Proyecting examples into a vector
+                ks=(len(ks),)
+                example_vectors,unknown=proyect_into_vectors(examples,full_voca,sample_unknown,opts.reps,lens)
+                #print unknown
+                #for example in example_vectors:
+                #    print example
+                #    print len(example)
+
+
+                # Creating matrix A
+                # First samples represent to author, rest impostors
+                # Normalizing the data
+                A=preprocessing.normalize(example_vectors,axis=0)
+                A=A.T
+                y=np.matrix(unknown)
+                y=y.T 
+                nu=0.002
+                tol=0.001
+                stopCrit=3
+                answer=False
+                while not answer:
+                    try:
+                        x_0, nIter = octave.SolveHomotopy(A, y, 'lambda', nu, 'tolerance', tol, 'stoppingcriterion', stopCrit);
+                        # Calculating residuals
+                        residuals=[]
+                        residuals_=[]
+                        for i in range(len(examples)/opts.documents):
+                            n=opts.documents
+                            if sum([x for x in x_0[i*n:(i+1)*n]])==0:
+                                residuals.append(300000)
+                                continue
+                            d_i= [[0.0 for x in x_0[:i*n]]+\
+                                 [x for x in x_0[i*n:(i+1)*n]]+\
+                                 [0.0 for x in x_0[(i+1)*n:]]]
+                            r_is=y-A*d_i
+                            r_is=np.array(r_is)
+                            r_is_2=sum(r_is**2)
+                            r_i=np.sqrt(r_is_2[0])
+                            residuals.append(r_i)
+                            residuals_.append(r_i)
+                            minres=min(residuals_)
+                            maxres=max(residuals_)
+                        identity=np.argmin(residuals)
+                        if identity==0:
+                            results.append(1.0)
+                        else:
+                            results.append(0.0)
+                        answer=True
+                    except Oct2PyError:
+                        pass
+            print id, sum(results)/iters
+
 
 # MAIN program
 if __name__ == "__main__":
@@ -130,9 +249,12 @@ if __name__ == "__main__":
     p.add_argument("--genre",default='all',
             action="store", dest="genre",
             help="Genre to process [all]")
-    p.add_argument("-r","--rep",default=['ngram'],
+    p.add_argument("-r","--rep",default=[],
             action="append", dest="reps",
             help="adds representation to process")
+    p.add_argument("--iters",default=10,type=int,
+            action="store", dest="iters",
+            help="Total iterations [10]")
     p.add_argument("--imposters",default=10,type=int,
             action="store", dest="imposters",
             help="Total of imposter per auhtor [10]")
@@ -243,97 +365,7 @@ if __name__ == "__main__":
 
     # Development model 
     if opts.mode.startswith("devel"):
-	#Iterating over problems
-        for id,(ks,uks) in problems:
-            master_author={}
-            master_unknown={}
-     
-            for filename,doc in ks:
-                for repname in opts.reps:
-                    try:
-                        exec("f=docread.{0}".format(repname))
-                        rep=f(doc)[0]
-                        try:
-                            master_author[repname].update(rep)
-                        except KeyError:
-                            master_author[repname]=Counter(rep)
-                    except:
-                        pass
-
-            for filename,doc in uks:
-                 for repname in opts.reps:
-                    try:
-                        exec("f=docread.{0}".format(repname))
-                        rep=f(doc)[0]
-                        try:
-                            master_unknown[repname].update(rep)
-                        except KeyError:
-                            master_unknown[repname]=Counter(rep)
-                    except:
-                        pass
-
-
-            #Extracting Examples
-            examples= []
-            lens=[]
-            for i in range(opts.documents):
-                examples.append(muestreo(master_author,opts.reps,percentage=opts.percentage))
-                lens.append(len(ks))
-
-            # Adding imposters
-            master_impostors,len_impostors=get_master_impostors(id,opts.imposters,problems)
-            for j,master_impostor in enumerate(master_impostors):
-                 len_impostor=len_impostors[j]
-                 for i in range(opts.documents):
-                     examples.append(muestreo(master_impostor,opts.reps,percentage=opts.percentage))
-                     lens.append(len_impostor)
-
-
-            # Sparce algorithm
-            # Proyecting examples into a vector
-            ks=(len(ks),)
-            example_vectors,unknown=proyect_into_vectors(examples,master_unknown,opts.reps,lens)
-            # Creating matrix A
-            # First samples represent to author, rest impostors
-            # Normalizing the data
-            A=preprocessing.normalize(example_vectors,axis=0)
-            A=A.T
-            y=np.matrix(unknown)
-            y=y.T 
-            nu=0.002
-            tol=0.001
-            stopCrit=3
-            x_0, nIter = octave.SolveHomotopy(A, y, 'lambda', nu, 'tolerance', tol, 'stoppingcriterion', stopCrit);
-            # Calculating residuals
-            residuals=[]
-            residuals_=[]
-            for i in range(len(examples)/opts.documents):
-                n=opts.documents
-                if sum([x for x in x_0[i*n:(i+1)*n]])==0:
-                    residuals.append(300000)
-                    continue
-                d_i= [[0.0 for x in x_0[:i*n]]+\
-                     [x for x in x_0[i*n:(i+1)*n]]+\
-                     [0.0 for x in x_0[(i+1)*n:]]]
-                r_is=y-A*d_i
-                r_is=np.array(r_is)
-                r_is_2=sum(r_is**2)
-                r_i=np.sqrt(r_is_2[0])
-                residuals.append(r_i)
-                residuals_.append(r_i)
-            identity=np.argmin(residuals)
-            avg=np.average(residuals_)
-            max=np.max(residuals_)
-            min=np.min(residuals_)
-            if max-min == 0:
-                prob=0.0
-            else:
-                prob=(max-avg)/(max-min)
-            lower=[x for x in residuals if x <= avg]
-            if identity==0:
-                print id, float(1-prob)
-            else:
-                print id, float(prob)
+        process_corpus(problems,problems,opts,"devel")
       
     # TRAINING - Save examples
     elif opts.mode.startswith("train"):
@@ -346,4 +378,8 @@ if __name__ == "__main__":
 
  
     elif opts.mode.startswith("test"):
-        pass	
+        import pickle
+        
+        problems_train = pickle.load(open(opts.model))
+        verbose("Reading model",opts.model)
+        process_corpus(problems,problems_train,opts,"test")
