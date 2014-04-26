@@ -178,7 +178,7 @@ def process_corpus(problems,impostor_problems,opts,mode):
                     if dk_du * du_dk > dk_di * du_di :
                         score += 1/ float( (opts.iters) * len(master_impostors) )
 
-            print id, score
+            print id, 1.0-score
 
 
 
