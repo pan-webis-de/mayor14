@@ -79,8 +79,6 @@ codes={
 
 
 
-
-
 def prettyprint(filename):
     with codecs.open(filename,'r','utf-8') as fh:
         pass
@@ -210,6 +208,7 @@ def bigramstop(doc,sw=[]):
     
     bigram = zip(wds, wds[1:])
     values=["{0} {1}".format(x,y[:5]) for x, y in bigram
+
                                     if x in sw]
     doc = Counter(values)
     com=postprocess(doc,ncutoff=0,ncommons=0)

@@ -194,7 +194,11 @@ def process_corpus(problems,impostor_problems,opts,mode):
                 tol=0.001
                 stopCrit=3
                 answer=False
+                nanswers=0
                 while not answer:
+                    if nanswers>4:
+                        results=[0.0 for i in range(iters)]
+                        break
                     try:
                         x_0, nIter = octave.SolveHomotopy(A, y, 'lambda', nu, 'tolerance', tol, 'stoppingcriterion', stopCrit);
                         # Calculating residuals
@@ -221,6 +225,7 @@ def process_corpus(problems,impostor_problems,opts,mode):
                             results.append(1.0)
                         else:
                             results.append(0.0)
+                        nanswers+=1
                         answer=True
                     except Oct2PyError:
                         pass

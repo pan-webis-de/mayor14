@@ -179,7 +179,7 @@ def process_corpus(problems,impostor_problems,opts,mode):
                         score += 1/ float( (opts.iters) * len(master_impostors) )
 
             print id, 1.0-score
-
+1.0-
 
 
 
@@ -303,4 +303,19 @@ if __name__ == "__main__":
     if opts.mode.startswith("devel"):
         process_corpus(problems,problems,opts,"devel")
  
+    # TRAINING - Save examples
+    elif opts.mode.startswith("train"):
+        import pickle
+        
+        stream_model = pickle.dumps(problems)
+        verbose("Saving model into ",opts.model)
+        with open(opts.model,"w") as modelf:
+            modelf.write(stream_model)
 
+    # Testing 
+    elif opts.mode.startswith("test"):
+        import pickle
+        
+        problems_train = pickle.load(open(opts.model))
+        verbose("Reading model",opts.model)
+        process_corpus(problems,problems_train,opts,"test")

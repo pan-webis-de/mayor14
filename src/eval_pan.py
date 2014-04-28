@@ -142,6 +142,8 @@ if __name__ == "__main__":
     fp=0
     fn=0
     total=0
+    yeas=0
+    noes=0
     sin_contestar=0
     tpd={}
     fpd={}
@@ -181,8 +183,10 @@ if __name__ == "__main__":
         # Checking the answer
         if sys[g]<0.5:
             res='N'
+            noes+=1
         elif sys[g]>0.5:
             res='Y'
+            yeas+=1
         
         if res==l:
             tp+=1
@@ -209,11 +213,13 @@ if __name__ == "__main__":
 
 
 	
-    info('True positives: ',str(tp))
+    info('True positives : ',str(tp))
     info('False positives: ',str(fp))
     info('False negatives: ',str(fn))
     info('Without ans    : ',str(sin_contestar))
     info('Total          : ',str(total))
+    info('Ys             : ',str(yeas))
+    info('Ns             : ',str(noes))
     info('==========')
     info('Accuracy  : {0:3.3f}%'.format(100.0*tp/len(gs)))
     info('==========')
