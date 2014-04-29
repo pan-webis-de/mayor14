@@ -179,8 +179,6 @@ def process_corpus(problems,impostor_problems,opts,mode):
                         score += 1/ float( (opts.iters) * len(master_impostors) )
 
             print id, 1.0-score
-1.0-
-
 
 
 # MAIN program
