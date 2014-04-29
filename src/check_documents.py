@@ -40,7 +40,7 @@ import docread
 def verbose(*args):
     """ Function to print verbose"""
     if opts.verbose:
-        print >> out, "".join(args)
+        print "".join(args)
 
 def info(*args):
     """ Function to print info"""
@@ -148,9 +148,15 @@ class AuthorIdCLI(cmd.Cmd):
         
         lks= len(problems[self.doc][1][0])
         args=self.parse(args)
-        if not len(args)>0:
+        print args
+        if not len(args)>=1:
             print "error: enough arguments"
-        exec("f=docread.{0}".format(args[0]))
+            return
+        try:
+            exec("f=docread.{0}".format(args[0]))
+        except:
+            print "error: not representation available"
+            return
         if len(args)==1:
             args=range(lks+1)
         else:
@@ -218,7 +224,7 @@ def printrep(c,nmost=1000):
     vals=c.most_common()[:nmost]
     print "Total classes:", len(c)
     print "Toral mass   :", sum(c.values())
-    for i in range(len(vals)/5):
+    for i in range(len(vals)/5+1):
         print " | ".join(["{0:<10}:{1:>3}".format(x[:10],v) for x,v in vals[(i*5):(i*5)+5]])
 
 

@@ -35,15 +35,17 @@ import codecs
 from collections import Counter
 
 spaces=re.compile('\W+',re.UNICODE)
+spaces_=re.compile('[ \t]+',re.UNICODE)
+period=re.compile('[.;]',re.UNICODE)
 rcapital=re.compile(u'[\u0391-\u03A9][^ ]+|[A-Z][^ ]+',re.UNICODE)
 #rcapital=re.compile(r'[A-Z][^W]+',re.UNICODE)
 rpar2 = re.compile(u'[.:].?\r?\n[A-Z]|[.:].?\r?\n[\u0391-\u03A9]',re.UNICODE)
 rterm=re.compile('[.,]',re.UNICODE)
 rpar = re.compile('\'''',re.UNICODE)
 renter = re.compile('\r?\n',re.UNICODE)
-renterer =re.compile('\n',re.UNICODE)
+renterer =re.compile('\r?\n',re.UNICODE)
 #wordpunct=re.compile('\w+\W+',re.UNICODE)
-wordpunct=re.compile('[^ ]+[\[\]():"\'.,;?¿]',re.UNICODE)
+wordpunct=re.compile(u'\W+',re.UNICODE)
 rcoma=re.compile(r'\w+,',re.UNICODE)
 rdot=re.compile(r'\w+\.',re.UNICODE)
 rspc=re.compile(r'[/]',re.UNICODE)
@@ -77,8 +79,6 @@ codes={
 
 
 
-
-
 def prettyprint(filename):
     with codecs.open(filename,'r','utf-8') as fh:
         pass
@@ -94,85 +94,147 @@ def numbers(doc,sw=[]):
     wds = rnumbers.findall(doc)
     values=[x.encode('utf-8') for x in wds]
     doc=Counter(values)
-    com=preprocess(doc,ncutoff=1,ncommons=0)
+    com=postprocess(doc)
+    return doc,com,values
+
+def numbers_size(doc,sw=[]):
+    wds = rnumbers.findall(doc)
+    values=[str(len(x)) for x in wds]
+    doc=Counter(values)
+    com=postprocess(doc)
     return doc,com,values
 
 def capital(doc,sw=[]):
     wds = rcapital.findall(renter.sub(' ',doc))
     values=[x.encode('utf-8').lower() for x in wds]
     doc=Counter(values)
-    com=preprocess(doc,sw=sw,ncutoff=0,ncommons=1)
+    com=postprocess(doc)
     return doc,com,values
 
 def punct(doc,sw=[]):
-    wds = wordpunct.findall(renter.sub(' ',doc.lower()))
-    values=[x.encode('utf-8')[:-1] for x in wds]
+    wds=wordpunct.findall(spaces_.sub('',renter.sub(' ',doc.lower())))
+    values=[x.encode('utf-8') for x in wds]
     doc=Counter(values)
-    com=preprocess(doc,ncutoff=0,ncommons=1)
+    com=postprocess(doc,ncutoff=0,ncommons=0)
     return doc,com,values
 
 def bow(doc,sw=[]):
     wds = spaces.split(renter.sub(' ',doc.lower()))
+    wds = preprocess(wds,sw)
     doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc,ncommons=0,ncutoff=0,sw=sw)
+    com=postprocess(doc,ncommons=0,ncutoff=0,sw=sw)
     return doc,com,[x.encode('utf-8') for x in wds]
+
+def stopwords(doc,sw=[]):
+    wds = spaces.split(renter.sub(' ',doc.lower()))
+    wds = [w for w in wds if w in sw]
+    doc=Counter([x.encode('utf-8') for x in wds])
+    com=postprocess(doc,ncommons=0,ncutoff=0,sw=sw)
+    return doc,com,[x.encode('utf-8') for x in wds]
+
+
+
+
+def prefix(doc,sw=[]):
+    wds = spaces.split(renter.sub(' ',doc.lower()))
+    wds = preprocess(wds,sw)
+    doc=Counter([x.encode('utf-8')[:5] for x in wds if len(x)>5])
+    com=postprocess(doc,ncommons=0,ncutoff=0,sw=sw)
+    return doc,com,[x.encode('utf-8') for x in wds]
+
+def sufix(doc,sw=[]):
+    wds = spaces.split(renter.sub(' ',doc.lower()))
+    wds = preprocess(wds,sw)
+    doc=Counter([x.encode('utf-8')[-5:] for x in wds if len(x)>5])
+    com=postprocess(doc,ncommons=0,ncutoff=0,sw=sw)
+    return doc,com,[x.encode('utf-8') for x in wds]
+
+
+
 
 def letters(doc,sw=[]):
     # Off
     wds = doc.lower()
     values=[x.encode('utf-8') for x in wds]
     doc=Counter(values)
-    com=preprocess(doc)
+    com=postprocess(doc)
     return doc,com,values
 
 def coma(doc,sw=[]):
     wds = rcoma.findall(doc.lower())
     values=[x.encode('utf-8')[:-1] for x in wds]
     doc=Counter(values)
-    com=preprocess(doc,ncutoff=0,ncommons=0,sw=sw)
+    com=postprocess(doc,ncutoff=0,ncommons=0,sw=sw)
     return doc,com,values
 
 def dot(doc,sw=[]):
     wds = rdot.findall(doc.lower())
     values=[x.encode('utf-8')[:-1] for x in wds]
     doc=Counter(values)
-    com=preprocess(doc,ncutoff=0,ncommons=0,sw=sw)
+    com=postprocess(doc,ncutoff=0,ncommons=0,sw=sw)
     return doc,com,values
 
 def sqrbrackets(doc,sw=[]):
     wds = rspc.findall(doc)
     doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc,ncutoff=0,ncommons=0)
+    com=postprocess(doc,ncutoff=0,ncommons=0)
     return doc,com,[x.encode('utf-8') for x in wds]
 
 def whitespc(doc,sw=[]):
     wds = rwspc.findall(doc)
     doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc,ncutoff=0,ncommons=0)
+    com=postprocess(doc,ncutoff=0,ncommons=0)
     return doc,com,[x.encode('utf-8') for x in wds]
 
 def enter(doc,sw=[]):
     wds = renterer.findall(doc)
     doc=Counter([x.encode('utf-8') for x in wds])
-    com=preprocess(doc,ncutoff=0,ncommons=0)
+    com=postprocess(doc,ncutoff=0,ncommons=0)
     return doc,com,[x.encode('utf-8') for x in wds]    
 
 def bigram(doc,sw=[]):
     wds = spaces.split(renter.sub(' ',doc.lower()))
+    wds = preprocess(wds,sw)
+    
     bigram = zip(wds, wds[1:])
     values=["{0} {1}".format(x.encode('utf-8'),
                                     y.encode('utf-8')) for x, y in bigram]
     doc = Counter(values)
-    com=preprocess(doc,ncutoff=0,ncommons=1)
+    com=postprocess(doc,ncutoff=0,ncommons=1)
     return doc,com,values
+
+def bigramstop(doc,sw=[]):
+    wds = [ x.encode('utf-8') for x in spaces.split(renter.sub(' ',doc.lower()))]
+    
+    bigram = zip(wds, wds[1:])
+    values=["{0} {1}".format(x,y[:5]) for x, y in bigram
+
+                                    if x in sw]
+    doc = Counter(values)
+    com=postprocess(doc,ncutoff=0,ncommons=0)
+    return doc,com,values
+
+
+
 
 def bigrampref(doc,sw=[]):
     wds = spaces.split(renter.sub(' ',doc.lower()))
+    wds = preprocess(wds,sw)
     bigram = zip(wds, wds[1:])
-    values=["{0} {1}".format(x.encode('utf-8')[:3],
+    values=["{0} {1}".format(x.encode('utf-8')[:5],
                                     y.encode('utf-8')[:3]) for x, y in bigram]
     doc = Counter(values)
-    com=preprocess(doc,ncutoff=0,ncommons=1)
+    com=postprocess(doc,ncutoff=0,ncommons=1)
+    return doc,com,values
+
+def bigramsuf(doc,sw=[]):
+    wds = spaces.split(renter.sub(' ',doc.lower()))
+    wds = preprocess(wds,sw)
+    bigram = zip(wds, wds[1:])
+    values=["{0} {1}".format(x.encode('utf-8')[-5:],
+                                    y.encode('utf-8')[:3]) for x, y in bigram]
+    doc = Counter(values)
+    com=postprocess(doc,ncutoff=0,ncommons=1)
     return doc,com,values
 
 
@@ -180,13 +242,14 @@ def bigrampref(doc,sw=[]):
 
 def trigram(doc,sw=[]):
     wds = spaces.split(renter.sub(' ',doc.lower()))
+    wds = preprocess(wds,sw)
     tri = zip(wds, wds[1:], wds[2:])
     values = ["{0} {1} {2}".format(x.encode('utf-8'),
                                     y.encode('utf-8'),
                                     z.encode('utf-8')) for x, y,z in tri]
     doc = Counter(values)
 
-    com=preprocess(doc,ncutoff=0)
+    com=postprocess(doc,ncutoff=0)
     return doc,com,values
 
 
@@ -204,37 +267,50 @@ def ngram(doc,sw=[],ngram=3):
         values = [" ".join(pat).format(*v) for v in val]
         doc.update(values)
 
-    com=preprocess(doc)
+    com=postprocess(doc,sw=sw)
     return doc,com,values
 
 
+def wordssntc(doc,sw=[]):
+    wds = [str(len(spaces.split(w))/10) for w in period.split(renter.sub(' ',doc.lower()))]
+    par = Counter(wds)
+    com=postprocess(par,ncutoff=0,ncommons=0)
+    return par,com,wds
 
 def wordpar(doc,sw=[]):
     #pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
-    pars = rpar.split(doc.lower())
+    pars = rpar2.split(doc.lower())
     par = Counter()
     #par['0']=len(pars)/10
     for k, p in enumerate(pars):
         wds = spaces.split(p)
         #par[str(k+1)]=len(wds)
         par[str(k-len(pars))]=len(wds)
-    com=preprocess(par,ncutoff=0,ncommons=0)
+    com=postprocess(par,ncutoff=0,ncommons=0)
     return par,com,[x.encode('utf-8') for x in pars]
 
 
 def sntcpar(doc,sw=[]):
     #pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
-    pars =rpar.split(doc)
+    pars =rpar2.split(doc)
     par = Counter()
     #par['0']=len(pars)/10
     for k, p in enumerate(pars):
       par[str(k+1)]=1
-    com=preprocess(par,ncutoff=0,ncommons=0)
+    com=postprocess(par,ncutoff=0,ncommons=0)
     return par,com,[x.encode('utf-8') for x in pars]
 
 
 
-def preprocess(doc,ncommons=0,ncutoff=0,sw=[]):
+
+def preprocess(wrds,sw):
+    wrds_=[]
+    for wrd in wrds:
+        if not wrd in sw:
+            wrds_.append(wrd)
+    return wrds_
+
+def postprocess(doc,ncommons=0,ncutoff=0,sw=[]):
     commons=[x for x,c in doc.most_common(ncommons)]
     cutoff=[x for x,c in doc.iteritems() if c <= ncutoff ]
     for c in commons:
@@ -247,20 +323,29 @@ def preprocess(doc,ncommons=0,ncutoff=0,sw=[]):
     return commons
 
 representations=[
-    #('letters',letters),   #X
+    ('letters',letters),   #X
     ('bigram',bigram),
+    ('bigrampref',bigrampref),
+    ('bigramstop',bigramstop),
+    ('bigramsug',bigramsuf),
     ('trigram',trigram), 
     ('punctuation',punct), 
+    ('wordssntc',wordssntc), 
+    ('stopwords',stopwords), 
     ('numbers',numbers),
+    ('numbers_size',numbers),
     ('coma',coma),
     ('dot',dot),           
     ('bow',bow),
+    ('prefix',prefix),
+    ('sufix',sufix),
     ('capital',capital),   
+    ('sntcpar',sntcpar),   
     ('wordpar',wordpar),
     ('sntcpar',sntcpar),
     ('sqrbrackets',sqrbrackets),
-    #('whitespc',whitespc),    #X
-    #('enter',enter),          #X
+    ('whitespc',whitespc),    #X
+    ('enter',enter),          #X
     ]
 
 

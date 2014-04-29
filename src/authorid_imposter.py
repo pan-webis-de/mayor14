@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
 # ----------------------------------------------------------------------
-# Author ID main using a sparse representation
+# Author ID main using imposters
 # ----------------------------------------------------------------------
+# Josue Gutierrez
+# 2014/Showroom, México
 # Ivan V. Meza
 # 2014/IIMAS, México
 # ----------------------------------------------------------------------
-# authorid_sparse.py is free software: you can redistribute it and/or modify
+# authorid_imposter.py is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
@@ -21,21 +23,23 @@
 # -------------------------------------------------------------------------
 
 # System libraries
+import os,re, sys, glob, codecs, requests, justext , shutil, time
+import numpy as np
+from BeautifulSoup import BeautifulSoup
+
 import argparse
 import sys
 import os
 import os.path
-import sklearn.preprocessing as preprocessing
 import numpy as np
 import random
 import itertools
 from collections import Counter
-from oct2py import octave
-from oct2py.utils import Oct2PyError
-octave.addpath('src/octave')
+
 
 # Local imports
 import docread
+import distance
 
 def verbose(*args):
     """ Function to print verbose"""
@@ -47,7 +51,7 @@ def info(*args):
     print >> out, "".join(args)
 
 def muestreo(counter,reps,percentage=.80):
-    final_count={}
+    final_count=Counter()
     for rep in reps:
         
         if len(counter[rep].keys()) < 120:
@@ -61,7 +65,7 @@ def muestreo(counter,reps,percentage=.80):
         size=len(list_counter)
         final_list=list_counter[0:int(size*percentage_)]  
       
-        final_count[rep]=Counter(final_list)  
+        final_count.update(final_list)  
     return final_count
 
 def get_master_impostors(id,n,problems,sw=[],mode="test"):
@@ -92,8 +96,7 @@ def get_master_impostors(id,n,problems,sw=[],mode="test"):
                         master_candidate[repname]=Counter(rep)
 
             master_impostors.append(master_candidate)
-            lens.append(len(ks))
-    return master_impostors,lens
+    return master_impostors
  
 
 def proyect_into_vectors(examples,full_voca,unknown,reps,lens,nmost=120):
@@ -155,86 +158,31 @@ def process_corpus(problems,impostor_problems,opts,mode):
 
             results=[]
             iters=opts.iters
+            score=0.0
             for iter in range(iters):
-                #Extracting Examples
-                examples= []
-                lens=[]
-                for i in range(opts.documents):
-                    examples.append(muestreo(master_author,opts.reps,percentage=opts.percentage))
-                    lens.append(len(ks))
+                known_sample=muestreo(master_author,opts.reps,percentage=opts.percentage)
+                unknown_sample=muestreo(master_unknown,opts.reps,percentage=opts.percentage)
 
                 # Adding imposters
-                master_impostors,len_impostors=get_master_impostors(id,opts.imposters,impostor_problems,mode)
-                for j,master_impostor in enumerate(master_impostors):
-                     len_impostor=len_impostors[j]
-                     for i in range(opts.documents):
-                         examples.append(muestreo(master_impostor,opts.reps,percentage=opts.percentage))
-                         lens.append(len_impostor)
+                master_impostors=get_master_impostors(id,opts.imposters,impostor_problems,mode)
 
-                sample_unknown=muestreo(master_unknown,opts.reps,percentage=opts.percentage)
-
-                # Sparce algorithm
-                # Proyecting examples into a vector
-                ks=(len(ks),)
-                example_vectors,unknown=proyect_into_vectors(examples,full_voca,sample_unknown,opts.reps,lens)
-                #print unknown
-                #for example in example_vectors:
-                #    print example
-                #    print len(example)
+                for master_impostor in master_impostors :
+                    imposter_sample=muestreo(master_impostor,opts.reps,percentage=opts.percentage)
 
 
-                # Creating matrix A
-                # First samples represent to author, rest impostors
-                # Normalizing the data
-                A=preprocessing.normalize(example_vectors,axis=0)
-                A=A.T
-                y=np.matrix(unknown)
-                y=y.T 
-                nu=0.002
-                tol=0.001
-                stopCrit=3
-                answer=False
-                nanswers=0
-                while not answer:
-                    if nanswers>4:
-                        results=[0.0 for i in range(iters)]
-                        break
-                    try:
-                        x_0, nIter = octave.SolveHomotopy(A, y, 'lambda', nu, 'tolerance', tol, 'stoppingcriterion', stopCrit);
-                        # Calculating residuals
-                        residuals=[]
-                        residuals_=[]
-                        for i in range(len(examples)/opts.documents):
-                            n=opts.documents
-                            if sum([x for x in x_0[i*n:(i+1)*n]])==0:
-                                residuals.append(300000)
-                                continue
-                            d_i= [[0.0 for x in x_0[:i*n]]+\
-                                 [x for x in x_0[i*n:(i+1)*n]]+\
-                                 [0.0 for x in x_0[(i+1)*n:]]]
-                            r_is=y-A*d_i
-                            r_is=np.array(r_is)
-                            r_is_2=sum(r_is**2)
-                            r_i=np.sqrt(r_is_2[0])
-                            residuals.append(r_i)
-                            residuals_.append(r_i)
-                            minres=min(residuals_)
-                            maxres=max(residuals_)
-                        identity=np.argmin(residuals)
-                        if identity==0:
-                            results.append(1.0)
-                        else:
-                            results.append(0.0)
-                        nanswers+=1
-                        answer=True
-                    except Oct2PyError:
-                        pass
-            print id, sum(results)/iters
+                    dk_di = distance.jacard2(known_sample, imposter_sample)
+                    dk_du = distance.jacard2(known_sample, unknown_sample)
+                    du_di = distance.jacard2(unknown_sample, imposter_sample)
+                    du_dk = distance.jacard2(unknown_sample, known_sample)
+
+                    if dk_du * du_dk > dk_di * du_di :
+                        score += 1/ float( (opts.iters) * len(master_impostors) )
+
+            print id, 1.0-score
 
 
 # MAIN program
 if __name__ == "__main__":
-
     # Command line options
     p = argparse.ArgumentParser("Author identification")
     p.add_argument("DIR",default=None,
@@ -257,30 +205,21 @@ if __name__ == "__main__":
     p.add_argument("-r","--rep",default=[],
             action="append", dest="reps",
             help="adds representation to process")
+    p.add_argument("--threshold",default=0.5,type=float,
+            action="store", dest="threshold",
+            help="Threshold to consider id an author [0.5]")
     p.add_argument("--iters",default=10,type=int,
             action="store", dest="iters",
             help="Total iterations [10]")
-    p.add_argument("--imposters",default=10,type=int,
+    p.add_argument("--imposters",default=100,type=int,
             action="store", dest="imposters",
-            help="Total of imposter per auhtor [10]")
-    p.add_argument("--documents",default=5,type=int,
-            action="store", dest="documents",
-            help="Documents per author [5]")
+            help="Total of imposters [100]")
     p.add_argument("--percentage",default=.95,type=float,
             action="store", dest="percentage",
             help="Sampling percentage [.95]")
     p.add_argument("--model",default=".",
             action="store", dest="model",
             help="Model to save training or to test with [None]")
-    p.add_argument("--random",default=True,
-            action="store_false", dest="random",
-            help="Use random seed [True]")
-    p.add_argument("--cvs",default=False,
-            action="store_true", dest="csv",
-            help="Save matrices into a .csv file [False]")
-    p.add_argument("--method",default="lp",
-            action="store", dest="method",
-            help="lp|avp|svm|ann [lp]")
     p.add_argument("--stopwords", default="data/stopwords.txt",
             action="store", dest="stopwords",
             help="List of stop words [data/stopwords.txt]")
@@ -292,8 +231,6 @@ if __name__ == "__main__":
             help="Verbose mode [Off]")
     opts = p.parse_args()
 
-    if not opts.random:
-        random.seed(9111978)
 
     # Managing configurations  --------------------------------------------
     # Check the correct mode
@@ -316,14 +253,6 @@ if __name__ == "__main__":
             p.error('Output parameter could not been open: {0}'\
                     .format(opts.output))
     verbose("Running in mode:",opts.mode)
-
-    if opts.csv:
-        import csv
-        file_A=open("A.csv","w")
-        csv_A=csv.writer(file_A,delimiter=',',quotechar=",")
-        file_b=open("b.csv","w")
-        csv_b=csv.writer(file_b,delimiter=',',quotechar=",")
-
 
     # Loading configuration files ----------------------------------------
     # - .ignore   : files to ignore some files
@@ -371,7 +300,7 @@ if __name__ == "__main__":
     # Development model 
     if opts.mode.startswith("devel"):
         process_corpus(problems,problems,opts,"devel")
-      
+ 
     # TRAINING - Save examples
     elif opts.mode.startswith("train"):
         import pickle
@@ -381,7 +310,7 @@ if __name__ == "__main__":
         with open(opts.model,"w") as modelf:
             modelf.write(stream_model)
 
- 
+    # Testing 
     elif opts.mode.startswith("test"):
         import pickle
         
