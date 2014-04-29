@@ -209,6 +209,7 @@ if __name__ == "__main__":
         
     # Loading answers file only for DEVELOPMENT OR TRAINNING MODE
     if opts.mode.startswith("train"):
+
         if opts.Answers:
             answers_file=opts.Answers
         else:
@@ -222,9 +223,18 @@ if __name__ == "__main__":
             p.error("Not match for number of problems({0}) and \
                     answers({1})".format(len(problems),len(answers)))
 
-    if opts.mode.startswith("test"):
-	 #print "Calculating answers"
-	 for id,(ks,uks) in problems:
+	import pickle
+	#opts.model+="/mio.model"
+        print opts.model
+        stream_model = pickle.dumps(problems)
+        verbose("Saving model into ",opts.model)
+        with open(opts.model,"w") as modelf:
+            modelf.write(stream_model)
+
+    if opts.mode.startswith("test") or opts.mode.startswith("devel"):
+	 import pickle
+	 problems_model = pickle.load(open( "./authorid_bayes.model", "r" ) )  
+	 for id,(ks,uks) in problems_model:
 		
 		verbose('Reading from : {0}'.format(id))
 		
@@ -262,6 +272,7 @@ if __name__ == "__main__":
                        count_aux.update(ngram)
 		       enter=Counter(dict(docread.enter(doc,sw=stopwords)[1]))
                        count_aux.update(enter)
+       		
                        prg="0.70"
  		    if id.find("EN")>=0:
                        ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
@@ -286,7 +297,7 @@ if __name__ == "__main__":
 		knows_intersection = (counter_final1 & counter_final2)
 	
                 
-                impostor=get_impostor(id,len(ks),problems,40,sw=stopwords)
+                impostor=get_impostor(id,len(ks),problems_model,40,sw=stopwords)
 		counter_imposter1=muestreo(impostor,10,float(opts.percentage))
 		counter_imposter2=muestreo(impostor,50,float(opts.percentage))
 		intersection_imposter = (counter_imposter1 & counter_imposter2)
@@ -305,6 +316,7 @@ if __name__ == "__main__":
                        counter_uks.update(ngram)
 		       punct=Counter(dict(docread.punct(uks[0][1],sw=stopwords)[1]))
 		       counter_uks.update(punct)
+
 		
 	        if id.find("EE")>=0:
                        ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
@@ -317,6 +329,8 @@ if __name__ == "__main__":
                        counter_uks.update(ngram)      
 		       enter=Counter(dict(docread.enter(uks[0][1],sw=stopwords)[1]))
                        counter_uks.update(enter)
+		  
+              
  		if id.find("EN")>=0:
                        ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
                        counter_uks.update(ngram)

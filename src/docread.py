@@ -177,6 +177,7 @@ def bigrampref(doc,sw=[]):
 
 
 
+
 def trigram(doc,sw=[]):
     wds = spaces.split(renter.sub(' ',doc.lower()))
     tri = zip(wds, wds[1:], wds[2:])
