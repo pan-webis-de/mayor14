@@ -23,9 +23,10 @@
 # -------------------------------------------------------------------------
 
 # System libraries
-import os,re, sys, glob, codecs, requests, justext , shutil, time
+import os,re, sys, glob, codecs, shutil, time
+# import justext, requests
 import numpy as np
-from BeautifulSoup import BeautifulSoup
+#from BeautifulSoup import BeautifulSoup
 
 import argparse
 import sys
