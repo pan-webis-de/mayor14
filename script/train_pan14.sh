@@ -19,5 +19,5 @@ done
 
 python src/authorid_sparse.py -m train --model ${modeldir}/sparse_authorid.model ${traindir} ${traindir}/truth.txt 
 python src/authorid_imposter.py -m train --model ${modeldir}/imposter_authorid.model ${traindir} ${traindir}/truth.txt 
-#python src/authorid_bayes.py -m train --model ${modeldir}/bayes_authorid.model ${traindir} ${traindir}/truth.txt 
+python src/authorid_bayes.py -m train --model ${modeldir}/bayes_authorid.model ${traindir} ${traindir}/truth.txt 
 
