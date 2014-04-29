@@ -129,18 +129,16 @@ if __name__ == "__main__":
     p.add_argument("--language",default='all',
             action="store", dest="language",
             help="Language to process [all]")
-
     p.add_argument("--percentage",default='0.6',
             action="store", dest="percentage",
             help="percentage to process")
-
     p.add_argument("--genre",default='all',
             action="store", dest="genre",
             help="Genre to process [all]")
     p.add_argument("--off",default=[],
             action="append", dest="off",
             help="distances or representations to turn off")
-    p.add_argument( "--model",default=".",
+    p.add_argument( "--model",default="model_bayes",
             action="store", dest="model",
             help="Model to save training or to test with [None]")
     p.add_argument("--method",default="lp",
@@ -232,8 +230,11 @@ if __name__ == "__main__":
             modelf.write(stream_model)
 
     if opts.mode.startswith("test") or opts.mode.startswith("devel"):
-	 import pickle
-	 problems_model = pickle.load(open( "./authorid_bayes.model", "r" ) )  
+         if opts.mode.startswith('devel'):
+             problems_model=problems
+         else:
+    	    import pickle
+	    problems_model = pickle.load(open(opts.model, "r" ) )  
 	 for id,(ks,uks) in problems_model:
 		
 		verbose('Reading from : {0}'.format(id))
