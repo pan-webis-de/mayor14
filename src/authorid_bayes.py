@@ -79,8 +79,35 @@ def muestreo(counter,seed,percentage):
    final_count=Counter(final_list)  
    return final_count
 
-
-def get_impostor(id,n, problems,seed,sw=[]):
+def get_impostor(id,n,problems,sw=[],mode="test"):
+    if mode.startswith("test"):
+        id=id+"___"
+    master_impostors=[]
+    lens=[]
+    pat=id[:2]
+    ids_candidates=[]
+    for id_,(ks,uks) in problems:
+        if id_.startswith(pat) and id != id_:
+            ids_candidates.append(id_)
+    random.shuffle(ids_candidates)
+    
+    for id_,(ks,uks) in problems:
+        if id_ in ids_candidates[:n]:
+            master_candidate=Counter()
+            for doc in ks:
+                for repname in opts.reps:
+                    try:
+                        exec("f=docread.{0}".format(repname))
+                        rep=f(doc[1])[0]
+                    except:
+                        rep=Counter()
+                    try:
+                        master_candidate.update(rep)
+                    except KeyError:
+                        master_candidate=Counter(rep)
+    return master_candidate
+ 
+def get_impostor_(id,n, roblems,seed,sw=[]):
     candidates=[]
     pat=id[:2]
     docs=Counter()
@@ -129,9 +156,12 @@ if __name__ == "__main__":
     p.add_argument("--language",default='all',
             action="store", dest="language",
             help="Language to process [all]")
-    p.add_argument("--percentage",default='0.6',
+    p.add_argument("--percentage",default='0.8',
             action="store", dest="percentage",
             help="percentage to process")
+    p.add_argument("-r","--rep",default=[],
+            action="append", dest="reps",
+            help="adds representation to process")
     p.add_argument("--genre",default='all',
             action="store", dest="genre",
             help="Genre to process [all]")
@@ -235,7 +265,7 @@ if __name__ == "__main__":
          else:
     	    import pickle
 	    problems_model = pickle.load(open(opts.model, "r" ) )  
-	 for id,(ks,uks) in problems_model:
+	 for id,(ks,uks) in problems:
 		
 		verbose('Reading from : {0}'.format(id))
 		
@@ -243,107 +273,47 @@ if __name__ == "__main__":
 		    p.error("More than one unknown file for {0}".format(id))
 	       
 
-                count_aux=Counter()		
+                count_aux=Counter()
+                master_author=Counter()
                 for filename,doc in ks:
-	            if id.find("DE")>=0:
-                       ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
-                       count_aux.update(ngram)
-		       punct=Counter(dict(docread.punct(doc,sw=stopwords)[1]))
-		       count_aux.update(punct)
-		       coma=Counter(dict(docread.coma(doc,sw=stopwords)[1]))
-	   	       count_aux.update(coma)
-		    
-                       prg="0.90"
-		    if id.find("GR")>=0:
-                       ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
-                       count_aux.update(ngram)
-		       punct=Counter(dict(docread.punct(doc,sw=stopwords)[1]))
-		       count_aux.update(punct)
-		     
-		       prg="0.95"
- 		    if id.find("EE")>=0:
-                       ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
-                       count_aux.update(ngram)
-		       bigrampref=Counter(dict(docread.bigrampref(doc,sw=stopwords)[1]))
-		       count_aux.update(bigrampref)
-  		    
-                       prg="0.70"
-	            if id.find("SP")>=0:
-                       ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
-                       count_aux.update(ngram)
-		       enter=Counter(dict(docread.enter(doc,sw=stopwords)[1]))
-                       count_aux.update(enter)
-       		
-                       prg="0.70"
- 		    if id.find("EN")>=0:
-                       ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
-                       count_aux.update(ngram)
-		
-                       prg="0.85"
-		    if id.find("DR")>=0:
-                       ngram=Counter(dict(docread.ngram(doc,sw=stopwords)[1]),ngram=3)
-                       count_aux.update(ngram)
-		       punct=Counter(dict(docread.punct(doc,sw=stopwords)[1]))
-		       count_aux.update(punct)
-		       coma=Counter(dict(docread.coma(doc,sw=stopwords)[1]))
-		       count_aux.update(coma)
-		      
-                       prg="0.75"
-		  
+                    for repname in opts.reps:
+                        try:
+                            exec("f=docread.{0}".format(repname))
+                            rep=f(doc)[0]
+                        except:
+                            rep=Counter()
+                        try:
+                            master_author.update(rep)
+                        except KeyError:
+                            master_author=Counter(rep)
+                count_aux=master_author
 
-		
-		opts.percentage=prg
+
 		counter_final1=muestreo(count_aux,10,float(opts.percentage))
 		counter_final2=muestreo(count_aux,50,float(opts.percentage))
 		knows_intersection = (counter_final1 & counter_final2)
 	
                 
-                impostor=get_impostor(id,len(ks),problems_model,40,sw=stopwords)
+                impostor=get_impostor(id,len(ks),problems_model,sw=stopwords)
 		counter_imposter1=muestreo(impostor,10,float(opts.percentage))
 		counter_imposter2=muestreo(impostor,50,float(opts.percentage))
 		intersection_imposter = (counter_imposter1 & counter_imposter2)
 
 		counter_uks=Counter()
-                if id.find("DE")>=0:
-                       ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
-                       counter_uks.update(ngram)
-		       punct=Counter(dict(docread.punct(uks[0][1],sw=stopwords)[1]))
-		       counter_uks.update(punct)
-		       coma=Counter(dict(docread.coma(uks[0][1],sw=stopwords)[1]))
-		       counter_uks.update(coma)
-		 
-		if id.find("GR")>=0:
-                       ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
-                       counter_uks.update(ngram)
-		       punct=Counter(dict(docread.punct(uks[0][1],sw=stopwords)[1]))
-		       counter_uks.update(punct)
+                master_unknown=Counter()
+                for filename,doc in uks:
+                    for repname in opts.reps:
+                        try:
+                            exec("f=docread.{0}".format(repname))
+                            rep=f(doc)[0]
+                        except:
+                            rep=Counter()
+                        try:
+                            master_unknown.update(rep)
+                        except KeyError:
+                            master_unknown=Counter(rep)
+                counter_uks=master_unknown
 
-		
-	        if id.find("EE")>=0:
-                       ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
-                       counter_uks.update(ngram)
-		       bigrampref=Counter(dict(docread.bigrampref(uks[0][1],sw=stopwords)[1]))
-		       counter_uks.update(bigrampref)
-		    
-	        if id.find("SP")>=0:
-                       ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
-                       counter_uks.update(ngram)      
-		       enter=Counter(dict(docread.enter(uks[0][1],sw=stopwords)[1]))
-                       counter_uks.update(enter)
-		  
-              
- 		if id.find("EN")>=0:
-                       ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
-                       counter_uks.update(ngram)
-		      
-		if id.find("DR")>=0:
-                       ngram=Counter(dict(docread.ngram(uks[0][1],sw=stopwords)[1]))
-                       counter_uks.update(ngram)
-		       punct=Counter(dict(docread.punct(uks[0][1],sw=stopwords)[1]))
-		       counter_uks.update(punct)
-		       coma=Counter(dict(docread.coma(uks[0][1],sw=stopwords)[1]))
-		       counter_uks.update(coma)
-		       
 
 	
 		set_uks = set(counter_uks.keys()) #elementos sin repeticion
@@ -362,8 +332,7 @@ if __name__ == "__main__":
 		else: 
 		      answer  = "N"
 		probability=(bayes_uks_knows)/( bayes_uks_knows+ bayes_uks_imposter)
-		wr=id+" "+str(probability)
-		print wr
+                print id, "{0:0.12f}".format(probability)
 
 		#print ("answer ",answer,"probability ",(bayes_uks_knows)/( bayes_uks_knows+ bayes_uks_imposter))
 
