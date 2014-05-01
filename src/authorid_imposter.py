@@ -178,8 +178,11 @@ def process_corpus(problems,impostor_problems,opts,mode):
 
                     if dk_du * du_dk > dk_di * du_di :
                         score += 1/ float( (opts.iters) * len(master_impostors) )
-
-            print id, "{0:0.12f}".format(1.0-score)
+                if score<0.5:
+                    results.append(1.0)
+                else:
+                    results.append(0.0)
+            print id, sum(results)/iters
 
 
 # MAIN program
@@ -212,12 +215,12 @@ if __name__ == "__main__":
     p.add_argument("--iters",default=10,type=int,
             action="store", dest="iters",
             help="Total iterations [10]")
-    p.add_argument("--imposters",default=100,type=int,
+    p.add_argument("--imposters",default=10,type=int,
             action="store", dest="imposters",
-            help="Total of imposters [100]")
-    p.add_argument("--percentage",default=.95,type=float,
+            help="Total of imposters [10]")
+    p.add_argument("--percentage",default=.80,type=float,
             action="store", dest="percentage",
-            help="Sampling percentage [.95]")
+            help="Sampling percentage [.80]")
     p.add_argument("--model",default=".",
             action="store", dest="model",
             help="Model to save training or to test with [None]")

@@ -70,7 +70,6 @@ def ngrams_test(docs,i):
 def muestreo(counter,seed,percentage):
    
    list_counter=list(counter.elements())
-   random.seed(seed)
    random.shuffle(list_counter)
    
    size=len(list_counter)
@@ -115,7 +114,6 @@ def get_impostor_(id,n, roblems,seed,sw=[]):
     for id_,(ks,uks) in problems:
         if id_.startswith(pat) and id != id_:
             ids_candidates.append(id_)
-    random.seed(seed)
     random.shuffle(ids_candidates)
     
     for id_,(ks,uks) in problems:
@@ -124,7 +122,6 @@ def get_impostor_(id,n, roblems,seed,sw=[]):
                 candidates.append(doc[1])
  
     candiates=list(itertools.chain(*candidates))
-    random.seed(seed)
     random.shuffle(candiates)
     for can in candidates[:n]:
         docs.update(Counter(dict(docread.ngram(can,sw=sw)[1])))
@@ -156,7 +153,7 @@ if __name__ == "__main__":
     p.add_argument("--language",default='all',
             action="store", dest="language",
             help="Language to process [all]")
-    p.add_argument("--percentage",default='0.8',
+    p.add_argument("--percentage",default='0.90',
             action="store", dest="percentage",
             help="percentage to process")
     p.add_argument("-r","--rep",default=[],
@@ -168,6 +165,9 @@ if __name__ == "__main__":
     p.add_argument("--off",default=[],
             action="append", dest="off",
             help="distances or representations to turn off")
+    p.add_argument("--iters",default=10,type=int,
+            action="store", dest="iters",
+            help="Total iterations [10]")
     p.add_argument( "--model",default="model_bayes",
             action="store", dest="model",
             help="Model to save training or to test with [None]")
@@ -273,6 +273,7 @@ if __name__ == "__main__":
 		    p.error("More than one unknown file for {0}".format(id))
 	       
 
+
                 count_aux=Counter()
                 master_author=Counter()
                 for filename,doc in ks:
@@ -289,16 +290,6 @@ if __name__ == "__main__":
                 count_aux=master_author
 
 
-		counter_final1=muestreo(count_aux,10,float(opts.percentage))
-		counter_final2=muestreo(count_aux,50,float(opts.percentage))
-		knows_intersection = (counter_final1 & counter_final2)
-	
-                
-                impostor=get_impostor(id,len(ks),problems_model,sw=stopwords)
-		counter_imposter1=muestreo(impostor,10,float(opts.percentage))
-		counter_imposter2=muestreo(impostor,50,float(opts.percentage))
-		intersection_imposter = (counter_imposter1 & counter_imposter2)
-
 		counter_uks=Counter()
                 master_unknown=Counter()
                 for filename,doc in uks:
@@ -313,28 +304,38 @@ if __name__ == "__main__":
                         except KeyError:
                             master_unknown=Counter(rep)
                 counter_uks=master_unknown
+                #Bayes
+                results=[]
+                iters=opts.iters
+                for iter in range(iters):
 
+                    counter_final1=muestreo(count_aux,10,float(opts.percentage))
+                    counter_final2=muestreo(count_aux,50,float(opts.percentage))
+                    knows_intersection = (counter_final1 & counter_final2)
+            
+                    impostor=get_impostor(id,len(ks),problems_model,sw=stopwords)
+                    counter_imposter1=muestreo(impostor,10,float(opts.percentage))
+                    counter_imposter2=muestreo(impostor,50,float(opts.percentage))
+                    intersection_imposter = (counter_imposter1 & counter_imposter2)
 
-	
-		set_uks = set(counter_uks.keys()) #elementos sin repeticion
+		    set_uks = set(counter_uks.keys()) #elementos sin repeticion
 
-		#Bayes
-		bayes_uks_imposter=0.5
-		bayes_uks_knows=0.5
-		for word in set_uks:
-  			if (knows_intersection[word]!= 0):
-			   bayes_uks_knows+=math.log(min(counter_uks[word],knows_intersection[word]),10)	 
-			if (intersection_imposter[word]!= 0):	
-			   bayes_uks_imposter+=math.log(min(counter_uks[word],intersection_imposter[word]),10)
-		#comparing 
-		if bayes_uks_knows > bayes_uks_imposter:
-		      answer = "Y"
-		else: 
-		      answer  = "N"
-		probability=(bayes_uks_knows)/( bayes_uks_knows+ bayes_uks_imposter)
-                print id, "{0:0.12f}".format(probability)
+		     
+                    bayes_uks_imposter=0.5
+                    bayes_uks_knows=0.5
+                    for word in set_uks:
+                            if (knows_intersection[word]!= 0):
+                               bayes_uks_knows+=math.log(min(counter_uks[word],knows_intersection[word]),10)	 
+                            if (intersection_imposter[word]!= 0):	
+                               bayes_uks_imposter+=math.log(min(counter_uks[word],intersection_imposter[word]),10)
+                    #comparing 
+                    if bayes_uks_knows > bayes_uks_imposter:
+                          results.append(1.0)
+                    else: 
+                          results.append(0.0)
+		    #print (bayes_uks_knows)/( bayes_uks_knows+ bayes_uks_imposter)
 
-		#print ("answer ",answer,"probability ",(bayes_uks_knows)/( bayes_uks_knows+ bayes_uks_imposter))
+                print id, sum(results)/iters
 
 	
      

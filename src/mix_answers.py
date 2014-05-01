@@ -81,6 +81,7 @@ if __name__ == "__main__":
             except KeyError:
                 final[k]=v*conf[key_word][k[:2]]
 
+
     for k,v in final.iteritems():
         print k, "{0:0.3f}".format(v)
 
