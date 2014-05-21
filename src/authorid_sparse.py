@@ -209,9 +209,9 @@ def process_corpus(problems,impostor_problems,opts,mode):
                             if sum([x for x in x_0[i*n:(i+1)*n]])==0:
                                 residuals.append(300000)
                                 continue
-                            d_i= [[0.0 for x in x_0[:i*n]]+\
+                            d_i= np.matrix([[0.0 for x in x_0[:i*n]]+\
                                  [x for x in x_0[i*n:(i+1)*n]]+\
-                                 [0.0 for x in x_0[(i+1)*n:]]]
+                                 [0.0 for x in x_0[(i+1)*n:]]]).T
                             r_is=y-A*d_i
                             r_is=np.array(r_is)
                             r_is_2=sum(r_is**2)
