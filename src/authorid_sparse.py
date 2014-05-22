@@ -109,7 +109,7 @@ def proyect_into_vectors(examples,full_voca,unknown,reps,lens,nmost=120):
         full.update(unknown[rep])
         idx=[p[0] for p in full.most_common()[:nmost]]
         for i,example in enumerate(examples):
-            arr=[1.0*example[rep][k] for k in idx]
+            arr=[1.0*example[rep][k]/lens[i] for k in idx]
             vectors[i].append(arr)
         uvec.append([1.0*unknown[rep][k] for k in idx])
     return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
@@ -189,17 +189,13 @@ def process_corpus(problems,impostor_problems,opts,mode):
                 # Creating matrix A
                 # First samples represent to author, rest impostors
                 # Normalizing the data
-                A=preprocessing.normalize(example_vectors,norm='l1')
-                tmp=np.sum(A,axis=1)
-                pl.imshow(A)
-                pl.show()
-                pl.imshow(tmp)
-                pl.show()
-                A=A.T
+                A=np.matrix(example_vectors)
+                A_=A.T
+                A=preprocessing.normalize(A,axis=0)
                 y=np.matrix(unknown)
-                y=y.T 
-                nu=0.002
-                tol=0.001
+                y_=y.T
+                nu=0.00001
+                tol=0.00001
                 stopCrit=3
                 answer=False
                 nanswers=0
@@ -208,31 +204,40 @@ def process_corpus(problems,impostor_problems,opts,mode):
                         results=[0.0 for i in range(iters)]
                         break
                     try:
-                        x_0, nIter = octave.SolveHomotopy(A, y, 'lambda', nu, 'tolerance', tol, 'stoppingcriterion', stopCrit);
+                        x_0, nIter = octave.SolveHomotopy(A_, y_, 'lambda', nu, 'tolerance', tol, 'stoppingcriterion', stopCrit)
+                        #ind=np.arange(x_0.shape[0])
+                        #pl.bar(ind,[np.float(x) for x in x_0])
+                        #pl.show()
+ 
                         # Calculating residuals
                         residuals=[]
-                        residuals_=[]
-                        for i in range(len(examples)/opts.documents):
+                        d_is=[]
+                        k=len(examples)/opts.documents
+                        for i in range(k):
                             n=opts.documents
-                            if sum([x for x in x_0[i*n:(i+1)*n]])==0:
-                                residuals.append(300000)
-                                continue
                             d_i= np.matrix([[0.0 for x in x_0[:i*n]]+\
-                                 [x for x in x_0[i*n:(i+1)*n]]+\
+                                 [np.float(x) for x in x_0[i*n:(i+1)*n]]+\
                                  [0.0 for x in x_0[(i+1)*n:]]]).T
-                            r_is=y-A*d_i
-                            r_is=np.array(r_is)
-                            r_is_2=sum(r_is**2)
-                            r_i=np.sqrt(r_is_2[0])
+                            d_is.append(np.linalg.norm(d_i,ord=1))
+                            r_is=y_-A_*d_i
+                            r_i=np.linalg.norm(r_is,ord=2)
                             residuals.append(r_i)
-                            residuals_.append(r_i)
-                            minres=min(residuals_)
-                            maxres=max(residuals_)
+                        #print residuals
+                        
+                        sci=(k*np.max(d_is)/np.linalg.norm(x_0,ord=1)-1)/(k-1)
+                        #print sci
                         identity=np.argmin(residuals)
-                        if identity==0:
-                            results.append(1.0)
-                        else:
+                        if sci<0.1:
                             results.append(0.0)
+                        else:
+                            if identity==0:
+                                results.append(1.0)
+                            else:
+                                results.append(0.0)
+                        #ind=np.arange(len(residuals))
+                        #pl.bar(ind,residuals)
+                        #pl.title(str(sci)+"---"+id+"----"+str(results[-1]))
+                        #pl.show()
                         nanswers+=1
                         answer=True
                     except Oct2PyError:
@@ -268,15 +273,15 @@ if __name__ == "__main__":
     p.add_argument("--iters",default=10,type=int,
             action="store", dest="iters",
             help="Total iterations [10]")
-    p.add_argument("--imposters",default=5,type=int,
+    p.add_argument("--imposters",default=10,type=int,
             action="store", dest="imposters",
-            help="Total of imposter per auhtor [5]")
-    p.add_argument("--documents",default=5,type=int,
+            help="Total of imposter per auhtor [10]")
+    p.add_argument("--documents",default=10,type=int,
             action="store", dest="documents",
-            help="Documents per author [5]")
-    p.add_argument("--percentage",default=.95,type=float,
+            help="Documents per author [10]")
+    p.add_argument("--percentage",default=.80,type=float,
             action="store", dest="percentage",
-            help="Sampling percentage [.95]")
+            help="Sampling percentage [.80]")
     p.add_argument("--model",default=".",
             action="store", dest="model",
             help="Model to save training or to test with [None]")
