@@ -37,6 +37,9 @@ octave.addpath('src/octave')
 # Local imports
 import docread
 
+# temporal
+import pylab as pl
+
 def verbose(*args):
     """ Function to print verbose"""
     if opts.verbose:
@@ -186,7 +189,12 @@ def process_corpus(problems,impostor_problems,opts,mode):
                 # Creating matrix A
                 # First samples represent to author, rest impostors
                 # Normalizing the data
-                A=preprocessing.normalize(example_vectors,axis=0)
+                A=preprocessing.normalize(example_vectors,norm='l1')
+                tmp=np.sum(A,axis=1)
+                pl.imshow(A)
+                pl.show()
+                pl.imshow(tmp)
+                pl.show()
                 A=A.T
                 y=np.matrix(unknown)
                 y=y.T 
@@ -260,9 +268,9 @@ if __name__ == "__main__":
     p.add_argument("--iters",default=10,type=int,
             action="store", dest="iters",
             help="Total iterations [10]")
-    p.add_argument("--imposters",default=10,type=int,
+    p.add_argument("--imposters",default=5,type=int,
             action="store", dest="imposters",
-            help="Total of imposter per auhtor [10]")
+            help="Total of imposter per auhtor [5]")
     p.add_argument("--documents",default=5,type=int,
             action="store", dest="documents",
             help="Documents per author [5]")
