@@ -132,11 +132,11 @@ def process_corpus(problems,impostor_problems,opts,mode):
             elif id.startswith('EE'):
                 opts.percentage=0.7
             elif id.startswith('EN'):
-                opts.percentage=0.7
+                opts.percentage=0.9
             elif id.startswith('GR'):
-                opts.percentage=0.8
+                opts.percentage=0.9
             elif id.startswith('SP'):
-                opts.percentage=0.7
+                opts.percentage=0.9
  
             for filename,doc in ks:
                 for repname in opts.reps:
