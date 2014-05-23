@@ -99,7 +99,7 @@ def get_master_impostors(id,n,problems,sw=[],mode="test"):
     return master_impostors,lens
  
 
-def proyect_into_vectors(examples,full_voca,unknown,reps,lens,nmost=120):
+def proyect_into_vectors(examples,full_voca,unknown,reps,lens,nmost=200):
     vectors=[[] for e in examples]
     uvec=[]
     for rep in reps:
@@ -107,6 +107,7 @@ def proyect_into_vectors(examples,full_voca,unknown,reps,lens,nmost=120):
         for example in examples:
             full.update(example[rep])
         full.update(unknown[rep])
+        tfull=len(full)
         idx=[p[0] for p in full.most_common()[:nmost]]
         for i,example in enumerate(examples):
             arr=[1.0*example[rep][k]/lens[i] for k in idx]
@@ -123,7 +124,20 @@ def process_corpus(problems,impostor_problems,opts,mode):
             master_author={}
             master_unknown={}
             full_voca={}
-     
+            ks_=ks
+            if id.startswith('DE'):
+                opts.percentage=0.9
+            elif id.startswith('DR'):
+                opts.percentage=0.7
+            elif id.startswith('EE'):
+                opts.percentage=0.7
+            elif id.startswith('EN'):
+                opts.percentage=0.7
+            elif id.startswith('GR'):
+                opts.percentage=0.8
+            elif id.startswith('SP'):
+                opts.percentage=0.7
+ 
             for filename,doc in ks:
                 for repname in opts.reps:
                     try:
@@ -162,10 +176,6 @@ def process_corpus(problems,impostor_problems,opts,mode):
                 #Extracting Examples
                 examples= []
                 lens=[]
-                for i in range(opts.documents):
-                    examples.append(muestreo(master_author,opts.reps,percentage=opts.percentage))
-                    lens.append(len(ks))
-
                 # Adding imposters
                 master_impostors,len_impostors=get_master_impostors(id,opts.imposters,impostor_problems,mode)
                 for j,master_impostor in enumerate(master_impostors):
@@ -174,7 +184,11 @@ def process_corpus(problems,impostor_problems,opts,mode):
                          examples.append(muestreo(master_impostor,opts.reps,percentage=opts.percentage))
                          lens.append(len_impostor)
 
-                sample_unknown=muestreo(master_unknown,opts.reps,percentage=opts.percentage)
+                for i in range(opts.documents):
+                    examples.append(muestreo(master_author,opts.reps,percentage=opts.percentage))
+                    lens.append(len(ks_))
+
+                sample_unknown=muestreo(master_unknown,opts.reps,percentage=1.0)
 
                 # Sparce algorithm
                 # Proyecting examples into a vector
@@ -194,8 +208,25 @@ def process_corpus(problems,impostor_problems,opts,mode):
                 A=preprocessing.normalize(A,axis=0)
                 y=np.matrix(unknown)
                 y_=y.T
-                nu=0.00001
-                tol=0.00001
+                if id.startswith('DE'):
+                    nu=0.00001
+                    tol=0.00001
+                elif id.startswith('DR'):
+                    nu=0.0001
+                    tol=0.0001
+                elif id.startswith('EE'):
+                    nu=0.00001
+                    tol=0.00001
+                elif id.startswith('EN'):
+                    nu=0.00001
+                    tol=0.00001
+                elif id.startswith('GR'):
+                    nu=0.00001
+                    tol=0.00001
+                elif id.startswith('SP'):
+                    nu=0.00001
+                    tol=0.00001
+ 
                 stopCrit=3
                 answer=False
                 nanswers=0
@@ -227,16 +258,28 @@ def process_corpus(problems,impostor_problems,opts,mode):
                         sci=(k*np.max(d_is)/np.linalg.norm(x_0,ord=1)-1)/(k-1)
                         #print sci
                         identity=np.argmin(residuals)
-                        if sci<0.1:
+                        if id.startswith('DE'):
+                            scith=0.1
+                        elif id.startswith('DR'):
+                            scith=0.1
+                        elif id.startswith('EE'):
+                            scith=0.05
+                        elif id.startswith('EN'):
+                            scith=0.1
+                        elif id.startswith('GR'):
+                            scith=0.1
+                        elif id.startswith('SP'):
+                            scith=0.1
+                        if sci<scith:
                             results.append(0.0)
                         else:
-                            if identity==0:
+                            if identity==(k-1):
                                 results.append(1.0)
                             else:
                                 results.append(0.0)
                         #ind=np.arange(len(residuals))
                         #pl.bar(ind,residuals)
-                        #pl.title(str(sci)+"---"+id+"----"+str(results[-1]))
+                        #pl.title(str(sci)+"---"+id+"----"+str(results[-1])+"---"+str(len([x for x in results if x > 0.5])))
                         #pl.show()
                         nanswers+=1
                         answer=True
@@ -272,10 +315,10 @@ if __name__ == "__main__":
             help="adds representation to process")
     p.add_argument("--iters",default=10,type=int,
             action="store", dest="iters",
-            help="Total iterations [10]")
-    p.add_argument("--imposters",default=10,type=int,
+            help="Total iterations []")
+    p.add_argument("--imposters",default=5,type=int,
             action="store", dest="imposters",
-            help="Total of imposter per auhtor [10]")
+            help="Total of imposter per auhtor [5]")
     p.add_argument("--documents",default=10,type=int,
             action="store", dest="documents",
             help="Documents per author [10]")
