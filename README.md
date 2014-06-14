@@ -1,27 +1,46 @@
 authorid
 ========
 
-Author identification code
+Author identification code using:
 
-Instrucctions for running in PAN13
+* Bayes
+* Imposters
+* Sparse representation
+ 
+
+
+Instrucctions for running in PAN14
 ----------------------------------
 
-### Trainning assesment
+### Trainning the three methodologies
 
-  bash script/train_pan13.sh TRAINDIR 
+  bash script/train_pan14.sh -i TRAINDIR -o MODELDIR 
 
 
-## Test on unknown data
-
-  bash script/test_pan13.sh INPUTDIR OUTPUTDIR
+## Test for bayes
   
-The results will be saved into $OUTDIR/Results.txt
+  bash script/test_pan14_bayes.sh -i INPUTDIR -m MODELDIR -o OUTPUTDIR 
+  
+## Test for imposter
+
+  bash script/test_pan14_imposter.sh -i INPUTDIR -m MODELDIR -o OUTPUTDIR 
+
+## Test for sparse
+
+  bash script/test_pan14_sparse.sh -i INPUTDIR -m MODELDIR -o OUTPUTDIR 
 
 
-### Development assesment
+The results will be saved into $OUTDIR/anwers.txt
 
-  bash script/develop_pan13.sh TRAINDIR
 
+Scripts
+-------
+
+For more information run:
+
+  python src/authorid_bayes.py -h
+  python src/authorid_imposter.py -h
+  python src/authorid_sparse.py -h
 
 Requirements
 ------------
@@ -30,18 +49,9 @@ Requirements
 * numpy, scikit
 * scikit-learn
 * python-cvxopt 
-* pybrain
+* oct2py
 
 Optional:
 
 * PAN dataset
-
-
-Documentation
--------------
-
-Create the documentation with makefile
-  
-   make doc
-
 
