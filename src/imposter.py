@@ -8,9 +8,10 @@
 # If we want to generate 150 imposters of spanish language , we use the next command 
 # python src/imposters_generator.py --lang en --seed training/ --output enimposters --imposters 150
 #
-
-import os,re, sys, glob, codecs, requests, getopt, justext , shutil, time
+import os,re, sys, glob, codecs, requests, getopt, justext , shutil, time, ssl, json, string
 import numpy as np
+from os import walk
+from pprint import pprint
 from BeautifulSoup import BeautifulSoup
 
 #
@@ -32,10 +33,10 @@ from BeautifulSoup import BeautifulSoup
 #	Name of the language, used to get the stop word list
 #
 lang = {
-	'ES': {'imposters': 1500,'langsearch':'es', 'min' : 50, 'max':70, 'lang':'Spanish'},
-	'EN': {'imposters': 1200,'langsearch':'en', 'min' : 50, 'max':80, 'lang':'English'},
-	'GR': {'imposters': 1300,'langsearch':'el', 'min' : 50, 'max':90, 'lang':'Greek'},
-	'NL': {'imposters': 1100,'langsearch':'nl', 'min' : 60, 'max':70, 'lang':'Dutch'},
+	'spanish': {'imposters': 1500,'langsearch':'es', 'min' : 50, 'max': 70, 'lang':'Spanish'},
+	'english': {'imposters': 1200,'langsearch':'en', 'min' : 50, 'max': 80, 'lang':'English'},
+	'greek'	 : {'imposters': 1300,'langsearch':'el', 'min' : 50, 'max': 90, 'lang':'Greek'},
+	'dutch'	 : {'imposters': 1100,'langsearch':'nl', 'min' : 60, 'max': 70, 'lang':'Dutch'},
 }
 
 #
@@ -60,16 +61,17 @@ lang = {
 # full_text (string):
 #	The clean corpus of a web page
 #
-
 def getCorpus(html, stopwords, lmin, lmax):	
-	full_text = []
+	full_text = ""
 	paragraphs = justext.justext(html, stopwords, lmin, lmax) 
 	for paragraph in paragraphs:
 		if paragraph.cf_class == 'good':
 			real_text = ''.join("%s" % i.encode('utf-8') for i in paragraph.text_nodes)
-			full_text.append(real_text)			
-	return ' '.join(full_text)
-
+			full_text = full_text + real_text
+	complete_text = full_text.split(" ")[:1500]
+	if len(complete_text) > 500:
+		return ' '.join(complete_text)
+	return None
 #
 # Function
 # --------
@@ -92,11 +94,9 @@ def getCorpus(html, stopwords, lmin, lmax):
 # path (string) : 
 #	Path where the file is saved
 #
-
-def doSearch(query, selection, stopwords, path):	
+def doSearch(language, query, stopwords, path):	
 	print "Generated query : %s " % query
-	search = 'https://www.google.com/search?q=%s&lr=lang_%s' % (query, selection['langsearch'])
-	
+	search = 'https://www.google.com/search?q=%s&lr=lang_%s' % (query+" -filetype:pdf", lang[language]['langsearch'] )
 	try:
 		r = requests.get(search,timeout=5, verify = False )
 		bs = BeautifulSoup(r.text)
@@ -108,14 +108,11 @@ def doSearch(query, selection, stopwords, path):
 			try :	
 				#We verify if the link is an url and it is not a file	
 				if href[1] == 'url' and any( href[2].upper().endswith(ext) for ext in ('.XLS','.XLSX','.PDF','.DOC')) == False :
-
-					source = requests.get(href[2],timeout=5)
-					corpus = getCorpus(source.text, stopwords, selection['min'], selection['max'])
-
+					source = requests.get(href[2],timeout=2)
+					corpus = getCorpus(source.text, stopwords, lang[language]['min'], lang[language]['max'])
 					if corpus : 
 						size = len(glob.glob(path+"/*.txt")) + 1
 						number = "%04d"% size
-	
 						print "Creating imposter : %s - %s" % (number,href[2])
 						imposter = open(path+"/imposter"+number+".txt","w")
 						imposter.write(corpus)
@@ -125,9 +122,6 @@ def doSearch(query, selection, stopwords, path):
 	except:
 		time.sleep(1)
 		print "Error"
-		#doSearch(query,selection,stopwords,path)
-
-
 #
 # Function
 # --------
@@ -150,86 +144,68 @@ def doSearch(query, selection, stopwords, path):
 # imposters(int) : 
 #	Number of impostors that has to be created
 #
-
-def doImposter(seed,out,mainlang,imposters):
-	
+def doImposter(seed, out, imposters , stopwords):
 	# We find all the TXT of the LANG directory 
 	# /PATH/LANG/*.TXT
 	#path    = seed+mainlang+"*/*.txt"
-
-	path = seed+"/*.txt"
-	files = glob.glob(path)
-
-	# Numbers of files to be chosen. This file are mixed to get random words
-	file_choice = 3
-	# Number of words to be chosen to build the query.
-	word_choice = 3
-
-	words   = []
-	selection = lang[mainlang]
-
-	# Random selection of the files to be mixed
-	randomfiles = np.random.choice(files, file_choice)
-
-	for single_file in randomfiles:
-		textwords = ''.join( [line.strip() for line in codecs.open(single_file,'r','utf-8')] ).split()
-		words = words + textwords
-
-	stopwords =  justext.get_stoplist(selection['lang'])
+	path = seed+"/contents.json"
+	content = open(path)
+	data = json.load(content)
 	
-	# After choose a text, we elimiate all the stop words of the variable
-	cleanwords = [word for word in words if word not in set(stopwords)]	
+	genre    = data['genre']
+	language = data['language']
+	problems = data['problems']
+	limit_search = 5
 
-	# Creation of ouput directory
-	# output = os.path.join(out,mainlang)
-	output = out 
+	output = out+"/"+language+"_"+genre
 	if not os.path.exists(output):
 		os.makedirs(output)
-	# ERASE 
-	#else: 
-	#	shutil.rmtree(out)
-	#	os.makedirs(output)		
-		
 
-	created = 0
-	print "Max imposters : %s" % imposters
-	while created <= int(imposters) :
-        	query = ' '.join( np.random.choice( cleanwords, word_choice) )
-		try:
-			doSearch(query, selection, stopwords, output)
-		except:
-			print "Error"
-		created = len(glob.glob(output+"/*.txt"))
+	remove_punctuation_map = dict((ord(char), None) for char in ( string.punctuation + "+”¿?-.“") )
+
+	for problem in problems:
+		print "Analizing "+problem + ":\n"
+		
+		known_files = glob.glob( seed+"/"+problem+"/know*.txt")
+		words = []
+		for single_file in known_files:
+			textwords = ''.join( [line.translate(remove_punctuation_map).strip() for line in codecs.open(single_file,'r','utf-8')] ).split()
+			words_to_search = set(textwords)-set(stopwords)
+			query = ' '.join( np.random.choice( list(words_to_search), limit_search) )
+			doSearch(language, query, stopwords, output)
 
 def main(argv):
 	mainlang = ""
 	seed = ""
 	out  = ""
-	imp  = 0
-	
+	imp  = 1000
+	stopwords_path = "data/stopwords.txt"
+
 	try:
-		opts, args = getopt.getopt(argv,"hi:o:",["lang=","seed=","output=","imposters="])
+		opts, args = getopt.getopt(argv,"hi:o:",["seed=","output="])
 	except getopt.GetoptError:
-		print "Usage : imposter.py --lang [ES|EN|GR|NL]--seed <directory> --output <directory> --imposters <number>"
+		print "Usage : imposter.py --seed <directory> --output <directory> --imposters <number>"
 		sys.exit(2)
 
 	for opt, arg in opts:
 		if opt == '-h':
-			print "imposter.py --lang [ES|EN|GR|NL] --seed <directory> --output <directory> --imposters <number>"
+			print "imposter.py --seed <directory> --output <directory> --stopwords <path>"
 			sys.exit()
-		elif opt in("--l","--lang"):
-			mainlang = arg
 		elif opt in("--s","--seed"):
 			seed = arg
 		elif opt in("--o","--output"):
 			out  = arg
-		elif opt in("--i","--imposters"):
-			imp  = arg
+		elif opt in("--st","--stopwords"):
+			stopwords_path  = arg
 	
 	try:
-		doImposter(seed,out,mainlang.upper(), imp)	
-	except :
+		stopwords = [line.strip() for line in  codecs.open(stopwords_path,'r','utf-8')]
+		for (dirpath, dirnames, filenames) in walk(seed):
+			for dirname in dirnames:
+				doImposter( seed + "/" + dirname , out, imp , stopwords);
+			break
+
+	except ValueError:
 		print "Bad parameters"
 if __name__ == "__main__":
 	main(sys.argv[1:])
-
