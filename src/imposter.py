@@ -120,9 +120,9 @@ def doSearch(language, query, stopwords, path):
 			except IOError as e:
 				isfile = 1
 				print "I/O error({0}): {1}".format(e.errno, e.strerror)
-	except:
+	except IOError as e:
 		time.sleep(1)
-		print "Error"
+		print "I/O error({0}): {1}".format(e.errno, e.strerror)
 #
 # Function
 # --------
