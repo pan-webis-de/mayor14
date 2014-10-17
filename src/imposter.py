@@ -117,8 +117,9 @@ def doSearch(language, query, stopwords, path):
 						imposter = open(path+"/imposter"+number+".txt","w")
 						imposter.write(corpus)
 						imposter.close()
-			except:
+			except IOError as e:
 				isfile = 1
+				print "I/O error({0}): {1}".format(e.errno, e.strerror)
 	except:
 		time.sleep(1)
 		print "Error"
