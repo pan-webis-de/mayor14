@@ -34,9 +34,12 @@ import os.path
 import codecs
 from collections import Counter
 
+from nlpcore import postagger
+
+
 spaces=re.compile('\W+',re.UNICODE)
 spaces_=re.compile('[ \t]+',re.UNICODE)
-period=re.compile('[.;]',re.UNICODE)
+period=re.compile('[.;!?]',re.UNICODE)
 rcapital=re.compile(u'[\u0391-\u03A9][^ ]+|[A-Z][^ ]+',re.UNICODE)
 #rcapital=re.compile(r'[A-Z][^W]+',re.UNICODE)
 rpar2 = re.compile(u'[.:].?\r?\n[A-Z]|[.:].?\r?\n[\u0391-\u03A9]',re.UNICODE)
@@ -78,13 +81,6 @@ codes={
 }
 
 
-
-def prettyprint(filename):
-    with codecs.open(filename,'r','utf-8') as fh:
-        pass
-        #for line in fh:
-            #line=line.strip()
-            #print line.encode('utf-8')
 
 def none(docs,filename):
     return None
@@ -133,8 +129,6 @@ def stopwords(doc,sw=[]):
     return doc,com,[x.encode('utf-8') for x in wds]
 
 
-
-
 def prefix(doc,sw=[]):
     wds = spaces.split(renter.sub(' ',doc.lower()))
     wds = preprocess(wds,sw)
@@ -148,8 +142,6 @@ def sufix(doc,sw=[]):
     doc=Counter([x.encode('utf-8')[-5:] for x in wds if len(x)>5])
     com=postprocess(doc,ncommons=0,ncutoff=0,sw=sw)
     return doc,com,[x.encode('utf-8') for x in wds]
-
-
 
 
 def letters(doc,sw=[]):
@@ -270,7 +262,6 @@ def ngram(doc,sw=[],ngram=3):
     com=postprocess(doc,sw=sw)
     return doc,com,values
 
-
 def wordssntc(doc,sw=[]):
     wds = [str(len(spaces.split(w))/10) for w in period.split(renter.sub(' ',doc.lower()))]
     par = Counter(wds)
@@ -289,7 +280,6 @@ def wordpar(doc,sw=[]):
     com=postprocess(par,ncutoff=0,ncommons=0)
     return par,com,[x.encode('utf-8') for x in pars]
 
-
 def sntcpar(doc,sw=[]):
     #pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
     pars =rpar2.split(doc)
@@ -300,8 +290,22 @@ def sntcpar(doc,sw=[]):
     com=postprocess(par,ncutoff=0,ncommons=0)
     return par,com,[x.encode('utf-8') for x in pars]
 
+# NEW features NAACL based on NLP
+def token(doc,sw=[],ngram=5):
+    pos=postagger.tag(doc)
+    doc=Counter([])
+    for n in range(ngram):
+        args=[]
+        pat=[]
+        for j in range(n+1):
+            args.append(pos[j:])
+            pat.append('{{{0}}}'.format(j))
+        val= zip(*args)
+        values = [" ".join(pat).format(*v) for v in val]
+        doc.update(values)
 
-
+    com=postprocess(doc,ncutoff=0,ncommons=0)
+    return pos,com,[x.encode('utf-8') for x in pos]
 
 def preprocess(wrds,sw):
     wrds_=[]
@@ -346,6 +350,7 @@ representations=[
     ('sqrbrackets',sqrbrackets),
     ('whitespc',whitespc),    #X
     ('enter',enter),          #X
+    ('token',token)
     ]
 
 

@@ -37,9 +37,6 @@ octave.addpath('src/octave')
 # Local imports
 import docread
 
-# temporal
-import pylab as pl
-
 def verbose(*args):
     """ Function to print verbose"""
     if opts.verbose:

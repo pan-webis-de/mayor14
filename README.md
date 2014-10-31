@@ -51,6 +51,18 @@ Requirements
 * python-cvxopt 
 * oct2py
 
+
+Install stanford libraries
+
+:: 
+
+  mkdir lib
+  wget http://nlp.stanford.edu/software/stanford-corenlp-full-2014-08-27.zip
+  unzip stanford-corenlp-full-2014-08-27.zip
+  cp stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1.jar lib/
+  cp stanford-corenlp-full-2014-08-27/stanford-corenlp-3.4.1-models.jar lib/
+
+
 Optional:
 
 * PAN dataset
