@@ -10,6 +10,7 @@
 #
 import os,re, sys, glob, codecs, requests, getopt, justext , shutil, time, ssl, json, string
 import numpy as np
+from collections import Counter
 from os import walk
 from pprint import pprint
 from BeautifulSoup import BeautifulSoup
@@ -33,10 +34,10 @@ from BeautifulSoup import BeautifulSoup
 #	Name of the language, used to get the stop word list
 #
 lang = {
-	'spanish': {'imposters': 1500,'langsearch':'es', 'min' : 50, 'max': 70, 'lang':'Spanish'},
-	'english': {'imposters': 1200,'langsearch':'en', 'min' : 50, 'max': 80, 'lang':'English'},
-	'greek'	 : {'imposters': 1300,'langsearch':'el', 'min' : 50, 'max': 90, 'lang':'Greek'},
-	'dutch'	 : {'imposters': 1100,'langsearch':'nl', 'min' : 60, 'max': 70, 'lang':'Dutch'},
+	'spanish': {'imposters': 1500,'langsearch':'es', 'min' : 50, 'max': 300, 'lang':'Spanish'},
+	'english': {'imposters': 1200,'langsearch':'en', 'min' : 50, 'max': 300, 'lang':'English'},
+	'greek'	 : {'imposters': 1300,'langsearch':'el', 'min' : 50, 'max': 240, 'lang':'Greek'},
+	'dutch'	 : {'imposters': 1100,'langsearch':'nl', 'min' : 50, 'max': 200, 'lang':'Dutch'},
 }
 
 #
@@ -61,16 +62,26 @@ lang = {
 # full_text (string):
 #	The clean corpus of a web page
 #
-def getCorpus(html, stopwords, lmin, lmax):	
+def getCorpus(html, language, lmin, lmax):	
 	full_text = ""
-	paragraphs = justext.justext(html, stopwords, lmin, lmax) 
-	for paragraph in paragraphs:
-		if paragraph.cf_class == 'good':
-			real_text = ''.join("%s" % i.encode('utf-8') for i in paragraph.text_nodes)
-			full_text = full_text + real_text
-	complete_text = full_text.split(" ")[:1500]
-	if len(complete_text) > 500:
-		return ' '.join(complete_text)
+	try:
+		paragraphs = justext.justext(html, justext.get_stoplist( language ),lmin, lmax) 
+		for paragraph in paragraphs:
+			# print paragraph.cf_class
+			# real_text = ''.join("%s" % i.encode('utf-8') for i in paragraph.text_nodes)
+			# print real_text
+			# print "\n"
+			if paragraph.cf_class =='good':
+				real_text = ''.join("%s" % i.encode('utf-8') for i in paragraph.text_nodes)
+				full_text = full_text + real_text
+		
+		# print full_text
+		complete_text = full_text.split(" ")[:1500]
+		# print "Words: %s" % ( len(complete_text) )
+		if len(complete_text) > 500:
+			return ' '.join(complete_text)
+	except IOError as e:
+		print "Time Sleep I/O error({0}): {1}".format(e.errno, e.strerror)
 	return None
 #
 # Function
@@ -97,6 +108,7 @@ def getCorpus(html, stopwords, lmin, lmax):
 def doSearch(language, query, stopwords, path):	
 	print "Generated query : %s " % query
 	search = 'https://www.google.com/search?q=%s&lr=lang_%s' % (query+" -filetype:pdf", lang[language]['langsearch'] )
+	imposters_created = 0
 	try:
 		r = requests.get(search,timeout=5, verify = False )
 		bs = BeautifulSoup(r.text)
@@ -106,23 +118,31 @@ def doSearch(language, query, stopwords, path):
 			href =re.split(r'\/(.*)\?q=(.*)\&sa',a.get('href'))
 
 			try :	
-				#We verify if the link is an url and it is not a file	
-				if href[1] == 'url' and any( href[2].upper().endswith(ext) for ext in ('.XLS','.XLSX','.PDF','.DOC')) == False :
-					source = requests.get(href[2],timeout=2)
-					corpus = getCorpus(source.text, stopwords, lang[language]['min'], lang[language]['max'])
-					if corpus : 
-						size = len(glob.glob(path+"/*.txt")) + 1
-						number = "%04d"% size
-						print "Creating imposter : %s - %s" % (number,href[2])
-						imposter = open(path+"/imposter"+number+".txt","w")
-						imposter.write(corpus)
-						imposter.close()
+				if len(href) > 1 : 
+					#We verify if the link is an url and it is not a file	
+					if href[1] == 'url' and any( href[2].upper().endswith(ext) for ext in ('.XLS','.XLSX','.PDF','.DOC')) == False :
+						try:
+							source = requests.get(href[2],timeout=3)
+							corpus = getCorpus(source.text, lang[language]['lang'], lang[language]['min'], lang[language]['max'])
+							if corpus : 
+								size = len(glob.glob(path+"/*.txt")) + 1
+								number = "%04d"% size
+								print "Creating imposter : %s - %s" % (number,href[2])
+								imposter = open(path+"/imposter"+number+".txt","w")
+								imposter.write(corpus)
+								imposter.close()
+								imposters_created+=1
+							else:
+								print "Insufficient corpus: %s" % (href[2])
+						except:
+								isfile = 1
 			except IOError as e:
 				isfile = 1
-				print "I/O error({0}): {1}".format(e.errno, e.strerror)
+				print "I/O error({0}): {1} {2}".format(e.errno, e.strerror, href[2])
 	except IOError as e:
 		time.sleep(1)
-		print "I/O error({0}): {1}".format(e.errno, e.strerror)
+		print "Time Sleep I/O error({0}): {1}".format(e.errno, e.strerror)
+	return imposters_created
 #
 # Function
 # --------
@@ -145,16 +165,23 @@ def doSearch(language, query, stopwords, path):
 # imposters(int) : 
 #	Number of impostors that has to be created
 #
-def doImposter(seed, out, imposters , stopwords):
+def doImposter(seed, out, imposters ):
 	# We find all the TXT of the LANG directory 
 	# /PATH/LANG/*.TXT
 	#path    = seed+mainlang+"*/*.txt"
+	imposters_limit = 10
+	attempts = 50
+
 	path = seed+"/contents.json"
 	content = open(path)
 	data = json.load(content)
 	
 	genre    = data['genre']
 	language = data['language']
+
+	stopwords_path = "data/stopwords_"+language+".txt"
+	stopwords = [line.strip() for line in  codecs.open(stopwords_path,'r','utf-8')]
+
 	problems = data['problems']
 	limit_search = 5
 
@@ -165,22 +192,32 @@ def doImposter(seed, out, imposters , stopwords):
 	remove_punctuation_map = dict((ord(char), None) for char in ( string.punctuation + "+”¿?-.“") )
 
 	for problem in problems:
-		print "Analizing "+problem + ":\n"
+		print "\nAnalizing "+problem + ":\n"
 		
 		known_files = glob.glob( seed+"/"+problem+"/know*.txt")
 		words = []
 		for single_file in known_files:
 			textwords = ''.join( [line.translate(remove_punctuation_map).strip() for line in codecs.open(single_file,'r','utf-8')] ).split()
-			words_to_search = set(textwords)-set(stopwords)
-			query = ' '.join( np.random.choice( list(words_to_search), limit_search) )
-			doSearch(language, query, stopwords, output)
-
+			most_used =  Counter(x for x in textwords if x not in stopwords).most_common(10)
+			words_to_search = []
+			for elemen, count in most_used:
+				words_to_search.append(elemen)
+			# words_to_search = set(textwords)-set(stopwords)
+			
+			created = 0
+			attempt = 0
+			while created < imposters_limit and attempt < attempts :
+				query = ' '.join( np.random.choice( (words_to_search), limit_search) )
+				created += doSearch(language, query, stopwords, output)
+				attempt += 1
+				print "Creados %s " % (created)
+			
 def main(argv):
 	mainlang = ""
 	seed = ""
 	out  = ""
 	imp  = 1000
-	stopwords_path = "data/stopwords.txt"
+	# stopwords_path = "data/stopwords.txt"
 
 	try:
 		opts, args = getopt.getopt(argv,"hi:o:",["seed=","output="])
@@ -200,10 +237,10 @@ def main(argv):
 			stopwords_path  = arg
 	
 	try:
-		stopwords = [line.strip() for line in  codecs.open(stopwords_path,'r','utf-8')]
+		# stopwords = [line.strip() for line in  codecs.open(stopwords_path,'r','utf-8')]
 		for (dirpath, dirnames, filenames) in walk(seed):
 			for dirname in dirnames:
-				doImposter( seed + "/" + dirname , out, imp , stopwords);
+				doImposter( seed + "/" + dirname , out, imp );
 			break
 
 	except ValueError:
