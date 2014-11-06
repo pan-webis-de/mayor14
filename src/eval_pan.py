@@ -184,7 +184,7 @@ if __name__ == "__main__":
         if sys[g]<0.5:
             res='N'
             noes+=1
-        elif sys[g]>0.5:
+        else:
             res='Y'
             yeas+=1
         

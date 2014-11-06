@@ -259,7 +259,7 @@ def ngram(doc,sw=[],ngram=3):
         values = [" ".join(pat).format(*v) for v in val]
         doc.update(values)
 
-    com=postprocess(doc,sw=sw)
+    com=postprocess(doc,sw=sw,ncutoff=5)
     return doc,com,values
 
 def wordssntc(doc,sw=[]):

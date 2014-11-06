@@ -193,15 +193,13 @@ def doImposter(seed, out, imposters ):
 
 	for problem in problems:
 		print "\nAnalizing "+problem + ":\n"
-		
+	
 		known_files = glob.glob( seed+"/"+problem+"/know*.txt")
 		words = []
 		for single_file in known_files:
 			textwords = ''.join( [line.translate(remove_punctuation_map).strip() for line in codecs.open(single_file,'r','utf-8')] ).split()
-			most_used =  Counter(x for x in textwords if x not in stopwords).most_common(10)
-			words_to_search = []
-			for elemen, count in most_used:
-				words_to_search.append(elemen)
+			most_used =  Counter(x for x in textwords if x not in stopwords)
+			words_to_search = [x for x in most_used.elements()]
 			# words_to_search = set(textwords)-set(stopwords)
 			
 			created = 0
@@ -220,7 +218,7 @@ def main(argv):
 	# stopwords_path = "data/stopwords.txt"
 
 	try:
-		opts, args = getopt.getopt(argv,"hi:o:",["seed=","output="])
+		opts, args = getopt.getopt(argv,"hi:o:",["seed=","output=","imposters="])
 	except getopt.GetoptError:
 		print "Usage : imposter.py --seed <directory> --output <directory> --imposters <number>"
 		sys.exit(2)

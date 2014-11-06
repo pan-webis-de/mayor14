@@ -96,7 +96,7 @@ def get_master_impostors(id,n,problems,sw=[],mode="test"):
     return master_impostors,lens
  
 
-def proyect_into_vectors(examples,full_voca,unknown,reps,lens,nmost=200):
+def project_into_vectors(examples,full_voca,unknown,reps,lens,nmost=1000):
     vectors=[[] for e in examples]
     uvec=[]
     for rep in reps:
@@ -104,7 +104,6 @@ def proyect_into_vectors(examples,full_voca,unknown,reps,lens,nmost=200):
         for example in examples:
             full.update(example[rep])
         full.update(unknown[rep])
-        tfull=len(full)
         idx=[p[0] for p in full.most_common()[:nmost]]
         for i,example in enumerate(examples):
             arr=[1.0*example[rep][k]/lens[i] for k in idx]
@@ -190,7 +189,7 @@ def process_corpus(problems,impostor_problems,opts,mode):
                 # Sparce algorithm
                 # Proyecting examples into a vector
                 ks=(len(ks),)
-                example_vectors,unknown=proyect_into_vectors(examples,full_voca,sample_unknown,opts.reps,lens)
+                example_vectors,unknown=project_into_vectors(examples,full_voca,sample_unknown,opts.reps,lens)
                 #print unknown
                 #for example in example_vectors:
                 #    print example
@@ -319,9 +318,9 @@ if __name__ == "__main__":
     p.add_argument("--documents",default=10,type=int,
             action="store", dest="documents",
             help="Documents per author [10]")
-    p.add_argument("--percentage",default=.80,type=float,
+    p.add_argument("--percentage",default=.60,type=float,
             action="store", dest="percentage",
-            help="Sampling percentage [.80]")
+            help="Sampling percentage [.60]")
     p.add_argument("--model",default=".",
             action="store", dest="model",
             help="Model to save training or to test with [None]")

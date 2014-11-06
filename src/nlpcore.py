@@ -28,6 +28,10 @@ jpype.startJVM(jpype.getDefaultJVMPath(),
     "-Djava.class.path=lib/stanford-corenlp-3.4.1.jar:lib/stanford-corenlp-3.4.1-models.jar"
     )
 
+def close():
+    jpype.shutdownJVM()
+    
+
 class POS():
     def __init__(self,model="edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"):
         MaxentTagger = jpype.JPackage("edu").stanford.nlp.tagger.maxent.MaxentTagger
@@ -38,7 +42,15 @@ class POS():
         tags=[wT.split('_',1)[1] for wT in tag.split()]
         return tags
 
-    def close(self):
-        jpype.shutdownJVM()
+class lemma():
+    def __init__(self,model="edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"):
+        MaxentTagger = jpype.JPackage("edu").stanford.nlp.tagger.maxent.MaxentTagger
+        self.tagger = MaxentTagger(model)
+
+    def tag(self,text):
+        tag=self.tagger.tagString(text)
+        tags=[wT.split('_',1)[1] for wT in tag.split()]
+        return tags
+
 
 postagger = POS()
