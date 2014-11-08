@@ -81,10 +81,11 @@ def get_master_impostors(id,n,problems,sw=[],mode="test"):
             master_candidate={}
             for doc in ks:
                 for repname in opts.reps:
-                    exec("f=docread.{0}".format(repname))
-                    rep=f(doc[1])[0]
-                    #except:
-                    #    rep=Counter()
+                    try:
+                        exec("f=docread.{0}".format(repname))
+                        rep=f(doc[1])[0]
+                    except:
+                        rep=Counter()
                     try:
                         master_candidate[repname].update(rep)
                     except KeyError:
@@ -135,10 +136,11 @@ def process_corpus(problems,impostor_problems,opts,mode):
  
             for filename,doc in ks:
                 for repname in opts.reps:
-                    exec("f=docread.{0}".format(repname))
-                    rep=f(doc)[0]
-                    #except:
-                    #    rep=Counter()
+                    try:
+                        exec("f=docread.{0}".format(repname))
+                        rep=f(doc)[0]
+                    except:
+                        rep=Counter()
                     try:
                         master_author[repname].update(rep)
                     except KeyError:
@@ -150,10 +152,11 @@ def process_corpus(problems,impostor_problems,opts,mode):
 
             for filename,doc in uks:
                  for repname in opts.reps:
-                    exec("f=docread.{0}".format(repname))
-                    rep=f(doc)[0]
-                    #except:
-                    #    rep=Counter()
+                    try:
+                        exec("f=docread.{0}".format(repname))
+                        rep=f(doc)[0]
+                    except:
+                        rep=Counter()
                     try:
                         master_unknown[repname].update(rep)
                     except KeyError:
