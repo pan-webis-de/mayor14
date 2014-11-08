@@ -34,7 +34,7 @@ import os.path
 import codecs
 from collections import Counter
 
-from nlpcore import postagger
+from nlpcore import postagger, fulltagger
 
 
 spaces=re.compile('\W+',re.UNICODE)
@@ -292,20 +292,23 @@ def sntcpar(doc,sw=[]):
 
 # NEW features NAACL based on NLP
 def token(doc,sw=[],ngram=5):
-    pos=postagger.tag(doc)
+    labels=fulltagger.tag(doc)
     doc=Counter([])
     for n in range(ngram):
         args=[]
         pat=[]
         for j in range(n+1):
-            args.append(pos[j:])
+            args.append(labels[j:][1])
             pat.append('{{{0}}}'.format(j))
         val= zip(*args)
         values = [" ".join(pat).format(*v) for v in val]
         doc.update(values)
 
     com=postprocess(doc,ncutoff=0,ncommons=0)
-    return pos,com,[x.encode('utf-8') for x in pos]
+    return labels,com,[u"{0}/{2}/{1}".format(
+                            w.encode('utf-8'),
+                            pos.encode('utf-8'),
+                            lemma.encode('utf-8')) for w,pos,lemma in labels]
 
 def preprocess(wrds,sw):
     wrds_=[]

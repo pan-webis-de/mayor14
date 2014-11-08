@@ -32,6 +32,38 @@ def close():
     jpype.shutdownJVM()
     
 
+
+class POS_lemma():
+    def __init__(self,model="edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"):
+        self.StringReader = jpype.JPackage("java").io.StringReader
+        self.CoreLabelTokenFactory =\
+            jpype.JPackage("edu").stanford.nlp.process.CoreLabelTokenFactory
+        self.PTBTokenizer =\
+            jpype.JPackage("edu").stanford.nlp.process.PTBTokenizer
+        WordToSentenceProcessor =\
+            jpype.JPackage("edu").stanford.nlp.process.WordToSentenceProcessor
+        MaxentTagger = jpype.JPackage("edu").stanford.nlp.tagger.maxent.MaxentTagger
+        Morphology = \
+            jpype.JPackage("edu").stanford.nlp.process.Morphology
+        self.postagger  = MaxentTagger(model)
+        self.lemmatizer = Morphology()
+        self.ssplit     = WordToSentenceProcessor()
+
+
+    def tag(self,text):
+        text_=self.StringReader(text.encode("ascii","ignore"))
+        tokenizer = self.PTBTokenizer(text_,self.CoreLabelTokenFactory(),"invertible,ptb3Escaping=true")
+        tokens=tokenizer.tokenize()
+        sntcs=self.ssplit.process(tokens)
+        labels=[]
+        for sntc in sntcs:
+            pos=self.postagger.tagSentence(tokens)
+            for wt in pos:
+                lemma=self.lemmatizer.lemma(wt.word(),wt.tag())
+                labels.append((wt.word(),wt.tag(),lemma))
+        return labels
+
+
 class POS():
     def __init__(self,model="edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"):
         MaxentTagger = jpype.JPackage("edu").stanford.nlp.tagger.maxent.MaxentTagger
@@ -54,3 +86,4 @@ class lemma():
 
 
 postagger = POS()
+fulltagger = POS_lemma()
