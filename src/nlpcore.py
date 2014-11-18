@@ -21,16 +21,47 @@
 # -------------------------------------------------------------------------
 
 
+from nltk.stem import SpanishStemmer
 import  jpype 
 
 jpype.startJVM(jpype.getDefaultJVMPath(),
     "-ea",
-    "-Djava.class.path=lib/stanford-corenlp-3.4.1.jar:lib/stanford-corenlp-3.4.1-models.jar"
+    "-Djava.class.path=lib/stanford-corenlp-3.4.1.jar:lib/stanford-corenlp-3.4.1-models.jar:lib/stanford-spanish-corenlp-2014-08-26-models.jar"
     )
 
 def close():
     jpype.shutdownJVM()
     
+
+class POS_lemma_es():
+    def __init__(self,model="edu/stanford/nlp/models/pos-tagger/spanish/spanish-distsim.tagger"):
+        self.StringReader = jpype.JPackage("java").io.StringReader
+        self.CoreLabelTokenFactory =\
+            jpype.JPackage("edu").stanford.nlp.process.CoreLabelTokenFactory
+        self.SpanishTokenizer =\
+            jpype.JPackage("edu").international.spanish.process.SpanishTokenizer
+        WordToSentenceProcessor =\
+            jpype.JPackage("edu").stanford.nlp.process.WordToSentenceProcessor
+        MaxentTagger = jpype.JPackage("edu").stanford.nlp.tagger.maxent.MaxentTagger
+        self.postagger  = MaxentTagger(model)
+        self.stemmer    = SpanishStemmer()
+        self.ssplit     = WordToSentenceProcessor()
+
+
+    def tag(self,text):
+        text_=self.StringReader(text.encode("ascii","ignore"))
+        tokenizer = self.SpanishTokenizer(text_,self.CoreLabelTokenFactory(),"invertible,ptb3Escaping=truei,splitAll=True")
+        tokens=tokenizer.tokenize()
+        sntcs=self.ssplit.process(tokens)
+        labels=[]
+        for sntc in sntcs:
+            pos=self.postagger.tagSentence(sntc)
+            for wt in pos:
+                lemma=self.stem(wt.word())
+                labels.append((wt.word(),wt.tag(),lemma))
+        return labels
+
+
 
 
 class POS_lemma():
@@ -57,7 +88,7 @@ class POS_lemma():
         sntcs=self.ssplit.process(tokens)
         labels=[]
         for sntc in sntcs:
-            pos=self.postagger.tagSentence(tokens)
+            pos=self.postagger.tagSentence(sntc)
             for wt in pos:
                 lemma=self.lemmatizer.lemma(wt.word(),wt.tag())
                 labels.append((wt.word(),wt.tag(),lemma))

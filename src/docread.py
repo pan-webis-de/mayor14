@@ -33,8 +33,8 @@ import os
 import os.path
 import codecs
 from collections import Counter
+from nlpcore import  fulltagger
 
-from nlpcore import postagger, fulltagger
 
 
 spaces=re.compile('\W+',re.UNICODE)
@@ -49,8 +49,8 @@ renter = re.compile('\r?\n',re.UNICODE)
 renterer =re.compile('\r?\n',re.UNICODE)
 #wordpunct=re.compile('\w+\W+',re.UNICODE)
 wordpunct=re.compile(u'\W+',re.UNICODE)
-rcoma=re.compile(r'\w+,',re.UNICODE)
-rdot=re.compile(r'\w+\.',re.UNICODE)
+rcoma=re.compile(r',',re.UNICODE)
+rdot=re.compile(r'\.',re.UNICODE)
 rspc=re.compile(r'[/]',re.UNICODE)
 rwspc=re.compile(r'\s',re.UNICODE)
 rnumbers=re.compile(r'\d+',re.UNICODE)
@@ -86,229 +86,203 @@ def none(docs,filename):
     return None
 
 # Functions for representation extraction
-def numbers(doc,sw=[]):
-    wds = rnumbers.findall(doc)
-    values=[x.encode('utf-8') for x in wds]
-    doc=Counter(values)
-    com=postprocess(doc)
-    return doc,com,values
+def numbers(doc,sw=[],cutoff=0):
+    wds = [ x for x,y,z in doc if rnumbers.search(x)]
+    doc_=Counter(wds)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
-def numbers_size(doc,sw=[]):
-    wds = rnumbers.findall(doc)
-    values=[str(len(x)) for x in wds]
-    doc=Counter(values)
-    com=postprocess(doc)
-    return doc,com,values
+def capital(doc,sw=[],cutoff=0):
+    wds = [ x for x,y,z in doc if rcapital.search(x)]
+    doc_=Counter(wds)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
-def capital(doc,sw=[]):
-    wds = rcapital.findall(renter.sub(' ',doc))
-    values=[x.encode('utf-8').lower() for x in wds]
-    doc=Counter(values)
-    com=postprocess(doc)
-    return doc,com,values
+def bow(doc,sw=[],cutoff=0):
+    wds = [ x.lower() for x,y,z in doc if z not in sw]
+    doc_=Counter([x.encode('utf-8') for x in wds])
+    postprocess(doc_,sw=sw,cutoff=cutoff)
+    return doc_
 
-def punct(doc,sw=[]):
-    wds=wordpunct.findall(spaces_.sub('',renter.sub(' ',doc.lower())))
-    values=[x.encode('utf-8') for x in wds]
-    doc=Counter(values)
-    com=postprocess(doc,ncutoff=0,ncommons=0)
-    return doc,com,values
+def lemma(doc,sw=[],cutoff=0):
+    wds = [ z for x,y,z in doc]
+    doc_=Counter([x.encode('utf-8') for x in wds])
+    postprocess(doc_,sw=sw,cutoff=cutoff)
+    return doc_
 
-def bow(doc,sw=[]):
-    wds = spaces.split(renter.sub(' ',doc.lower()))
-    wds = preprocess(wds,sw)
+def pos(doc,sw=[],cutoff=0):
+    wds = [ y for x,y,z in doc if z not in sw]
     doc=Counter([x.encode('utf-8') for x in wds])
-    com=postprocess(doc,ncommons=0,ncutoff=0,sw=sw)
-    return doc,com,[x.encode('utf-8') for x in wds]
+    postprocess(doc,cutoff=cutoff)
+    return doc
 
-def stopwords(doc,sw=[]):
-    wds = spaces.split(renter.sub(' ',doc.lower()))
-    wds = [w for w in wds if w in sw]
-    doc=Counter([x.encode('utf-8') for x in wds])
-    com=postprocess(doc,ncommons=0,ncutoff=0,sw=sw)
-    return doc,com,[x.encode('utf-8') for x in wds]
-
-
-def prefix(doc,sw=[]):
-    wds = spaces.split(renter.sub(' ',doc.lower()))
-    wds = preprocess(wds,sw)
-    doc=Counter([x.encode('utf-8')[:5] for x in wds if len(x)>5])
-    com=postprocess(doc,ncommons=0,ncutoff=0,sw=sw)
-    return doc,com,[x.encode('utf-8') for x in wds]
-
-def sufix(doc,sw=[]):
-    wds = spaces.split(renter.sub(' ',doc.lower()))
-    wds = preprocess(wds,sw)
-    doc=Counter([x.encode('utf-8')[-5:] for x in wds if len(x)>5])
-    com=postprocess(doc,ncommons=0,ncutoff=0,sw=sw)
-    return doc,com,[x.encode('utf-8') for x in wds]
+def poslemma(doc,sw=[],cutoff=0):
+    wds = [ "{0}_{1}".format(y,z) for x,y,z in doc if z not in sw]
+    doc_=Counter([x.encode('utf-8') for x in wds])
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
 
-def letters(doc,sw=[]):
-    # Off
-    wds = doc.lower()
-    values=[x.encode('utf-8') for x in wds]
-    doc=Counter(values)
-    com=postprocess(doc)
-    return doc,com,values
+def stopwords(doc,sw=[],cutoff=0):
+    wds = [ x for x,y,z in doc if x in sw]
+    doc_=Counter(wds)
+    postprocess(doc_,sw=[],cutoff=cutoff)
+    return doc_
 
-def coma(doc,sw=[]):
-    wds = rcoma.findall(doc.lower())
+
+def prefix(doc,sw=[],cutoff=0):
+    wds = [ x.lower()[:5] for x,y,z in doc if len(x)>5]
+    doc_=Counter(wds)
+    postprocess(doc_,sw=sw,cutoff=cutoff)
+    return doc_
+
+def sufix(doc,sw=[],cutoff=0):
+    wds = [ x.lower()[-5:] for x,y,z in doc if len(x)>5]
+    doc_=Counter(wds)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
+
+
+def letters(doc,sw=[],cutoff=0):
+    wds = "".join([ x.lower() for x,y,z in doc if x in sw])
+    doc_=Counter(wds)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
+
+def coma(doc,sw=[],cutoff=0):
+    wds = [ x for x,y,z in doc if rcoma.search(x)]
     values=[x.encode('utf-8')[:-1] for x in wds]
-    doc=Counter(values)
-    com=postprocess(doc,ncutoff=0,ncommons=0,sw=sw)
-    return doc,com,values
+    doc_=Counter(values)
+    postprocess(doc_,sw=sw,cutoff=cutoff)
+    return doc_
 
-def dot(doc,sw=[]):
-    wds = rdot.findall(doc.lower())
+
+def punct(doc,sw=[],cutoff=0):
+    wds = [ x for x,y,z in doc if wordpunct.search(x)]
+    doc_=Counter(wds)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
+
+def dot(doc,sw=[],cutoff=0):
+    wds = [ x for x,y,z in doc if rdot.search(x)]
     values=[x.encode('utf-8')[:-1] for x in wds]
-    doc=Counter(values)
-    com=postprocess(doc,ncutoff=0,ncommons=0,sw=sw)
-    return doc,com,values
+    doc_=Counter(values)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
-def sqrbrackets(doc,sw=[]):
-    wds = rspc.findall(doc)
-    doc=Counter([x.encode('utf-8') for x in wds])
-    com=postprocess(doc,ncutoff=0,ncommons=0)
-    return doc,com,[x.encode('utf-8') for x in wds]
+def sqrbrackets(doc,sw=[],cutoff=0):
+    wds = [ x for x,y,z in doc if rspc.search(x)]
+    doc_=Counter([x.encode('utf-8') for x in wds])
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
-def whitespc(doc,sw=[]):
-    wds = rwspc.findall(doc)
-    doc=Counter([x.encode('utf-8') for x in wds])
-    com=postprocess(doc,ncutoff=0,ncommons=0)
-    return doc,com,[x.encode('utf-8') for x in wds]
+def whitespc(doc,sw=[],cutoff=0):
+    wds = [ x for x,y,z in doc if rwspc.search(x)]
+    doc_=Counter([x.encode('utf-8') for x in wds])
+    postprocess(doc_,cutoff=cutoff)
+    return doc
 
-def enter(doc,sw=[]):
-    wds = renterer.findall(doc)
-    doc=Counter([x.encode('utf-8') for x in wds])
-    com=postprocess(doc,ncutoff=0,ncommons=0)
-    return doc,com,[x.encode('utf-8') for x in wds]    
-
-def bigram(doc,sw=[]):
-    wds = spaces.split(renter.sub(' ',doc.lower()))
-    wds = preprocess(wds,sw)
-    
+def bigramlemma(doc,sw=[],cutoff=0):
+    wds = [ z for x,y,z in doc]
+    wds = preprocess(wds)
     bigram = zip(wds, wds[1:])
     values=["{0} {1}".format(x.encode('utf-8'),
                                     y.encode('utf-8')) for x, y in bigram]
-    doc = Counter(values)
-    com=postprocess(doc,ncutoff=0,ncommons=1)
-    return doc,com,values
+    doc_ = Counter(values)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
-def bigramstop(doc,sw=[]):
-    wds = [ x.encode('utf-8') for x in spaces.split(renter.sub(' ',doc.lower()))]
-    
+
+def bigram(doc,sw=[],cutoff=0):
+    wds = [ x.lower() for x,y,z in doc]
     bigram = zip(wds, wds[1:])
-    values=["{0} {1}".format(x,y[:5]) for x, y in bigram
+    values=["{0} {1}".format(x.encode('utf-8'),
+                                    y.encode('utf-8')) for x, y in bigram]
+    doc_ = Counter(values)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
-                                    if x in sw]
-    doc = Counter(values)
-    com=postprocess(doc,ncutoff=0,ncommons=0)
-    return doc,com,values
-
-
-
-
-def bigrampref(doc,sw=[]):
-    wds = spaces.split(renter.sub(' ',doc.lower()))
-    wds = preprocess(wds,sw)
+def bigrampref(doc,sw=[],cutoff=0):
+    wds = [ z[:5] for x,y,z in doc if x in sw]
+    wds = preprocess(wds)
     bigram = zip(wds, wds[1:])
     values=["{0} {1}".format(x.encode('utf-8')[:5],
                                     y.encode('utf-8')[:3]) for x, y in bigram]
-    doc = Counter(values)
-    com=postprocess(doc,ncutoff=0,ncommons=1)
-    return doc,com,values
+    doc_ = Counter(values)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
-def bigramsuf(doc,sw=[]):
-    wds = spaces.split(renter.sub(' ',doc.lower()))
-    wds = preprocess(wds,sw)
+def bigramsuf(doc,sw=[],cutoff=0):
+    wds = [ z[5:] for x,y,z in doc if x in sw]
+    wds = preprocess(wds)
     bigram = zip(wds, wds[1:])
     values=["{0} {1}".format(x.encode('utf-8')[-5:],
                                     y.encode('utf-8')[:3]) for x, y in bigram]
-    doc = Counter(values)
-    com=postprocess(doc,ncutoff=0,ncommons=1)
-    return doc,com,values
+    doc_ = Counter(values)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
 
 
-
-def trigram(doc,sw=[]):
-    wds = spaces.split(renter.sub(' ',doc.lower()))
-    wds = preprocess(wds,sw)
+def trigram(doc,sw=[],cutoff=0):
+    wds = [ x for x,y,z in doc]
+    wds = preprocess(wds)
     tri = zip(wds, wds[1:], wds[2:])
     values = ["{0} {1} {2}".format(x.encode('utf-8'),
                                     y.encode('utf-8'),
                                     z.encode('utf-8')) for x, y,z in tri]
-    doc = Counter(values)
+    doc_ = Counter(values)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
-    com=postprocess(doc,ncutoff=0)
-    return doc,com,values
 
-
-def ngram(doc,sw=[],ngram=3):
-    wds = [w.encode('utf-8') for w in spaces.split(renter.sub(' ',doc.lower()))]
-
-    doc=Counter([])
+def ngramword(doc,sw=[],ngram=5,cutoff=0):
+    pos = [ x.lower() for x,y,z in doc]
+    doc_=Counter()
     for n in range(ngram):
         args=[]
         pat=[]
         for j in range(n+1):
-            args.append(wds[j:])
+            args.append(pos[j:])
             pat.append('{{{0}}}'.format(j))
         val= zip(*args)
         values = [" ".join(pat).format(*v) for v in val]
-        doc.update(values)
+        doc_.update(values)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
-    com=postprocess(doc,sw=sw,ncutoff=5)
-    return doc,com,values
 
-def wordssntc(doc,sw=[]):
-    wds = [str(len(spaces.split(w))/10) for w in period.split(renter.sub(' ',doc.lower()))]
-    par = Counter(wds)
-    com=postprocess(par,ncutoff=0,ncommons=0)
-    return par,com,wds
-
-def wordpar(doc,sw=[]):
-    #pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
-    pars = rpar2.split(doc.lower())
-    par = Counter()
-    #par['0']=len(pars)/10
-    for k, p in enumerate(pars):
-        wds = spaces.split(p)
-        #par[str(k+1)]=len(wds)
-        par[str(k-len(pars))]=len(wds)
-    com=postprocess(par,ncutoff=0,ncommons=0)
-    return par,com,[x.encode('utf-8') for x in pars]
-
-def sntcpar(doc,sw=[]):
-    #pars = [x.strip() for x in rpar.split(doc.lower()) if x and len(x.strip())>0]
-    pars =rpar2.split(doc)
-    par = Counter()
-    #par['0']=len(pars)/10
-    for k, p in enumerate(pars):
-      par[str(k+1)]=1
-    com=postprocess(par,ncutoff=0,ncommons=0)
-    return par,com,[x.encode('utf-8') for x in pars]
-
-# NEW features NAACL based on NLP
-def token(doc,sw=[],ngram=5):
-    labels=fulltagger.tag(doc)
-    doc=Counter([])
+def ngrampos(doc,sw=[],ngram=5,cutoff=0):
+    pos = [ y for x,y,z in doc]
+    doc_=Counter()
     for n in range(ngram):
         args=[]
         pat=[]
         for j in range(n+1):
-            args.append(labels[j:][1])
+            args.append(pos[j:])
             pat.append('{{{0}}}'.format(j))
         val= zip(*args)
         values = [" ".join(pat).format(*v) for v in val]
-        doc.update(values)
+        doc_.update(values)
 
-    com=postprocess(doc,ncutoff=0,ncommons=0)
-    return labels,com,[u"{0}/{2}/{1}".format(
-                            w.encode('utf-8'),
-                            pos.encode('utf-8'),
-                            lemma.encode('utf-8')) for w,pos,lemma in labels]
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
+
+def ngramlemma(doc,sw=[],ngram=5,cutoff=0):
+    pos = [z for x,y,z in doc]
+    doc_=Counter()
+    for n in range(ngram):
+        args=[]
+        pat=[]
+        for j in range(n+1):
+            args.append(pos[j:])
+            pat.append('{{{0}}}'.format(j))
+        val= zip(*args)
+        values = [" ".join(pat).format(*v) for v in val]
+        doc_.update(values)
+
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
 def preprocess(wrds,sw):
     wrds_=[]
@@ -317,43 +291,35 @@ def preprocess(wrds,sw):
             wrds_.append(wrd)
     return wrds_
 
-def postprocess(doc,ncommons=0,ncutoff=0,sw=[]):
-    commons=[x for x,c in doc.most_common(ncommons)]
-    cutoff=[x for x,c in doc.iteritems() if c <= ncutoff ]
-    for c in commons:
-        del doc[c]
+def postprocess(doc,cutoff=5,sw=[]):
+    cutoff=[x for x,c in doc.iteritems() if c < cutoff ]
     for c in cutoff:
         del doc[c]
     for c in sw:
         del doc[c]
-    commons=doc.most_common(10)
-    return commons
 
 representations=[
     ('letters',letters),   #X
     ('bigram',bigram),
     ('bigrampref',bigrampref),
-    ('bigramstop',bigramstop),
     ('bigramsug',bigramsuf),
     ('trigram',trigram), 
     ('punctuation',punct), 
-    ('wordssntc',wordssntc), 
     ('stopwords',stopwords), 
     ('numbers',numbers),
-    ('numbers_size',numbers),
     ('coma',coma),
     ('dot',dot),           
     ('bow',bow),
+    ('lemma',lemma),
+    ('poslemma',poslemma),
     ('prefix',prefix),
     ('sufix',sufix),
     ('capital',capital),   
-    ('sntcpar',sntcpar),   
-    ('wordpar',wordpar),
-    ('sntcpar',sntcpar),
-    ('sqrbrackets',sqrbrackets),
     ('whitespc',whitespc),    #X
-    ('enter',enter),          #X
-    ('token',token)
+    ('ngramword',ngramword),
+    ('ngrampos',ngrampos),
+    ('ngramlemma',ngramlemma),
+
     ]
 
 
@@ -398,18 +364,18 @@ def readstopwords(filename):
         for line in file:
             line=line.strip()
             if len(line)>0 and not line[0]=='#':
-                stopwords.append(line.encode('utf-8'))
+                stopwords.append(line)
     return stopwords
 
 
 def readdoc(filename):
     try:
         with codecs.open(filename,'r','utf-8') as fh:
-            return  fh.read()
+            return  fulltagger.tag(fh.read())
     except UnicodeDecodeError:
         try:
             with codecs.open(filename,'r','ISO-8859-1') as fh:
-                return fh.read()
+                return fulltagger.tag(fh.read())
         except UnicodeDecodeError:
             return ""
 

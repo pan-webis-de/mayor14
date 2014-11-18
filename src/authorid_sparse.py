@@ -50,21 +50,16 @@ def muestreo(counter,reps,percentage=.80):
     final_count={}
     for rep in reps:
         
-        if len(counter[rep].keys()) < 120:
-            percentage_=1.0
-        else:
-            percentage_=percentage
-
         list_counter=list(counter[rep].elements())
         random.shuffle(list_counter)
        
         size=len(list_counter)
-        final_list=list_counter[0:int(size*percentage_)]  
+        final_list=list_counter[0:int(size*percentage)]  
       
         final_count[rep]=Counter(final_list)  
     return final_count
 
-def get_master_impostors(id,n,problems,sw=[],mode="test"):
+def get_master_impostors(id,n,problems,sw=[],mode="test",cutoff=0):
     if mode.startswith("test"):
         id=id+"___"
     master_impostors=[]
@@ -83,7 +78,7 @@ def get_master_impostors(id,n,problems,sw=[],mode="test"):
                 for repname in opts.reps:
                     try:
                         exec("f=docread.{0}".format(repname))
-                        rep=f(doc[1])[0]
+                        rep=f(doc[1],cutoff=cutoff,sw=sw)
                     except:
                         rep=Counter()
                     try:
@@ -96,7 +91,7 @@ def get_master_impostors(id,n,problems,sw=[],mode="test"):
     return master_impostors,lens
  
 
-def project_into_vectors(examples,full_voca,unknown,reps,lens,nmost=1000):
+def project_into_vectors(examples,full_voca,unknown,reps,lens,nmost=100):
     vectors=[[] for e in examples]
     uvec=[]
     for rep in reps:
@@ -104,7 +99,7 @@ def project_into_vectors(examples,full_voca,unknown,reps,lens,nmost=1000):
         for example in examples:
             full.update(example[rep])
         full.update(unknown[rep])
-        idx=[p[0] for p in full.most_common()[:nmost]]
+        idx=[p[0] for p in full.most_common()]
         for i,example in enumerate(examples):
             arr=[1.0*example[rep][k]/lens[i] for k in idx]
             vectors[i].append(arr)
@@ -114,31 +109,18 @@ def project_into_vectors(examples,full_voca,unknown,reps,lens,nmost=1000):
 codes=docread.codes
 
 
-def process_corpus(problems,impostor_problems,opts,mode):
+def process_corpus(problems,impostor_problems,opts,mode,sw):
 	#Iterating over problems
         for id,(ks,uks) in problems:
             master_author={}
             master_unknown={}
             full_voca={}
             ks_=ks
-            if id.startswith('DE'):
-                opts.percentage=0.9
-            elif id.startswith('DR'):
-                opts.percentage=0.7
-            elif id.startswith('EE'):
-                opts.percentage=0.7
-            elif id.startswith('EN'):
-                opts.percentage=0.9
-            elif id.startswith('GR'):
-                opts.percentage=0.9
-            elif id.startswith('SP'):
-                opts.percentage=0.9
- 
             for filename,doc in ks:
                 for repname in opts.reps:
                     try:
                         exec("f=docread.{0}".format(repname))
-                        rep=f(doc)[0]
+                        rep=f(doc,cutoff=opts.cutoff,sw=sw)
                     except:
                         rep=Counter()
                     try:
@@ -154,7 +136,7 @@ def process_corpus(problems,impostor_problems,opts,mode):
                  for repname in opts.reps:
                     try:
                         exec("f=docread.{0}".format(repname))
-                        rep=f(doc)[0]
+                        rep=f(doc,sw=sw,cutoff=opts.cutoff)
                     except:
                         rep=Counter()
                     try:
@@ -172,8 +154,10 @@ def process_corpus(problems,impostor_problems,opts,mode):
                 #Extracting Examples
                 examples= []
                 lens=[]
-                # Adding imposters
-                master_impostors,len_impostors=get_master_impostors(id,opts.imposters,impostor_problems,mode)
+                # Adding impostors
+                master_impostors,len_impostors=get_master_impostors(id,opts.nimpostors,impostor_problems,mode=mode,sw=sw,cutoff=opts.cutoff)
+                #for mi in master_impostors:
+                #   print ">>>>",mi
                 for j,master_impostor in enumerate(master_impostors):
                      len_impostor=len_impostors[j]
                      for i in range(opts.documents):
@@ -191,9 +175,8 @@ def process_corpus(problems,impostor_problems,opts,mode):
                 ks=(len(ks),)
                 example_vectors,unknown=project_into_vectors(examples,full_voca,sample_unknown,opts.reps,lens)
                 #print unknown
-                #for example in example_vectors:
-                #    print example
-                #    print len(example)
+                #for example in enumerate(example_vectors):
+                #    print len(example),example
 
 
                 # Creating matrix A
@@ -204,24 +187,8 @@ def process_corpus(problems,impostor_problems,opts,mode):
                 A=preprocessing.normalize(A,axis=0)
                 y=np.matrix(unknown)
                 y_=y.T
-                if id.startswith('DE'):
-                    nu=0.00001
-                    tol=0.00001
-                elif id.startswith('DR'):
-                    nu=0.0001
-                    tol=0.0001
-                elif id.startswith('EE'):
-                    nu=0.00001
-                    tol=0.00001
-                elif id.startswith('EN'):
-                    nu=0.00001
-                    tol=0.00001
-                elif id.startswith('GR'):
-                    nu=0.00001
-                    tol=0.00001
-                elif id.startswith('SP'):
-                    nu=0.00001
-                    tol=0.00001
+                nu=0.00001
+                tol=0.00001
  
                 stopCrit=3
                 answer=False
@@ -309,18 +276,24 @@ if __name__ == "__main__":
     p.add_argument("-r","--rep",default=[],
             action="append", dest="reps",
             help="adds representation to process")
-    p.add_argument("--iters",default=10,type=int,
+    p.add_argument("--cutoff",default=5,type=int,
+            action="store", dest="cutoff",
+            help="Minimum frequency [5]")
+    p.add_argument("--iters",default=100,type=int,
             action="store", dest="iters",
-            help="Total iterations []")
-    p.add_argument("--imposters",default=5,type=int,
-            action="store", dest="imposters",
-            help="Total of imposter per auhtor [5]")
-    p.add_argument("--documents",default=10,type=int,
+            help="Total iterations [100]")
+    p.add_argument("--impostors",default=None,
+            action="store", dest="impostors",
+            help="Directory of imposter per auhtor")
+    p.add_argument("--nimpostors",default=8,type=int,
+            action="store", dest="nimpostors",
+            help="Total of imposter per auhtor [8]")
+    p.add_argument("--documents",default=1,type=int,
             action="store", dest="documents",
-            help="Documents per author [10]")
-    p.add_argument("--percentage",default=.60,type=float,
+            help="Documents per author [1]")
+    p.add_argument("--percentage",default=.90,type=float,
             action="store", dest="percentage",
-            help="Sampling percentage [.60]")
+            help="Sampling percentage [.90]")
     p.add_argument("--model",default=".",
             action="store", dest="model",
             help="Model to save training or to test with [None]")
@@ -404,7 +377,24 @@ if __name__ == "__main__":
     problems=docread.problems(
              docread.dirproblems(dirname,known_pattern,unknown_pattern,_ignore,
                                  code=codes[opts.language][opts.genre]))
-        
+
+
+    # Load impostors from directory
+    impostors=None
+    if opts.impostors:
+        impostors=[]
+        verbose('Loading impostors')
+        files  =[(i,x,"{0}/{1}".format(opts.impostors,x)) for i,x in
+                                enumerate(os.listdir(opts.impostors))]
+        random.shuffle(files)
+        for i,id,f in files[:1000]:
+                impostors.append(
+                    (opts.impostors[-2:]+"__"+str(i),
+                    ([(f,docread.readdoc(f))],[])))
+    else:
+        verbose('Using problems as impostors')
+        impostors=problems
+
     # Loading answers file only for DEVELOPMENT OR TRAINNING MODE
     if opts.mode.startswith("train") or opts.mode.startswith('devel'):
         if opts.Answers:
@@ -422,13 +412,14 @@ if __name__ == "__main__":
 
     # Development model 
     if opts.mode.startswith("devel"):
-        process_corpus(problems,problems,opts,"devel")
+        verbose('Starting the process')
+        process_corpus(problems,impostors,opts,"devel",sw=stopwords)
       
     # TRAINING - Save examples
     elif opts.mode.startswith("train"):
         import pickle
         
-        stream_model = pickle.dumps(problems)
+        stream_model = pickle.dumps(impostors)
         verbose("Saving model into ",opts.model)
         with open(opts.model,"w") as modelf:
             modelf.write(stream_model)
@@ -437,6 +428,6 @@ if __name__ == "__main__":
     elif opts.mode.startswith("test"):
         import pickle
         
-        problems_train = pickle.load(open(opts.model))
+        impostors = pickle.load(open(opts.model))
         verbose("Reading model",opts.model)
-        process_corpus(problems,problems_train,opts,"test")
+        process_corpus(problems,impostors,opts,"test",sw=stopwords)
