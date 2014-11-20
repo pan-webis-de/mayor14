@@ -98,10 +98,12 @@ def project_into_vectors(examples,full_voca,unknown,reps,lens,nmost=100):
         full=Counter()
         for example in examples:
             full.update(example[rep])
+        mass=sum(full.values())
         full.update(unknown[rep])
         idx=[p[0] for p in full.most_common()]
         for i,example in enumerate(examples):
-            arr=[1.0*example[rep][k]/lens[i] for k in idx]
+            #arr=[1.0*example[rep][k]/lens[i] for k in idx]
+            arr=[1.0*example[rep][k]/mass for k in idx]
             vectors[i].append(arr)
         uvec.append([1.0*unknown[rep][k] for k in idx])
     return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
@@ -111,6 +113,10 @@ codes=docread.codes
 
 def process_corpus(problems,impostor_problems,opts,mode,sw):
 	#Iterating over problems
+
+        if opts.nmax>0:
+            problems=problems[:opts.nmax]
+
         for id,(ks,uks) in problems:
             master_author={}
             master_unknown={}
@@ -150,6 +156,10 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
 
             results=[]
             iters=opts.iters
+            #print "============"
+            #print id, master_author
+            #print ">>>", master_unknown
+
             for iter in range(iters):
                 #Extracting Examples
                 examples= []
@@ -172,7 +182,6 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
 
                 # Sparce algorithm
                 # Proyecting examples into a vector
-                ks=(len(ks),)
                 example_vectors,unknown=project_into_vectors(examples,full_voca,sample_unknown,opts.reps,lens)
                 #print unknown
                 #for example in enumerate(example_vectors):
@@ -219,20 +228,9 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                         #print residuals
                         
                         sci=(k*np.max(d_is)/np.linalg.norm(x_0,ord=1)-1)/(k-1)
-                        #print sci
                         identity=np.argmin(residuals)
-                        if id.startswith('DE'):
-                            scith=0.1
-                        elif id.startswith('DR'):
-                            scith=0.1
-                        elif id.startswith('EE'):
-                            scith=0.05
-                        elif id.startswith('EN'):
-                            scith=0.1
-                        elif id.startswith('GR'):
-                            scith=0.1
-                        elif id.startswith('SP'):
-                            scith=0.1
+                        #print sci, identity
+                        scith=0.1
                         if sci<scith:
                             results.append(0.0)
                         else:
@@ -285,15 +283,18 @@ if __name__ == "__main__":
     p.add_argument("--impostors",default=None,
             action="store", dest="impostors",
             help="Directory of imposter per auhtor")
+    p.add_argument("--max",default=0,type=int,
+            action="store", dest="nmax",
+            help="Maximum number of problems to solve [All]")
     p.add_argument("--nimpostors",default=8,type=int,
             action="store", dest="nimpostors",
             help="Total of imposter per auhtor [8]")
     p.add_argument("--documents",default=1,type=int,
             action="store", dest="documents",
             help="Documents per author [1]")
-    p.add_argument("--percentage",default=.90,type=float,
+    p.add_argument("--percentage",default=.60,type=float,
             action="store", dest="percentage",
-            help="Sampling percentage [.90]")
+            help="Sampling percentage [.60]")
     p.add_argument("--model",default=".",
             action="store", dest="model",
             help="Model to save training or to test with [None]")
@@ -378,7 +379,6 @@ if __name__ == "__main__":
              docread.dirproblems(dirname,known_pattern,unknown_pattern,_ignore,
                                  code=codes[opts.language][opts.genre]))
 
-
     # Load impostors from directory
     impostors=None
     if opts.impostors:
@@ -387,7 +387,7 @@ if __name__ == "__main__":
         files  =[(i,x,"{0}/{1}".format(opts.impostors,x)) for i,x in
                                 enumerate(os.listdir(opts.impostors))]
         random.shuffle(files)
-        for i,id,f in files[:1000]:
+        for i,id,f in files[:10]:
                 impostors.append(
                     (opts.impostors[-2:]+"__"+str(i),
                     ([(f,docread.readdoc(f))],[])))
