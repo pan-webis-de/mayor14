@@ -134,8 +134,12 @@ if __name__ == "__main__":
             p.error('Output parameter could not been open: {0}'\
                     .format(opts.output))
 
-    gs = docread.loadanswers(opts.GS,code=codes[opts.language][opts.genre])
+    gs_ = docread.loadanswers(opts.GS,code=codes[opts.language][opts.genre])
     sys = docread.loadanswers(opts.SYS,code=codes[opts.language][opts.genre])
+    
+    gs={}
+    for k in sys.keys():
+        gs[k]=gs_[k]
     
     #probas = docread.loadproba(args[1])
     tp=0

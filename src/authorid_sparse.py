@@ -103,7 +103,10 @@ def project_into_vectors(examples,full_voca,unknown,reps,lens,nmost=100):
         idx=[p[0] for p in full.most_common()]
         for i,example in enumerate(examples):
             #arr=[1.0*example[rep][k]/lens[i] for k in idx]
-            arr=[1.0*example[rep][k]/mass for k in idx]
+            if mass > 0:
+                arr=[1.0*example[rep][k]/mass for k in idx]
+            else:
+                arr=[1.0*example[rep][k] for k in idx]
             vectors[i].append(arr)
         uvec.append([1.0*unknown[rep][k] for k in idx])
     return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
@@ -387,7 +390,7 @@ if __name__ == "__main__":
         files  =[(i,x,"{0}/{1}".format(opts.impostors,x)) for i,x in
                                 enumerate(os.listdir(opts.impostors))]
         random.shuffle(files)
-        for i,id,f in files[:10]:
+        for i,id,f in files[:2000]:
                 impostors.append(
                     (opts.impostors[-2:]+"__"+str(i),
                     ([(f,docread.readdoc(f))],[])))
