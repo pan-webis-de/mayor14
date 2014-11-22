@@ -49,7 +49,6 @@ def info(*args):
 def muestreo(counter,reps,percentage=.80):
     final_count={}
     for rep in reps:
-        
         list_counter=list(counter[rep].elements())
         random.shuffle(list_counter)
        
@@ -94,21 +93,30 @@ def get_master_impostors(id,n,problems,sw=[],mode="test",cutoff=0):
 def project_into_vectors(examples,full_voca,unknown,reps,lens,nmost=100):
     vectors=[[] for e in examples]
     uvec=[]
+    mass=[]
+    for example in examples:
+        mass.append(sum(example['bow'].values()))
+    umass=sum(unknown['bow'].values())
     for rep in reps:
         full=Counter()
         for example in examples:
             full.update(example[rep])
-        mass=sum(full.values())
         full.update(unknown[rep])
         idx=[p[0] for p in full.most_common()]
+        print idx[:20]
         for i,example in enumerate(examples):
-            #arr=[1.0*example[rep][k]/lens[i] for k in idx]
-            if mass > 0:
+            if mass[i] > 0:
                 arr=[1.0*example[rep][k]/mass for k in idx]
+                arr=[1.0*example[rep][k]/mass[i] for k in idx]
             else:
-                arr=[1.0*example[rep][k] for k in idx]
+                arr=[1.0*example[rep][k]/lens[i] for k in idx]
+            print rep, i, arr[:20]
             vectors[i].append(arr)
-        uvec.append([1.0*unknown[rep][k] for k in idx])
+        if umass > 0:
+            uvec.append([1.0*unknown[rep][k]/umass for k in idx])
+        else:
+            uvec.append([1.0*unknown[rep][k]/lens[i] for k in idx])
+        print uvec[-1][:20]
     return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
 
 codes=docread.codes
@@ -122,16 +130,19 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
 
         for id,(ks,uks) in problems:
             master_author={}
+            docs_author=[]
             master_unknown={}
             full_voca={}
             ks_=ks
             for filename,doc in ks:
+                doc_author={}
                 for repname in opts.reps:
                     try:
                         exec("f=docread.{0}".format(repname))
                         rep=f(doc,cutoff=opts.cutoff,sw=sw)
                     except:
                         rep=Counter()
+                    doc_author[repname]=rep
                     try:
                         master_author[repname].update(rep)
                     except KeyError:
@@ -140,12 +151,13 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                         full_voca[repname].update(rep)
                     except KeyError:
                         full_voca[repname]=Counter(rep)
+                docs_author.append(doc_author)
 
             for filename,doc in uks:
                  for repname in opts.reps:
                     try:
                         exec("f=docread.{0}".format(repname))
-                        rep=f(doc,sw=sw,cutoff=opts.cutoff)
+                        rep=f(doc,sw=sw)
                     except:
                         rep=Counter()
                     try:
@@ -168,17 +180,17 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                 examples= []
                 lens=[]
                 # Adding impostors
-                master_impostors,len_impostors=get_master_impostors(id,opts.nimpostors,impostor_problems,mode=mode,sw=sw,cutoff=opts.cutoff)
+                master_impostors,len_impostors=get_master_impostors(id,opts.nimpostors*len(ks),impostor_problems,mode=mode,sw=sw,cutoff=opts.cutoff)
                 #for mi in master_impostors:
-                #   print ">>>>",mi
+                   #print ">>>>",mi
                 for j,master_impostor in enumerate(master_impostors):
                      len_impostor=len_impostors[j]
-                     for i in range(opts.documents):
-                         examples.append(muestreo(master_impostor,opts.reps,percentage=opts.percentage))
-                         lens.append(len_impostor)
+                     examples.append(muestreo(master_impostor,opts.reps,percentage=opts.percentage))
+                     lens.append(len_impostor)
 
-                for i in range(opts.documents):
-                    examples.append(muestreo(master_author,opts.reps,percentage=opts.percentage))
+                for i in range(len(ks)):
+                    doc_author=docs_author[i]
+                    examples.append(muestreo(doc_author,opts.reps,percentage=opts.percentage))
                     lens.append(len(ks_))
 
                 sample_unknown=muestreo(master_unknown,opts.reps,percentage=1.0)
@@ -218,7 +230,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                         # Calculating residuals
                         residuals=[]
                         d_is=[]
-                        k=len(examples)/opts.documents
+                        k=len(examples)/len(uks)
                         for i in range(k):
                             n=opts.documents
                             d_i= np.matrix([[0.0 for x in x_0[:i*n]]+\
@@ -304,6 +316,9 @@ if __name__ == "__main__":
     p.add_argument("--random",default=True,
             action="store_false", dest="random",
             help="Use random seed [True]")
+    p.add_argument("--concatente",default=False,
+            action="store_false", dest="concatenate",
+            help="Concatenate [False]")
     p.add_argument("--cvs",default=False,
             action="store_true", dest="csv",
             help="Save matrices into a .csv file [False]")
@@ -382,6 +397,17 @@ if __name__ == "__main__":
              docread.dirproblems(dirname,known_pattern,unknown_pattern,_ignore,
                                  code=codes[opts.language][opts.genre]))
 
+    if opts.concatenate:
+        nproblems=[]
+        for idd,(ks,uks) in problems:
+            ndocs=[]
+            for filename,doc in ks:
+                ndocs.append(doc)
+            ks_=list(itertools.chain(*ndocs))
+            nproblems.append((idd,([(ks[0][0],ks_)],uks)))
+        problems=nproblems
+
+
     # Load impostors from directory
     impostors=None
     if opts.impostors:
@@ -390,7 +416,7 @@ if __name__ == "__main__":
         files  =[(i,x,"{0}/{1}".format(opts.impostors,x)) for i,x in
                                 enumerate(os.listdir(opts.impostors))]
         random.shuffle(files)
-        for i,id,f in files[:2000]:
+        for i,id,f in files[:1000]:
                 impostors.append(
                     (opts.impostors[-2:]+"__"+str(i),
                     ([(f,docread.readdoc(f))],[])))

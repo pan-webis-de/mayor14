@@ -41,6 +41,7 @@ spaces=re.compile('\W+',re.UNICODE)
 spaces_=re.compile('[ \t]+',re.UNICODE)
 period=re.compile('[.;!?]',re.UNICODE)
 rcapital=re.compile(u'[\u0391-\u03A9][^ ]+|[A-Z][^ ]+',re.UNICODE)
+rfullcapital=re.compile(u'[\u0391-\u03A9]+$|[A-Z]+$',re.UNICODE)
 #rcapital=re.compile(r'[A-Z][^W]+',re.UNICODE)
 rpar2 = re.compile(u'[.:].?\r?\n[A-Z]|[.:].?\r?\n[\u0391-\u03A9]',re.UNICODE)
 rterm=re.compile('[.,]',re.UNICODE)
@@ -48,12 +49,18 @@ rpar = re.compile('\'''',re.UNICODE)
 renter = re.compile('\r?\n',re.UNICODE)
 renterer =re.compile('\r?\n',re.UNICODE)
 #wordpunct=re.compile('\w+\W+',re.UNICODE)
-wordpunct=re.compile(u'\W+',re.UNICODE)
+wordpunct=re.compile(u'\W+$',re.UNICODE)
+rcomposed=re.compile(u'.+\W+.+',re.UNICODE)
+rwordcomposed=re.compile(u'\w+\W+\w+',re.UNICODE)
 rcoma=re.compile(r',',re.UNICODE)
 rdot=re.compile(r'\.',re.UNICODE)
+rdeli=re.compile(r'[.?!]',re.UNICODE)
 rspc=re.compile(r'[/]',re.UNICODE)
 rwspc=re.compile(r'\s',re.UNICODE)
 rnumbers=re.compile(r'\d+',re.UNICODE)
+ryear=re.compile(r'\d\d\d\d$',re.UNICODE)
+rrange=re.compile(r'\d+(-|:)\d+',re.UNICODE)
+rdecimal=re.compile(r'\d+(\.|,)\d+$',re.UNICODE)
 
 # Codes for problems
 codes={
@@ -80,27 +87,43 @@ codes={
     }
 }
 
+def check(exp,doc,doc_,pref):
+    wds = [ pref+x for x,y,z in doc if exp.match(x)]
+    wds_ = Counter(wds)
+    doc_.update(wds_)
+    doc_[pref+"T"]=len(wds_)
+    doc_[pref+"M"]=len(wds)
 
+
+    
 
 def none(docs,filename):
     return None
 
 # Functions for representation extraction
 def numbers(doc,sw=[],cutoff=0):
-    wds = [ x for x,y,z in doc if rnumbers.search(x)]
-    doc_=Counter(wds)
-    postprocess(doc_,cutoff=cutoff)
+    doc_=Counter([])
+    check(rnumbers,doc,doc_,"")
+    check(ryear,doc,doc_,"year")
+    check(rrange,doc,doc_,"range")
+    check(rdecimal,doc,doc_,"dec")
+    postprocess(doc_)
     return doc_
 
 def capital(doc,sw=[],cutoff=0):
-    wds = [ x for x,y,z in doc if rcapital.search(x)]
-    doc_=Counter(wds)
-    postprocess(doc_,cutoff=cutoff)
+    doc_=Counter([])
+    check(rcapital,doc,doc_,"")
+    check(rfullcapital,doc,doc_,"f")
+    postprocess(doc_)
     return doc_
 
 def bow(doc,sw=[],cutoff=0):
     wds = [ x.lower() for x,y,z in doc if z not in sw]
     doc_=Counter([x.encode('utf-8') for x in wds])
+    hist=[]
+    for v in doc_.values():
+        hist.append(v)
+    doc_.update(hist)
     postprocess(doc_,sw=sw,cutoff=cutoff)
     return doc_
 
@@ -158,17 +181,44 @@ def coma(doc,sw=[],cutoff=0):
 
 
 def punct(doc,sw=[],cutoff=0):
-    wds = [ x for x,y,z in doc if wordpunct.search(x)]
-    doc_=Counter(wds)
-    postprocess(doc_,cutoff=cutoff)
+    doc_=Counter([])
+    check(wordpunct,doc,doc_,"")
+    check(rcomposed,doc,doc_,"comp_")
+    check(rwordcomposed,doc,doc_,"wcomp_")
+    postprocess(doc_)
     return doc_
 
 def dot(doc,sw=[],cutoff=0):
-    wds = [ x for x,y,z in doc if rdot.search(x)]
-    values=[x.encode('utf-8')[:-1] for x in wds]
-    doc_=Counter(values)
+    doc_=Counter([])
+    check(rdot,doc,doc,"")
     postprocess(doc_,cutoff=cutoff)
     return doc_
+
+def dotpos(doc,sw=[],cutoff=0):
+    doc_=Counter()
+    dp=[]
+    for wd,nwd in zip(doc,doc[1:]):
+        if rdot.match(wd[0]):
+            dp.append(nwd[1])
+    doc_.update(dp)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
+
+def nstcs(doc,sw=[],cutoff=0):
+    doc_=Counter()
+    l=0
+    ls=[]
+    for wd in (doc):
+        if rdeli.match(wd[0]):
+            ls.append(l)
+            l=0
+        else:
+            l+=1
+    doc_.update([str(l/5) for l in ls])
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
+
+
 
 def sqrbrackets(doc,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc if rspc.search(x)]
@@ -234,6 +284,31 @@ def trigram(doc,sw=[],cutoff=0):
     doc_ = Counter(values)
     postprocess(doc_,cutoff=cutoff)
     return doc_
+
+
+def skipgram(doc,sw=[],skip=5,cutoff=0):
+    wds = [ x.lower() for x,y,z in doc]
+    doc_=Counter()
+    for s in range(2,skip):
+        skip_ = zip(wds, wds[s:])
+        values=["{0} {1}".format(x.encode('utf-8'),
+                                    y.encode('utf-8')) for x, y in skip_]
+        doc_.update(values)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
+
+def skipposgram(doc,sw=[],skip=5,cutoff=0):
+    wds = [ x.lower() for x,y,z in doc]
+    pos = [ z.lower() for x,y,z in doc]
+    doc_=Counter()
+    for s in range(2,skip):
+        skip_ = zip(wds, pos[s:])
+        values=["{0} {1}".format(x.encode('utf-8'),
+                                    y.encode('utf-8')) for x, y in skip_]
+        doc_.update(values)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
+
 
 
 def ngramword(doc,sw=[],ngram=5,cutoff=0):
@@ -308,7 +383,10 @@ representations=[
     ('stopwords',stopwords), 
     ('numbers',numbers),
     ('coma',coma),
+    ('skipgram',skipgram),
+    ('skipposgram',skipposgram),
     ('dot',dot),           
+    ('dotpos',dotpos),           
     ('bow',bow),
     ('lemma',lemma),
     ('poslemma',poslemma),
@@ -319,6 +397,7 @@ representations=[
     ('ngramword',ngramword),
     ('ngrampos',ngrampos),
     ('ngramlemma',ngramlemma),
+    ('nstcs',nstcs),
 
     ]
 

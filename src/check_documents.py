@@ -25,12 +25,7 @@ import argparse
 import sys
 import os
 import os.path
-import sklearn.preprocessing as preprocessing
-import numpy as np
-import random
-import itertools
 import cmd
-from collections import Counter
 from oct2py import octave
 octave.addpath('src/octave')
 
@@ -60,24 +55,27 @@ class AuthorIdCLI(cmd.Cmd):
         "Move to tne next document"
         self.doc+=1
         if self.doc > len(problems):
-            seld.doc=0
+            self.doc=0
         print "In problem:", problems[self.doc][0]
 
     def do_next_error(self,args):
         "Move to tne next document"
         error=False
+        if not sys:
+            print "Error: No systemp predictions loaded"
+            return
         while not error and self.doc<len(problems):
             self.doc+=1
-            if gs[problems[self.doc][0]]=='Y' and sys[problems[self.doc][0]]<0.5:
+            if gs[problems[self.doc][0]]=='Y' and sy[problems[self.doc][0]]<0.5:
                 error=True
-            elif gs[problems[self.doc][0]]=='N' and sys[problems[self.doc][0]]>0.5:
+            elif gs[problems[self.doc][0]]=='N' and sy[problems[self.doc][0]]>0.5:
                 error=True
-            elif sys[problems[self.doc][0]]==0.5:
+            elif sy[problems[self.doc][0]]==0.5:
                 error=True
 
 
         if self.doc == len(problems):
-            seld.doc=0
+            self.doc=0
             print "error: reached last problem"
             return 
         print "In problem:", problems[self.doc][0]
@@ -87,10 +85,18 @@ class AuthorIdCLI(cmd.Cmd):
         "Shows the answer of the problem"
         print "Answer          : ", gs[problems[self.doc][0]]
 
+    def do_reload(self,args):
+        "Reload representations"
+        import docread
+        docread = reload(docread)
+
 
     def do_pred(self,args):
         "Shows the prediction of the problem"
-        print "Predction       : ", sys[problems[self.doc][0]]
+        if sy:
+            print "Predction       : ", sy[problems[self.doc][0]]
+        else:
+            print "No error prediction loadded"
 
 
 
@@ -99,21 +105,56 @@ class AuthorIdCLI(cmd.Cmd):
         print "Problem Id      : ", problems[self.doc][0]
         print "Known documents : ", len(problems[self.doc][1][0])
         print "Answer          : ", gs[problems[self.doc][0]]
-        print "Predction       : ", sys[problems[self.doc][0]]
+        if sy:
+            print "Predction       : ", sy[problems[self.doc][0]]
         print "Known files     : "
         for i,doc in enumerate(problems[self.doc][1][0]):
-            bow=docread.bow(doc[1])[0]
-            print "    [{0}]".format(i), doc[0], "({0})".format(sum(bow.values()))
+            bow=docread.bow(doc[1])
+            print "    [{0}]".format(i), doc[0], "({0})".format(len(bow))
         print "Unknown file   : "
         for doc in problems[self.doc][1][1]:
             i+=1
-            bow=docread.bow(doc[1])[0]
-            print  "    [{0}]".format(i),doc[0],"({0})".format(sum(bow.values()))
+            bow=docread.bow(doc[1])
+            print  "    [{0}]".format(i),doc[0],"({0})".format(len(bow))
             
     def do_current(self,args):
         "Shows the id of the current problem"
         print "Problem Id      : ", problems[self.doc][0]
- 
+
+    def do_dump(self,args):
+        "Prints document by its index (use info to print indexes)"
+        
+        lks= len(problems[self.doc][1][0])
+        args=self.parse(args)
+        if len(args)==0:
+            args=range(lks+1)
+        for i in args:
+            try:
+                i=int(i)
+            except ValueError:
+                print "error: invalid index has to be number",i
+                return
+        
+            if i+1 > lks:
+                print "===> Unknown document ({0})".format(i)
+                try:
+                    for line in open("{1}".format(
+                                    opts.GS,
+                                    problems[self.doc][1][1][i-lks][0])):
+                        line = line.strip()
+                        print line
+                except IndexError:
+                    print "error: no document with that index",i
+                    return
+            else:
+                print "===> known document ({0})".format(i)
+                for line in open("{1}".format(
+                                    opts.GS,problems[self.doc][1][0][i][0])):
+                    print line
+        print "Done."
+
+
+
     def do_print(self,args):
         "Prints document by its index (use info to print indexes)"
         
@@ -131,13 +172,13 @@ class AuthorIdCLI(cmd.Cmd):
             if i+1 > lks:
                 print "===> Unknown document ({0})".format(i)
                 try:
-                    print problems[self.doc][1][1][i-lks][1]
+                    print u" ".join([x[0] for x in problems[self.doc][1][1][i-lks][1]])
                 except IndexError:
                     print "error: no document with that index",i
                     return
             else:
                 print "===> known document ({0})".format(i)
-                print problems[self.doc][1][0][i][1]
+                print u" ".join([x[0] for x in problems[self.doc][1][0][i][1]])
         print "Done."
 
     def do_show(self,args):
@@ -174,14 +215,14 @@ class AuthorIdCLI(cmd.Cmd):
                 print "===> Unknown document ({0})".format(i)
                 try:
                     rep=f(problems[self.doc][1][1][i-lks][1],sw=stopwords)
-                    printrep(rep[0],self.max)
+                    printrep(rep,self.max)
                 except IndexError:
                     print "error: no document with that index",i
                     return
             else:
                 print "===> known document ({0})".format(i)
                 rep=f(problems[self.doc][1][0][i][1],sw=stopwords)
-                printrep(rep[0],self.max)
+                printrep(rep,self.max)
         print "Done."
 
 
@@ -239,7 +280,7 @@ if __name__ == "__main__":
             action="store", help="Directory with examples")
     p.add_argument("GS",default=None,
             action="store", help="File with the truth answers")
-    p.add_argument("SYS",default=None,
+    p.add_argument("SYS",default=None,nargs='?',
             action="store", help="File with the predicted answers")
     p.add_argument("--stopwords", default="data/stopwords.txt",
             action="store", dest="stopwords",
@@ -296,7 +337,9 @@ if __name__ == "__main__":
                                  code=codes[opts.language][opts.genre]))
         
     gs = docread.loadanswers(opts.GS,code=codes[opts.language][opts.genre])
-    sys = docread.loadanswers(opts.SYS,code=codes[opts.language][opts.genre])
+    sy=None
+    if opts.SYS:
+        sy = docread.loadanswers(opts.SYS,code=codes[opts.language][opts.genre])
   
 
     console=AuthorIdCLI()
