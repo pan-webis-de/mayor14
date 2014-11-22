@@ -214,8 +214,8 @@ def nstcs(doc,sw=[],cutoff=0):
             l=0
         else:
             l+=1
-    doc_.update([str(l/5) for l in ls])
-    postprocess(doc_,cutoff=cutoff)
+    doc_.update([str(l/10) for l in ls])
+    postprocess(doc_)
     return doc_
 
 
