@@ -106,7 +106,6 @@ def project_into_vectors(examples,full_voca,unknown,reps,lens,nmost=100):
         print idx[:20]
         for i,example in enumerate(examples):
             if mass[i] > 0:
-                arr=[1.0*example[rep][k]/mass for k in idx]
                 arr=[1.0*example[rep][k]/mass[i] for k in idx]
             else:
                 arr=[1.0*example[rep][k]/lens[i] for k in idx]
