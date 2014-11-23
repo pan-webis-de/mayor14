@@ -27,7 +27,7 @@ import os
 import os.path
 import sklearn.preprocessing as preprocessing
 import numpy as np
-import matplotlib.pyplot as pl
+#import matplotlib.pyplot as pl
 import random
 import itertools
 from collections import Counter
@@ -419,7 +419,7 @@ if __name__ == "__main__":
         files  =[(i,x,"{0}/{1}".format(opts.impostors,x)) for i,x in
                                 enumerate(os.listdir(opts.impostors))]
         random.shuffle(files)
-        for i,id,f in files[:10]:
+        for i,id,f in files[:1000]:
                 impostors.append(
                     (opts.impostors[-2:]+"__"+str(i),
                     ([(f,docread.readdoc(f)[:1000])],[])))
