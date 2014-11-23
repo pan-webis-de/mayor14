@@ -104,17 +104,10 @@ def project_into_vectors(examples,full_voca,unknown,reps,lens,nmost=100):
         idx=[p[0] for p in full.most_common()]
         #print idx[:20]
         for i,example in enumerate(examples):
-            if mass[i] > 0:
-                arr=[1.0*example[rep][k]/mass[i] for k in idx]
-            else:
-                arr=[1.0*example[rep][k]/lens[i] for k in idx]
+            arr=[1.0*example[rep][k]/lens[i] for k in idx]
             #print rep, i, arr[:20]
             vectors[i].append(arr)
-        umass=sum(unknown[rep].values())
-        if umass > 0:
-            uvec.append([1.0*unknown[rep][k]/umass for k in idx])
-        else:
-            uvec.append([1.0*unknown[rep][k]/lens[i] for k in idx])
+        uvec.append([1.0*unknown[rep][k]/lens[i] for k in idx])
         #print uvec[-1][:20]
     return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
 
@@ -156,7 +149,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                  for repname in opts.reps:
                     try:
                         exec("f=docread.{0}".format(repname))
-                        rep=f(doc,sw=sw)
+                        rep=f(doc,sw=sw,cutoff=opts.cutoff)
                     except:
                         rep=Counter()
                     try:
@@ -183,6 +176,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                 # Adding impostors
 
                 master_impostors,len_impostors=get_master_impostors(id,nimpostors,impostor_problems,mode=mode,sw=sw,cutoff=opts.cutoff)
+                #print ">>>>>>>>>",len(master_impostors)
                 #for mi in master_impostors:
                    #print ">>>>",mi
                 for j,master_impostor in enumerate(master_impostors):
@@ -195,6 +189,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                         doc_author=docs_author[i]
                         examples.append(muestreo(doc_author,opts.reps,percentage=opts.percentage))
                         lens.append(len(ks_))
+                #print "<<<<<<<<<<<<",len(examples)
 
                 sample_unknown=muestreo(master_unknown,opts.reps,percentage=1.0)
 
@@ -214,9 +209,12 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                 A=preprocessing.normalize(A,axis=0)
                 y=np.matrix(unknown)
                 y_=y.T
-                nu=0.00001
-                tol=0.00001
- 
+                nu=0.001
+                tol=0.001
+                #pl.pcolor(A,cmap=pl.cm.Blues)
+                #pl.title("A")
+                #pl.show()
+
                 stopCrit=3
                 answer=False
                 nanswers=0
@@ -228,18 +226,21 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                         x_0, nIter = octave.SolveHomotopy(A_, y_, 'lambda', nu, 'tolerance', tol, 'stoppingcriterion', stopCrit)
                         #ind=np.arange(x_0.shape[0])
                         #pl.bar(ind,[np.float(x) for x in x_0])
+                        #pl.title("X_0")
                         #pl.show()
- 
+                    
                         # Calculating residuals
                         residuals=[]
                         d_is=[]
-                        k=len(examples)/len(uks)
+                        k=len(examples)/len(ks)*opts.documents
                         for i in range(k):
-                            n=opts.documents
+                            n=opts.documents*len(ks)
                             d_i= np.matrix([[0.0 for x in x_0[:i*n]]+\
                                  [np.float(x) for x in x_0[i*n:(i+1)*n]]+\
                                  [0.0 for x in x_0[(i+1)*n:]]]).T
                             d_is.append(np.linalg.norm(d_i,ord=1))
+                            #print "y",y
+                            #print "y_",(A_*d_i).T
                             r_is=y_-A_*d_i
                             r_i=np.linalg.norm(r_is,ord=2)
                             residuals.append(r_i)
@@ -256,10 +257,10 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                                 results.append(1.0)
                             else:
                                 results.append(0.0)
-                        ind=np.arange(len(residuals))
-                        pl.bar(ind,residuals)
-                        pl.title(str(sci)+"---"+id+"----"+str(results[-1])+"---"+str(len([x for x in results if x > 0.5])))
-                        pl.show()
+                        #ind=np.arange(len(residuals))
+                        #pl.bar(ind,residuals)
+                        #pl.title(str(sci)+"---"+id+"----"+str(results[-1])+"---"+str(scith))
+                        #pl.show()
                         nanswers+=1
                         answer=True
                     except Oct2PyError:
@@ -320,7 +321,7 @@ if __name__ == "__main__":
             action="store_false", dest="random",
             help="Use random seed [True]")
     p.add_argument("--concatenate",default=False,
-            action="store_false", dest="concatenate",
+            action="store_true", dest="concatenate",
             help="Concatenate [False]")
     p.add_argument("--cvs",default=False,
             action="store_true", dest="csv",
@@ -419,10 +420,10 @@ if __name__ == "__main__":
         files  =[(i,x,"{0}/{1}".format(opts.impostors,x)) for i,x in
                                 enumerate(os.listdir(opts.impostors))]
         random.shuffle(files)
-        for i,id,f in files[:10]:
+        for i,id,f in files[:3000]:
                 impostors.append(
                     (opts.impostors[-2:]+"__"+str(i),
-                    ([(f,docread.readdoc(f)[:1000])],[])))
+                    ([(f,docread.readdoc(f))],[])))
     else:
         verbose('Using problems as impostors')
         impostors=problems
