@@ -59,26 +59,29 @@ def muestreo(counter,reps,percentage=.80):
         final_count[rep]=Counter(final_list)  
     return final_count
 
-def get_master_impostors(id,n,problems,sw=[],mode="test",cutoff=0):
+def get_master_impostors(id,nimpostors,ndocs,nknown,problems,sw=[],mode="test",cutoff=0):
     if mode.startswith("test"):
         id=id+"___"
     master_impostors=[]
-    lens=[]
     pat=id[:2]
     ids_candidates=[]
-    for id_,(ks,uks) in problems:
-        if id_.startswith(pat) and id != id_:
-            ids_candidates.append(id_)
-    random.shuffle(ids_candidates)
-    
-    for id_,(ks,uks) in problems:
-        if id_ in ids_candidates[:n]:
-            master_candidate={}
-            for doc in ks:
+    for i,(id_,(ks,uks)) in enumerate(problems):
+        if id_.startswith(pat) and id != id_ and i < len(problems)-nknown:
+            ids_candidates.append(i)
+    pos=range(len(ids_candidates))
+    random.shuffle(pos)
+   
+   
+    for i in range(nimpostors):
+        for j in range(ndocs):
+            id_=pos[i*nimpostors+j]
+            for k in range(nknown):
+                master_candidate={}
+                doc=problems[ids_candidates[id_]+k]
                 for repname in opts.reps:
                     try:
                         exec("f=docread.{0}".format(repname))
-                        rep=f(doc[1],cutoff=cutoff,sw=sw)
+                        rep=f(doc[1][0][0][1],cutoff=cutoff,sw=sw)
                     except:
                         rep=Counter()
                     try:
@@ -86,12 +89,11 @@ def get_master_impostors(id,n,problems,sw=[],mode="test",cutoff=0):
                     except KeyError:
                         master_candidate[repname]=Counter(rep)
 
-            master_impostors.append(master_candidate)
-            lens.append(len(ks))
-    return master_impostors,lens
+                master_impostors.append(master_candidate)
+    return master_impostors
  
 
-def project_into_vectors(examples,full_voca,unknown,reps,lens,nmost=100):
+def project_into_vectors(examples,full_voca,unknown,reps,nmost=100):
     vectors=[[] for e in examples]
     uvec=[]
     mass=[]
@@ -100,15 +102,19 @@ def project_into_vectors(examples,full_voca,unknown,reps,lens,nmost=100):
         for example in examples:
             full.update(example[rep])
             mass.append(sum(example[rep].values()))
+        umass=sum(unknown[rep].values())
         full.update(unknown[rep])
         idx=[p[0] for p in full.most_common()]
-        #print idx[:20]
         for i,example in enumerate(examples):
-            arr=[1.0*example[rep][k]/lens[i] for k in idx]
-            #print rep, i, arr[:20]
+            if mass[i]>0:
+                arr=[1.0*example[rep][k]/mass[i] for k in idx]
+            else:
+                arr=[1.0*example[rep][k] for k in idx]
             vectors[i].append(arr)
-        uvec.append([1.0*unknown[rep][k]/lens[i] for k in idx])
-        #print uvec[-1][:20]
+        if umass>0:
+           uvec.append([1.0*unknown[rep][k]/umass for k in idx])
+        else:
+           uvec.append([1.0*unknown[rep][k] for k in idx])
     return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
 
 codes=docread.codes
@@ -149,7 +155,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                  for repname in opts.reps:
                     try:
                         exec("f=docread.{0}".format(repname))
-                        rep=f(doc,sw=sw,cutoff=opts.cutoff)
+                        rep=f(doc,sw=sw)
                     except:
                         rep=Counter()
                     try:
@@ -167,22 +173,18 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
             #print id, master_author
             #print ">>>", master_unknown
 
-            nimpostors=opts.nimpostors*len(ks)*opts.documents
-
             for iter in range(iters):
                 #Extracting Examples
                 examples= []
                 lens=[]
                 # Adding impostors
 
-                master_impostors,len_impostors=get_master_impostors(id,nimpostors,impostor_problems,mode=mode,sw=sw,cutoff=opts.cutoff)
+                master_impostors=get_master_impostors(id,opts.nimpostors,opts.documents,len(ks),impostor_problems,mode=mode,sw=sw,cutoff=opts.cutoff)
                 #print ">>>>>>>>>",len(master_impostors)
                 #for mi in master_impostors:
                    #print ">>>>",mi
                 for j,master_impostor in enumerate(master_impostors):
-                     len_impostor=len_impostors[j]
                      examples.append(muestreo(master_impostor,opts.reps,percentage=opts.percentage))
-                     lens.append(len_impostor)
 
                 for j in range(opts.documents):
                     for i in range(len(ks)):
@@ -195,7 +197,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
 
                 # Sparce algorithm
                 # Proyecting examples into a vector
-                example_vectors,unknown=project_into_vectors(examples,full_voca,sample_unknown,opts.reps,lens)
+                example_vectors,unknown=project_into_vectors(examples,full_voca,sample_unknown,opts.reps)
                 #print unknown
                 #for example in enumerate(example_vectors):
                 #    print len(example),example
@@ -209,9 +211,15 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                 A=preprocessing.normalize(A,axis=0)
                 y=np.matrix(unknown)
                 y_=y.T
-                nu=0.001
-                tol=0.001
-                #pl.pcolor(A,cmap=pl.cm.Blues)
+                nu=0.0000001
+                tol=0.0000001
+                #AA=[v for v in example_vectors]
+                #AA.append(unknown)
+                #AAA=np.matrix(AA)
+                #AAA=preprocessing.normalize(AAA,axis=0)
+                #AAA.shape
+
+                #pl.pcolor(AAA,cmap=pl.cm.Blues)
                 #pl.title("A")
                 #pl.show()
 
@@ -420,7 +428,7 @@ if __name__ == "__main__":
         files  =[(i,x,"{0}/{1}".format(opts.impostors,x)) for i,x in
                                 enumerate(os.listdir(opts.impostors))]
         random.shuffle(files)
-        for i,id,f in files[:3000]:
+        for i,id,f in files[:2000]:
                 impostors.append(
                     (opts.impostors[-2:]+"__"+str(i),
                     ([(f,docread.readdoc(f))],[])))
