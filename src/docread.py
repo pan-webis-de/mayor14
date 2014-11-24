@@ -122,8 +122,10 @@ def bow(doc,sw=[],cutoff=0):
     doc_=Counter([x.encode('utf-8') for x in wds])
     hist=[]
     for v in doc_.values():
-        hist.append(v)
+        hist.append("s_"+str(v))
+    sizes=[str(len(w)) for w in wds]
     doc_.update(hist)
+    doc_.update(sizes)
     postprocess(doc_,sw=sw,cutoff=cutoff)
     return doc_
 
@@ -189,8 +191,8 @@ def punct(doc,sw=[],cutoff=0):
     return doc_
 
 def dot(doc,sw=[],cutoff=0):
-    doc_=Counter([])
-    check(rdot,doc,doc,"")
+    doc_=Counter()
+    check(rdot,doc,doc_,"")
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
@@ -224,6 +226,7 @@ def sqrbrackets(doc,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc if rspc.search(x)]
     doc_=Counter([x.encode('utf-8') for x in wds])
     postprocess(doc_,cutoff=cutoff)
+    print doc_
     return doc_
 
 def whitespc(doc,sw=[],cutoff=0):
@@ -366,7 +369,7 @@ def preprocess(wrds,sw):
             wrds_.append(wrd)
     return wrds_
 
-def postprocess(doc,cutoff=5,sw=[]):
+def postprocess(doc,cutoff=0,sw=[]):
     cutoff=[x for x,c in doc.iteritems() if c < cutoff ]
     for c in cutoff:
         del doc[c]

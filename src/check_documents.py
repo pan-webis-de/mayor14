@@ -264,7 +264,7 @@ class AuthorIdCLI(cmd.Cmd):
 def printrep(c,nmost=1000):
     vals=c.most_common()[:nmost]
     print "Total classes:", len(c)
-    print "Toral mass   :", sum(c.values())
+    print "Total mass   :", sum(c.values())
     for i in range(len(vals)/5+1):
         print " | ".join(["{0:<10}:{1:>3}".format(x[:10],v) for x,v in vals[(i*5):(i*5)+5]])
 
