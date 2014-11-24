@@ -431,7 +431,7 @@ if __name__ == "__main__":
         for i,id,f in files[:2000]:
                 impostors.append(
                     (opts.impostors[-2:]+"__"+str(i),
-                    ([(f,docread.readdoc(f))],[])))
+                    ([(f,docread.readdoc(f)[:900])],[])))
     else:
         verbose('Using problems as impostors')
         impostors=problems
