@@ -97,6 +97,7 @@ def project_into_vectors(examples,full_voca,unknown,reps,nmost=100):
     vectors=[[] for e in examples]
     uvec=[]
     mass=[]
+    N=len(examples)+1
     for rep in reps:
         full=Counter()
         for example in examples:
@@ -105,16 +106,33 @@ def project_into_vectors(examples,full_voca,unknown,reps,nmost=100):
         umass=sum(unknown[rep].values())
         full.update(unknown[rep])
         idx=[p[0] for p in full.most_common()]
+        idf={}
+        t=0
+        for id_ in idx:
+            t=0
+            for example in examples:
+                try:
+                    example[rep][id_]
+                    t+=1
+                except KeyError:
+                    pass
+            try:
+                unknown[id_]
+                t+=1
+            except KeyError:
+                pass
+            idf[id_]=np.log(1.0*abs(N)/abs(t))
+
         for i,example in enumerate(examples):
             if mass[i]>0:
-                arr=[1.0*example[rep][k]/mass[i] for k in idx]
+                arr=[1.0*example[rep][k]*idf[k] for k in idx]
             else:
-                arr=[1.0*example[rep][k] for k in idx]
+                arr=[1.0*example[rep][k]*idf[k] for k in idx]
             vectors[i].append(arr)
         if umass>0:
-           uvec.append([1.0*unknown[rep][k]/umass for k in idx])
+           uvec.append([1.0*unknown[rep][k]*idf[k] for k in idx])
         else:
-           uvec.append([1.0*unknown[rep][k] for k in idx])
+           uvec.append([1.0*unknown[rep][k]*idf[k] for k in idx])
     return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
 
 codes=docread.codes
@@ -207,6 +225,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                 # First samples represent to author, rest impostors
                 # Normalizing the data
                 A=np.matrix(example_vectors)
+                
                 A_=A.T
                 A=preprocessing.normalize(A,axis=0)
                 y=np.matrix(unknown)
@@ -428,7 +447,7 @@ if __name__ == "__main__":
         files  =[(i,x,"{0}/{1}".format(opts.impostors,x)) for i,x in
                                 enumerate(os.listdir(opts.impostors))]
         random.shuffle(files)
-        for i,id,f in files[:2000]:
+        for i,id,f in files[:3000]:
                 impostors.append(
                     (opts.impostors[-2:]+"__"+str(i),
                     ([(f,docread.readdoc(f)[:900])],[])))
