@@ -59,10 +59,7 @@ class POS_lemma_es():
             for wt in pos:
                 lemma=self.stem(wt.word())
                 labels.append((wt.word(),wt.tag(),lemma))
-        return labels
-
-
-
+        return labels,text.encode('utf-8')
 
 class POS_lemma():
     def __init__(self,model="edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"):
@@ -92,7 +89,7 @@ class POS_lemma():
             for wt in pos:
                 lemma=self.lemmatizer.lemma(wt.word(),wt.tag())
                 labels.append((wt.word(),wt.tag(),lemma))
-        return labels
+        return labels,text.encode("utf-8")
 
 
 class POS():
@@ -113,7 +110,7 @@ class lemma():
     def tag(self,text):
         tag=self.tagger.tagString(text)
         tags=[wT.split('_',1)[1] for wT in tag.split()]
-        return tags
+        return tags,text
 
 
 postagger = POS()

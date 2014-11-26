@@ -101,7 +101,7 @@ def none(docs,filename):
     return None
 
 # Functions for representation extraction
-def numbers(doc,sw=[],cutoff=0):
+def numbers(doc,text,sw=[],cutoff=0):
     doc_=Counter([])
     check(rnumbers,doc,doc_,"")
     check(ryear,doc,doc_,"year")
@@ -110,14 +110,14 @@ def numbers(doc,sw=[],cutoff=0):
     postprocess(doc_)
     return doc_
 
-def capital(doc,sw=[],cutoff=0):
+def capital(doc,text,sw=[],cutoff=0):
     doc_=Counter([])
     check(rcapital,doc,doc_,"")
     check(rfullcapital,doc,doc_,"f")
     postprocess(doc_)
     return doc_
 
-def bow(doc,sw=[],cutoff=0):
+def bow(doc,text,sw=[],cutoff=0):
     wds = [ x.lower() for x,y,z in doc if z not in sw]
     doc_=Counter([x.encode('utf-8') for x in wds])
     hist=[]
@@ -129,52 +129,52 @@ def bow(doc,sw=[],cutoff=0):
     postprocess(doc_,sw=sw,cutoff=cutoff)
     return doc_
 
-def lemma(doc,sw=[],cutoff=0):
+def lemma(doc,text,sw=[],cutoff=0):
     wds = [ z for x,y,z in doc]
     doc_=Counter([x.encode('utf-8') for x in wds])
     postprocess(doc_,sw=sw,cutoff=cutoff)
     return doc_
 
-def pos(doc,sw=[],cutoff=0):
+def pos(doc,text,sw=[],cutoff=0):
     wds = [ y for x,y,z in doc if z not in sw]
     doc=Counter([x.encode('utf-8') for x in wds])
     postprocess(doc,cutoff=cutoff)
     return doc
 
-def poslemma(doc,sw=[],cutoff=0):
+def poslemma(doc,text,sw=[],cutoff=0):
     wds = [ "{0}_{1}".format(y,z) for x,y,z in doc if z not in sw]
     doc_=Counter([x.encode('utf-8') for x in wds])
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
 
-def stopwords(doc,sw=[],cutoff=0):
+def stopwords(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc if x in sw]
     doc_=Counter(wds)
     postprocess(doc_,sw=[],cutoff=cutoff)
     return doc_
 
 
-def prefix(doc,sw=[],cutoff=0):
+def prefix(doc,text,sw=[],cutoff=0):
     wds = [ x.lower()[:5] for x,y,z in doc if len(x)>5]
     doc_=Counter(wds)
     postprocess(doc_,sw=sw,cutoff=cutoff)
     return doc_
 
-def sufix(doc,sw=[],cutoff=0):
+def sufix(doc,text,sw=[],cutoff=0):
     wds = [ x.lower()[-5:] for x,y,z in doc if len(x)>5]
     doc_=Counter(wds)
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
 
-def letters(doc,sw=[],cutoff=0):
+def letters(doc,text,sw=[],cutoff=0):
     wds = "".join([ x.lower() for x,y,z in doc if x in sw])
     doc_=Counter(wds)
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
-def coma(doc,sw=[],cutoff=0):
+def coma(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc if rcoma.search(x)]
     values=[x.encode('utf-8')[:-1] for x in wds]
     doc_=Counter(values)
@@ -182,7 +182,7 @@ def coma(doc,sw=[],cutoff=0):
     return doc_
 
 
-def punct(doc,sw=[],cutoff=0):
+def punct(doc,text,sw=[],cutoff=0):
     doc_=Counter([])
     check(wordpunct,doc,doc_,"")
     check(rcomposed,doc,doc_,"comp_")
@@ -190,13 +190,13 @@ def punct(doc,sw=[],cutoff=0):
     postprocess(doc_)
     return doc_
 
-def dot(doc,sw=[],cutoff=0):
+def dot(doc,text,sw=[],cutoff=0):
     doc_=Counter()
     check(rdot,doc,doc_,"")
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
-def dotpos(doc,sw=[],cutoff=0):
+def dotpos(doc,text,sw=[],cutoff=0):
     doc_=Counter()
     dp=[]
     for wd,nwd in zip(doc,doc[1:]):
@@ -206,7 +206,7 @@ def dotpos(doc,sw=[],cutoff=0):
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
-def nstcs(doc,sw=[],cutoff=0):
+def nstcs(doc,text,sw=[],cutoff=0):
     doc_=Counter()
     l=0
     ls=[]
@@ -222,20 +222,20 @@ def nstcs(doc,sw=[],cutoff=0):
 
 
 
-def sqrbrackets(doc,sw=[],cutoff=0):
+def sqrbrackets(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc if rspc.search(x)]
     doc_=Counter([x.encode('utf-8') for x in wds])
     postprocess(doc_,cutoff=cutoff)
     print doc_
     return doc_
 
-def whitespc(doc,sw=[],cutoff=0):
+def whitespc(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc if rwspc.search(x)]
     doc_=Counter([x.encode('utf-8') for x in wds])
     postprocess(doc_,cutoff=cutoff)
     return doc
 
-def bigramlemma(doc,sw=[],cutoff=0):
+def bigramlemma(doc,text,sw=[],cutoff=0):
     wds = [ z for x,y,z in doc]
     wds = preprocess(wds)
     bigram = zip(wds, wds[1:])
@@ -246,7 +246,7 @@ def bigramlemma(doc,sw=[],cutoff=0):
     return doc_
 
 
-def bigram(doc,sw=[],cutoff=0):
+def bigram(doc,text,sw=[],cutoff=0):
     wds = [ x.lower() for x,y,z in doc]
     bigram = zip(wds, wds[1:])
     values=["{0} {1}".format(x.encode('utf-8'),
@@ -255,7 +255,7 @@ def bigram(doc,sw=[],cutoff=0):
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
-def bigrampref(doc,sw=[],cutoff=0):
+def bigrampref(doc,text,sw=[],cutoff=0):
     wds = [ z[:5] for x,y,z in doc if x in sw]
     wds = preprocess(wds)
     bigram = zip(wds, wds[1:])
@@ -265,7 +265,7 @@ def bigrampref(doc,sw=[],cutoff=0):
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
-def bigramsuf(doc,sw=[],cutoff=0):
+def bigramsuf(doc,text,sw=[],cutoff=0):
     wds = [ z[5:] for x,y,z in doc if x in sw]
     wds = preprocess(wds)
     bigram = zip(wds, wds[1:])
@@ -277,7 +277,7 @@ def bigramsuf(doc,sw=[],cutoff=0):
 
 
 
-def trigram(doc,sw=[],cutoff=0):
+def trigram(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc]
     wds = preprocess(wds)
     tri = zip(wds, wds[1:], wds[2:])
@@ -289,7 +289,7 @@ def trigram(doc,sw=[],cutoff=0):
     return doc_
 
 
-def skipgram(doc,sw=[],skip=5,cutoff=0):
+def skipgram(doc,text,sw=[],skip=5,cutoff=0):
     wds = [ x.lower() for x,y,z in doc]
     doc_=Counter()
     for s in range(2,skip):
@@ -300,7 +300,7 @@ def skipgram(doc,sw=[],skip=5,cutoff=0):
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
-def skipposgram(doc,sw=[],skip=5,cutoff=0):
+def skipposgram(doc,text,sw=[],skip=5,cutoff=0):
     wds = [ x.lower() for x,y,z in doc]
     pos = [ z.lower() for x,y,z in doc]
     doc_=Counter()
@@ -313,8 +313,34 @@ def skipposgram(doc,sw=[],skip=5,cutoff=0):
     return doc_
 
 
+def gram3letter(doc,text,sw=[],ngram=5,cutoff=0):
+    doc_=Counter()
+    pat=[]
+    args=[]
+    for n in range(3):
+        args.append(text[n:])
+        pat.append('{{{0}}}'.format(n))
+    val= zip(*args)
+    values = ["".join(pat).format(*v) for v in val]
+    doc_.update(values)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
 
-def ngramword(doc,sw=[],ngram=5,cutoff=0):
+def gram8letter(doc,text,sw=[],ngram=5,cutoff=0):
+    doc_=Counter()
+    pat=[]
+    args=[]
+    for n in range(8):
+        args.append(text[n:])
+        pat.append('{{{0}}}'.format(n))
+    val= zip(*args)
+    values = ["".join(pat).format(*v) for v in val]
+    doc_.update(values)
+    postprocess(doc_,cutoff=cutoff)
+    return doc_
+
+
+def ngramword(doc,text,sw=[],ngram=5,cutoff=0):
     pos = [ x.lower() for x,y,z in doc]
     doc_=Counter()
     for n in range(ngram):
@@ -330,7 +356,7 @@ def ngramword(doc,sw=[],ngram=5,cutoff=0):
     return doc_
 
 
-def ngrampos(doc,sw=[],ngram=5,cutoff=0):
+def ngrampos(doc,text,sw=[],ngram=5,cutoff=0):
     pos = [ y for x,y,z in doc]
     doc_=Counter()
     for n in range(ngram):
@@ -346,7 +372,7 @@ def ngrampos(doc,sw=[],ngram=5,cutoff=0):
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
-def ngramlemma(doc,sw=[],ngram=5,cutoff=0):
+def ngramlemma(doc,text,sw=[],ngram=5,cutoff=0):
     pos = [z for x,y,z in doc]
     doc_=Counter()
     for n in range(ngram):
@@ -382,7 +408,7 @@ representations=[
     ('bigrampref',bigrampref),
     ('bigramsug',bigramsuf),
     ('trigram',trigram), 
-    ('punctuation',punct), 
+    ('punct',punct), 
     ('stopwords',stopwords), 
     ('numbers',numbers),
     ('coma',coma),
@@ -398,6 +424,8 @@ representations=[
     ('capital',capital),   
     ('whitespc',whitespc),    #X
     ('ngramword',ngramword),
+    ('gram3letter',gram3letter),
+    ('gram8letter',gram8letter),
     ('ngrampos',ngrampos),
     ('ngramlemma',ngramlemma),
     ('nstcs',nstcs),

@@ -214,14 +214,18 @@ class AuthorIdCLI(cmd.Cmd):
             if i+1 > lks:
                 print "===> Unknown document ({0})".format(i)
                 try:
-                    rep=f(problems[self.doc][1][1][i-lks][1],sw=stopwords)
+                    text=problems[self.doc][1][1][i-lks][1][1]
+                    doc=problems[self.doc][1][1][i-lks][1][0]
+                    rep=f(doc,text,sw=stopwords)
                     printrep(rep,self.max)
                 except IndexError:
                     print "error: no document with that index",i
                     return
             else:
                 print "===> known document ({0})".format(i)
-                rep=f(problems[self.doc][1][0][i][1],sw=stopwords)
+                text=problems[self.doc][1][0][i][1][1]
+                doc=problems[self.doc][1][0][i][1][0]
+                rep=f(doc,text,sw=stopwords)
                 printrep(rep,self.max)
         print "Done."
 

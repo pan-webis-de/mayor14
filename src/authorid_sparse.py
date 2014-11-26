@@ -27,7 +27,7 @@ import os
 import os.path
 import sklearn.preprocessing as preprocessing
 import numpy as np
-#import matplotlib.pyplot as pl
+import matplotlib.pyplot as pl
 import random
 import itertools
 from collections import Counter
@@ -66,7 +66,7 @@ def get_master_impostors(id,nimpostors,ndocs,nknown,problems,sw=[],mode="test",c
     pat=id[:2]
     ids_candidates=[]
     for i,(id_,(ks,uks)) in enumerate(problems):
-        if id_.startswith(pat) and id != id_ and i < len(problems)-nknown:
+        if id != id_ and i < len(problems)-nknown:
             ids_candidates.append(i)
     pos=range(len(ids_candidates))
     random.shuffle(pos)
@@ -78,10 +78,12 @@ def get_master_impostors(id,nimpostors,ndocs,nknown,problems,sw=[],mode="test",c
             for k in range(nknown):
                 master_candidate={}
                 doc=problems[ids_candidates[id_]+k]
+                text=doc[1][0][0][1][1]
+                doc=doc[1][0][0][1][0]
                 for repname in opts.reps:
                     try:
                         exec("f=docread.{0}".format(repname))
-                        rep=f(doc[1][0][0][1],cutoff=cutoff,sw=sw)
+                        rep=f(doc,text,cutoff=cutoff,sw=sw)
                     except:
                         rep=Counter()
                     try:
@@ -151,13 +153,15 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
             full_voca={}
             ks_=ks
             for filename,doc in ks:
+                text=doc[1]
+                doc=doc[0]
                 doc_author={}
                 for repname in opts.reps:
-                    try:
-                        exec("f=docread.{0}".format(repname))
-                        rep=f(doc,cutoff=opts.cutoff,sw=sw)
-                    except:
-                        rep=Counter()
+                    #try:
+                    exec("f=docread.{0}".format(repname))
+                    rep=f(doc,text,cutoff=opts.cutoff,sw=sw)
+                    #except:
+                    #    rep=Counter()
                     doc_author[repname]=rep
                     try:
                         master_author[repname].update(rep)
@@ -170,12 +174,14 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                 docs_author.append(doc_author)
 
             for filename,doc in uks:
+                 text=doc[1]
+                 doc=doc[0]
                  for repname in opts.reps:
-                    try:
-                        exec("f=docread.{0}".format(repname))
-                        rep=f(doc,sw=sw)
-                    except:
-                        rep=Counter()
+                    #try:
+                    exec("f=docread.{0}".format(repname))
+                    rep=f(doc,text,sw=sw,cutoff=opts.cutoff)
+                    #except:
+                    #    rep=Counter()
                     try:
                         master_unknown[repname].update(rep)
                     except KeyError:
@@ -188,8 +194,8 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
             results=[]
             iters=opts.iters
             #print "============"
-            #print id, master_author
             #print ">>>", master_unknown
+            #print id, master_author
 
             for iter in range(iters):
                 #Extracting Examples
@@ -227,7 +233,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                 A=np.matrix(example_vectors)
                 
                 A_=A.T
-                A=preprocessing.normalize(A,axis=0)
+                #A=preprocessing.normalize(A,axis=0)
                 y=np.matrix(unknown)
                 y_=y.T
                 nu=0.0000001
@@ -287,7 +293,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                         #ind=np.arange(len(residuals))
                         #pl.bar(ind,residuals)
                         #pl.title(str(sci)+"---"+id+"----"+str(results[-1])+"---"+str(scith))
-                        #pl.show()
+                        pl.show()
                         nanswers+=1
                         answer=True
                     except Oct2PyError:
@@ -447,10 +453,10 @@ if __name__ == "__main__":
         files  =[(i,x,"{0}/{1}".format(opts.impostors,x)) for i,x in
                                 enumerate(os.listdir(opts.impostors))]
         random.shuffle(files)
-        for i,id,f in files[:3000]:
+        for i,id,f in files[:30]:
                 impostors.append(
                     (opts.impostors[-2:]+"__"+str(i),
-                    ([(f,docread.readdoc(f)[:900])],[])))
+                    ([(f,docread.readdoc(f))],[])))
     else:
         verbose('Using problems as impostors')
         impostors=problems
