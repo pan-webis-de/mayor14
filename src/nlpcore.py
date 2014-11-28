@@ -71,6 +71,7 @@ class POS_lemma_es():
 class POS_lemma():
     def __init__(self,model="edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"):
         self.StringReader = jpype.JPackage("java").io.StringReader
+        self.String = jpype.JPackage("java").lang.String
         self.CoreLabelTokenFactory =\
             jpype.JPackage("edu").stanford.nlp.process.CoreLabelTokenFactory
         self.PTBTokenizer =\
