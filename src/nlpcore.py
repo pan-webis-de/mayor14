@@ -27,7 +27,7 @@ import  jpype
 jpype.startJVM(jpype.getDefaultJVMPath(),
     "-ea",
     "-Xmx2048m",
-    "-Djava.class.path=lib/stanford-corenlp-3.5.0.jar:lib/stanford-corenlp-3.5.0-models.jar:lib/stanford-spanish-corenlp-2014-10-23-models.jar"
+    "-Djava.class.path=lib/stanford-corenlp-3.4.1.jar:lib/stanford-corenlp-3.4.1-models.jar:lib/stanford-spanish-corenlp-2014-08-26-models.jar"
     )
 
 def close():
