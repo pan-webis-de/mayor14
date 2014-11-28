@@ -57,7 +57,9 @@ class POS_lemma_es():
         text_ =self.StringReader(text_)
         tokenizer = self.tokenizer.getTokenizer(text_)
         tokens=tokenizer.tokenize()
-        sntcs=self.ssplit.process(tokens[:1500])
+        if tokens.size()>1500:
+            tokens=tokens.subList(0,1500)
+        sntcs=self.ssplit.process(tokens)
         labels=[]
         for sntc in sntcs:
             pos=self.postagger.tagSentence(sntc)
