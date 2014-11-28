@@ -25,7 +25,6 @@ import argparse
 import sys
 import os
 import os.path
-import sklearn.preprocessing as preprocessing
 import numpy as np
 import matplotlib.pyplot as pl
 import random
@@ -59,11 +58,10 @@ def muestreo(counter,reps,percentage=.80):
         final_count[rep]=Counter(final_list)  
     return final_count
 
-def get_master_impostors(id,nimpostors,ndocs,nknown,problems,sw=[],mode="test",cutoff=0):
+def get_master_impostors(id,nimpostors,ndocs,nknown,problems,sw=[],mode="test",cutoff=0,lang="en"):
     if mode.startswith("test"):
         id=id+"___"
     master_impostors=[]
-    pat=id[:2]
     ids_candidates=[]
     for i,(id_,(ks,uks)) in enumerate(problems):
         if id != id_ and i < len(problems)-nknown:
@@ -78,8 +76,7 @@ def get_master_impostors(id,nimpostors,ndocs,nknown,problems,sw=[],mode="test",c
             for k in range(nknown):
                 master_candidate={}
                 doc=problems[ids_candidates[id_]+k]
-                text=doc[1][0][0][1][1]
-                doc=doc[1][0][0][1][0]
+                doc,text=docread.tag(doc[1][0][0][0],doc[1][0][0][1],lang)
                 for repname in opts.reps:
                     try:
                         exec("f=docread.{0}".format(repname))
@@ -153,8 +150,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
             full_voca={}
             ks_=ks
             for filename,doc in ks:
-                text=doc[1]
-                doc=doc[0]
+                doc,text=docread.tag(filename,doc,opts.language)
                 doc_author={}
                 for repname in opts.reps:
                     #try:
@@ -174,8 +170,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                 docs_author.append(doc_author)
 
             for filename,doc in uks:
-                 text=doc[1]
-                 doc=doc[0]
+                 doc,text=docread.tag(filename,doc,opts.language)
                  for repname in opts.reps:
                     #try:
                     exec("f=docread.{0}".format(repname))
@@ -203,7 +198,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                 lens=[]
                 # Adding impostors
 
-                master_impostors=get_master_impostors(id,opts.nimpostors,opts.documents,len(ks),impostor_problems,mode=mode,sw=sw,cutoff=opts.cutoff)
+                master_impostors=get_master_impostors(id,opts.nimpostors,opts.documents,len(ks),impostor_problems,mode=mode,sw=sw,cutoff=opts.cutoff,lang=opts.language)
                 #print ">>>>>>>>>",len(master_impostors)
                 #for mi in master_impostors:
                    #print ">>>>",mi
@@ -231,17 +226,15 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                 # First samples represent to author, rest impostors
                 # Normalizing the data
                 A=np.matrix(example_vectors)
-                
                 A_=A.T
-                #A=preprocessing.normalize(A,axis=0)
                 y=np.matrix(unknown)
                 y_=y.T
                 nu=0.0000001
                 tol=0.0000001
+                
                 #AA=[v for v in example_vectors]
                 #AA.append(unknown)
-                #AAA=np.matrix(AA)
-                #AAA=preprocessing.normalize(AAA,axis=0)
+                #AAA=np.array(AA)
                 #AAA.shape
 
                 #pl.pcolor(AAA,cmap=pl.cm.Blues)
@@ -293,7 +286,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                         #ind=np.arange(len(residuals))
                         #pl.bar(ind,residuals)
                         #pl.title(str(sci)+"---"+id+"----"+str(results[-1])+"---"+str(scith))
-                        pl.show()
+                        #pl.show()
                         nanswers+=1
                         answer=True
                     except Oct2PyError:
@@ -317,7 +310,7 @@ if __name__ == "__main__":
     p.add_argument("-m", "--mode",default='test',
             action="store", dest="mode",
             help="test|train|devel [test]")
-    p.add_argument("--language",default='all',
+    p.add_argument("--language",default='en',
             action="store", dest="language",
             help="Language to process [all]")
     p.add_argument("--genre",default='all',
@@ -362,7 +355,7 @@ if __name__ == "__main__":
     p.add_argument("--method",default="lp",
             action="store", dest="method",
             help="lp|avp|svm|ann [lp]")
-    p.add_argument("--stopwords", default="data/stopwords.txt",
+    p.add_argument("--stopwords", default="data/stopwords_{0}.txt",
             action="store", dest="stopwords",
             help="List of stop words [data/stopwords.txt]")
     p.add_argument("--answers", default="answers.txt",
@@ -421,9 +414,10 @@ if __name__ == "__main__":
 
     # Loading stopwords if exits
     stopwords=[]
-    if os.path.exists(opts.stopwords):
-        verbose('Loading stopwords: ',opts.stopwords)
-        stopwords=docread.readstopwords(opts.stopwords)
+    fstopwords=opts.stopwords.format(codes[opts.language]['stopwords'])
+    if os.path.exists(fstopwords):
+        verbose('Loading stopwords: ',fstopwords)
+        stopwords=docread.readstopwords(fstopwords)
     else:
         info('Stopwords file not found assuming, emtpy',opts.stopwords)
 
@@ -453,7 +447,7 @@ if __name__ == "__main__":
         files  =[(i,x,"{0}/{1}".format(opts.impostors,x)) for i,x in
                                 enumerate(os.listdir(opts.impostors))]
         random.shuffle(files)
-        for i,id,f in files[:30]:
+        for i,id,f in files[:3000]:
                 impostors.append(
                     (opts.impostors[-2:]+"__"+str(i),
                     ([(f,docread.readdoc(f))],[])))

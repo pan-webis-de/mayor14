@@ -33,7 +33,7 @@ import os
 import os.path
 import codecs
 from collections import Counter
-from nlpcore import  fulltagger
+from nlpcore import  fulltagger, fulltagger_es
 
 
 
@@ -62,28 +62,35 @@ ryear=re.compile(r'\d\d\d\d$',re.UNICODE)
 rrange=re.compile(r'\d+(-|:)\d+',re.UNICODE)
 rdecimal=re.compile(r'\d+(\.|,)\d+$',re.UNICODE)
 
+tagged={}
+
 # Codes for problems
 codes={
     'en': {
         'essays': re.compile('^[^\w]*EE'),
         'novels': re.compile('^[^\w]*EN'),
-        'all': re.compile('^[^\w]*E')
+        'all': re.compile('^[^\w]*E'),
+        'stopwords': 'english'
         },
     'nl': {
         'essays': re.compile('^[^\w]*DE'),
         'reviews': re.compile('^[^\w]*DR'),
-        'all': re.compile('^[^\w]*D')
+        'all': re.compile('^[^\w]*D'),
+        'stopwords': 'dutch'
         },
     'gr': {
         'news': re.compile('^[^\w]*GR'),
-        'all': re.compile('^[^\w]*GR')
+        'all': re.compile('^[^\w]*GR'),
+        'stopwords': 'greek'
         },
     'es': {
         'news': re.compile('^[^\w]*SP'),
-        'all': re.compile('^[^\w]*SP')
+        'all': re.compile('^[^\w]*SP'),
+        'stopwords': 'spanish'
         },
     'all': {
-        'all': re.compile('.*')
+        'all': re.compile('.*'),
+        'stopwords': 'all'
     }
 }
 
@@ -119,7 +126,7 @@ def capital(doc,text,sw=[],cutoff=0):
 
 def bow(doc,text,sw=[],cutoff=0):
     wds = [ x.lower() for x,y,z in doc if z not in sw]
-    doc_=Counter([x.encode('utf-8') for x in wds])
+    doc_=Counter([x for x in wds])
     hist=[]
     for v in doc_.values():
         hist.append("s_"+str(v))
@@ -131,19 +138,19 @@ def bow(doc,text,sw=[],cutoff=0):
 
 def lemma(doc,text,sw=[],cutoff=0):
     wds = [ z for x,y,z in doc]
-    doc_=Counter([x.encode('utf-8') for x in wds])
+    doc_=Counter([x for x in wds])
     postprocess(doc_,sw=sw,cutoff=cutoff)
     return doc_
 
 def pos(doc,text,sw=[],cutoff=0):
     wds = [ y for x,y,z in doc if z not in sw]
-    doc=Counter([x.encode('utf-8') for x in wds])
+    doc=Counter([x for x in wds])
     postprocess(doc,cutoff=cutoff)
     return doc
 
 def poslemma(doc,text,sw=[],cutoff=0):
     wds = [ "{0}_{1}".format(y,z) for x,y,z in doc if z not in sw]
-    doc_=Counter([x.encode('utf-8') for x in wds])
+    doc_=Counter([x for x in wds])
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
@@ -176,7 +183,7 @@ def letters(doc,text,sw=[],cutoff=0):
 
 def coma(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc if rcoma.search(x)]
-    values=[x.encode('utf-8')[:-1] for x in wds]
+    values=[x[:-1] for x in wds]
     doc_=Counter(values)
     postprocess(doc_,sw=sw,cutoff=cutoff)
     return doc_
@@ -224,14 +231,14 @@ def nstcs(doc,text,sw=[],cutoff=0):
 
 def sqrbrackets(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc if rspc.search(x)]
-    doc_=Counter([x.encode('utf-8') for x in wds])
+    doc_=Counter([x for x in wds])
     postprocess(doc_,cutoff=cutoff)
     print doc_
     return doc_
 
 def whitespc(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc if rwspc.search(x)]
-    doc_=Counter([x.encode('utf-8') for x in wds])
+    doc_=Counter([x for x in wds])
     postprocess(doc_,cutoff=cutoff)
     return doc
 
@@ -239,8 +246,8 @@ def bigramlemma(doc,text,sw=[],cutoff=0):
     wds = [ z for x,y,z in doc]
     wds = preprocess(wds)
     bigram = zip(wds, wds[1:])
-    values=["{0} {1}".format(x.encode('utf-8'),
-                                    y.encode('utf-8')) for x, y in bigram]
+    values=["{0} {1}".format(x,
+                                    y) for x, y in bigram]
     doc_ = Counter(values)
     postprocess(doc_,cutoff=cutoff)
     return doc_
@@ -249,8 +256,8 @@ def bigramlemma(doc,text,sw=[],cutoff=0):
 def bigram(doc,text,sw=[],cutoff=0):
     wds = [ x.lower() for x,y,z in doc]
     bigram = zip(wds, wds[1:])
-    values=["{0} {1}".format(x.encode('utf-8'),
-                                    y.encode('utf-8')) for x, y in bigram]
+    values=["{0} {1}".format(x,
+                                    y) for x, y in bigram]
     doc_ = Counter(values)
     postprocess(doc_,cutoff=cutoff)
     return doc_
@@ -259,8 +266,8 @@ def bigrampref(doc,text,sw=[],cutoff=0):
     wds = [ z[:5] for x,y,z in doc if x in sw]
     wds = preprocess(wds)
     bigram = zip(wds, wds[1:])
-    values=["{0} {1}".format(x.encode('utf-8')[:5],
-                                    y.encode('utf-8')[:3]) for x, y in bigram]
+    values=["{0} {1}".format(x[:5],
+                                    y[:3]) for x, y in bigram]
     doc_ = Counter(values)
     postprocess(doc_,cutoff=cutoff)
     return doc_
@@ -269,8 +276,8 @@ def bigramsuf(doc,text,sw=[],cutoff=0):
     wds = [ z[5:] for x,y,z in doc if x in sw]
     wds = preprocess(wds)
     bigram = zip(wds, wds[1:])
-    values=["{0} {1}".format(x.encode('utf-8')[-5:],
-                                    y.encode('utf-8')[:3]) for x, y in bigram]
+    values=["{0} {1}".format(x[-5:],
+                                    y[:3]) for x, y in bigram]
     doc_ = Counter(values)
     postprocess(doc_,cutoff=cutoff)
     return doc_
@@ -281,9 +288,9 @@ def trigram(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc]
     wds = preprocess(wds)
     tri = zip(wds, wds[1:], wds[2:])
-    values = ["{0} {1} {2}".format(x.encode('utf-8'),
-                                    y.encode('utf-8'),
-                                    z.encode('utf-8')) for x, y,z in tri]
+    values = ["{0} {1} {2}".format(x,
+                                    y,
+                                    z) for x, y,z in tri]
     doc_ = Counter(values)
     postprocess(doc_,cutoff=cutoff)
     return doc_
@@ -294,8 +301,8 @@ def skipgram(doc,text,sw=[],skip=5,cutoff=0):
     doc_=Counter()
     for s in range(2,skip):
         skip_ = zip(wds, wds[s:])
-        values=["{0} {1}".format(x.encode('utf-8'),
-                                    y.encode('utf-8')) for x, y in skip_]
+        values=["{0} {1}".format(x,
+                                    y) for x, y in skip_]
         doc_.update(values)
     postprocess(doc_,cutoff=cutoff)
     return doc_
@@ -306,8 +313,8 @@ def skipposgram(doc,text,sw=[],skip=5,cutoff=0):
     doc_=Counter()
     for s in range(2,skip):
         skip_ = zip(wds, pos[s:])
-        values=["{0} {1}".format(x.encode('utf-8'),
-                                    y.encode('utf-8')) for x, y in skip_]
+        values=["{0} {1}".format(x,
+                                    y) for x, y in skip_]
         doc_.update(values)
     postprocess(doc_,cutoff=cutoff)
     return doc_
@@ -402,6 +409,18 @@ def postprocess(doc,cutoff=0,sw=[]):
     for c in sw:
         del doc[c]
 
+def tag(tag,doc,lang='en'):
+    try:
+        return tagged[tag]
+    except KeyError:
+        if lang.startswith('en'):
+            tagged[tag]=fulltagger.tag(doc)
+        elif lang.startswith('es'):
+            tagged[tag]=fulltagger_es.tag(doc)
+        return tagged[tag]
+
+
+
 representations=[
     ('letters',letters),   #X
     ('bigram',bigram),
@@ -474,18 +493,18 @@ def readstopwords(filename):
         for line in file:
             line=line.strip()
             if len(line)>0 and not line[0]=='#':
-                stopwords.append(line)
+                stopwords.append(line.encode('utf-8'))
     return stopwords
 
 
 def readdoc(filename):
     try:
         with codecs.open(filename,'r','utf-8') as fh:
-            return  fulltagger.tag(fh.read())
+            return  fh.read()
     except UnicodeDecodeError:
         try:
-            with codecs.open(filename,'r','ISO-8859-1') as fh:
-                return fulltagger.tag(fh.read())
+            with codecs.open(filename,'r','latin') as fh:
+                return fh.read()
         except UnicodeDecodeError:
             return ""
 

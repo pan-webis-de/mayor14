@@ -26,7 +26,8 @@ import  jpype
 
 jpype.startJVM(jpype.getDefaultJVMPath(),
     "-ea",
-    "-Djava.class.path=lib/stanford-corenlp-3.4.1.jar:lib/stanford-corenlp-3.4.1-models.jar:lib/stanford-spanish-corenlp-2014-08-26-models.jar"
+    "-Xmx2048m",
+    "-Djava.class.path=lib/stanford-corenlp-3.5.0.jar:lib/stanford-corenlp-3.5.0-models.jar:lib/stanford-spanish-corenlp-2014-10-23-models.jar"
     )
 
 def close():
@@ -36,29 +37,33 @@ def close():
 class POS_lemma_es():
     def __init__(self,model="edu/stanford/nlp/models/pos-tagger/spanish/spanish-distsim.tagger"):
         self.StringReader = jpype.JPackage("java").io.StringReader
-        self.CoreLabelTokenFactory =\
+        self.String = jpype.JPackage("java").lang.String
+        CoreLabelTokenFactory =\
             jpype.JPackage("edu").stanford.nlp.process.CoreLabelTokenFactory
-        self.SpanishTokenizer =\
-            jpype.JPackage("edu").international.spanish.process.SpanishTokenizer
+        SpanishTokenizer =\
+            jpype.JPackage("edu").stanford.nlp.international.spanish.process.SpanishTokenizer;
         WordToSentenceProcessor =\
             jpype.JPackage("edu").stanford.nlp.process.WordToSentenceProcessor
         MaxentTagger = jpype.JPackage("edu").stanford.nlp.tagger.maxent.MaxentTagger
         self.postagger  = MaxentTagger(model)
-        self.stemmer    = SpanishStemmer()
+        self.tokenizer  = SpanishTokenizer.factory(CoreLabelTokenFactory(),"invertible,ptb3Escaping=truei,splitAll=True")
+        self.stemmer    = SpanishStemmer("spanish")
         self.ssplit     = WordToSentenceProcessor()
+        self.utf8       = self.String('UTF-8')
 
 
     def tag(self,text):
-        text_=self.StringReader(text.encode("ascii","ignore"))
-        tokenizer = self.SpanishTokenizer(text_,self.CoreLabelTokenFactory(),"invertible,ptb3Escaping=truei,splitAll=True")
+        text_ = self.String(text)
+        text_ =self.StringReader(text_)
+        tokenizer = self.tokenizer.getTokenizer(text_)
         tokens=tokenizer.tokenize()
-        sntcs=self.ssplit.process(tokens)
+        sntcs=self.ssplit.process(tokens[:1500])
         labels=[]
         for sntc in sntcs:
             pos=self.postagger.tagSentence(sntc)
             for wt in pos:
-                lemma=self.stem(wt.word())
-                labels.append((wt.word(),wt.tag(),lemma))
+                lemma=self.stemmer.stem(wt.word())
+                labels.append((unicode(wt.word()).encode('utf-8'),unicode(wt.tag()).encode('utf-8'),unicode(lemma).encode('utf-8')))
         return labels,text.encode('utf-8')
 
 class POS_lemma():
@@ -79,7 +84,8 @@ class POS_lemma():
 
 
     def tag(self,text):
-        text_=self.StringReader(text.encode("ascii","ignore"))
+        text_ = self.String(text)
+        text_ =self.StringReader(text_)
         tokenizer = self.PTBTokenizer(text_,self.CoreLabelTokenFactory(),"invertible,ptb3Escaping=true")
         tokens=tokenizer.tokenize()
         sntcs=self.ssplit.process(tokens)
@@ -88,7 +94,7 @@ class POS_lemma():
             pos=self.postagger.tagSentence(sntc)
             for wt in pos:
                 lemma=self.lemmatizer.lemma(wt.word(),wt.tag())
-                labels.append((wt.word(),wt.tag(),lemma))
+                labels.append((unicode(wt.word()).encode('utf-8'),unicode(wt.tag()).encode('utf-8'),unicode(lemma).encode('utf-8')))
         return labels,text.encode("utf-8")
 
 
@@ -113,5 +119,6 @@ class lemma():
         return tags,text
 
 
-postagger = POS()
 fulltagger = POS_lemma()
+fulltagger_es = POS_lemma_es()
+
