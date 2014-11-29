@@ -444,8 +444,9 @@ if __name__ == "__main__":
     if opts.impostors:
         impostors=[]
         verbose('Loading impostors')
-        files  =[(i,x,"{0}/{1}".format(opts.impostors,x)) for i,x in
-                                enumerate(os.listdir(opts.impostors))]
+        files  =[(i,x,os.path.join(opts.impostors,x)) for i,x in
+                                enumerate(os.listdir(opts.impostors))
+                                if x.endswith(".txt")]
         random.shuffle(files)
         for i,id,f in files[:3000]:
                 impostors.append(
