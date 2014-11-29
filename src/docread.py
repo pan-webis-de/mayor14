@@ -457,10 +457,10 @@ def problems(dirproblems_):
     return [(id,([(k,readdoc(k)) for k in ks],[(u,readdoc(u)) for u in uks])) \
                 for id,(ks,uks) in dirproblems_ ]    
 
-def dirproblems(dirname, rknown  =r"known.*\.txt",
-                         runknown=r"unknown.*\.txt",ignore=[],code=re.compile('.*')):
+def dirproblems(dirname, rknown  =r"known.*\.txt$",
+                         runknown=r"unknown.*\.txt$",ignore=[],code=re.compile('.*')):
     """Loads the directories containing problems"""
-    dirnames=[(x,"{0}/{1}".format(dirname,x)) for x in os.listdir(dirname)  
+    dirnames=[(x,os.path.join(dirname,x)) for x in os.listdir(dirname)  
                 if not x in ignore and
                    code.match(x) and
                    os.path.isdir("{0}/{1}".format(dirname,x))]
@@ -472,8 +472,8 @@ def dirproblems(dirname, rknown  =r"known.*\.txt",
     return problems
 
 
-def dirproblem(dirname, rknown  =r"known.*\.txt",
-                        runknown=r"unknown.*\.txt",ignore=[]):
+def dirproblem(dirname, rknown  =r"known.*\.txt$",
+                        runknown=r"unknown.*\.txt$",ignore=[]):
     """Loads problem """
     r_known=re.compile(rknown)
     r_unknown=re.compile(runknown)
