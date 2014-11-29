@@ -26,8 +26,8 @@ import  jpype
 
 jpype.startJVM(jpype.getDefaultJVMPath(),
     "-ea",
-    "-Xmx2048m",
-    "-Djava.class.path=lib/stanford-corenlp-3.5.0.jar:lib/stanford-corenlp-3.5.0-models.jar:lib/stanford-spanish-corenlp-2014-10-23-models.jar"
+    "-Xmx3096m",
+    "-Djava.class.path=lib/stanford-corenlp-3.4.1.jar:lib/stanford-corenlp-3.4.1-models.jar:lib/stanford-spanish-corenlp-2014-08-26-models.jar"
     )
 
 def close():
@@ -71,6 +71,7 @@ class POS_lemma_es():
 class POS_lemma():
     def __init__(self,model="edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"):
         self.StringReader = jpype.JPackage("java").io.StringReader
+        self.String = jpype.JPackage("java").lang.String
         self.CoreLabelTokenFactory =\
             jpype.JPackage("edu").stanford.nlp.process.CoreLabelTokenFactory
         self.PTBTokenizer =\
@@ -86,7 +87,7 @@ class POS_lemma():
 
 
     def tag(self,text):
-        text_ = self.String(text)
+        text_ = self.String(text.encode('ascii','ignore'))
         text_ =self.StringReader(text_)
         tokenizer = self.PTBTokenizer(text_,self.CoreLabelTokenFactory(),"invertible,ptb3Escaping=true")
         tokens=tokenizer.tokenize()
@@ -96,7 +97,7 @@ class POS_lemma():
             pos=self.postagger.tagSentence(sntc)
             for wt in pos:
                 lemma=self.lemmatizer.lemma(wt.word(),wt.tag())
-                labels.append((unicode(wt.word()).encode('utf-8'),unicode(wt.tag()).encode('utf-8'),unicode(lemma).encode('utf-8')))
+                labels.append((wt.word().encode('utf-8'),wt.tag().encode('utf-8'),lemma.encode('utf-8')))
         return labels,text.encode("utf-8")
 
 
