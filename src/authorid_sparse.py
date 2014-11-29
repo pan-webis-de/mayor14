@@ -376,8 +376,8 @@ if __name__ == "__main__":
 
     # Parameters
     # Patterns for files
-    known_pattern=r'known.*\.txt'
-    unknown_pattern=r'unknown*.txt'
+    known_pattern=r'known.*\.txt$'
+    unknown_pattern=r'unknown*.txt$'
 
     dirname = opts.DIR
 
