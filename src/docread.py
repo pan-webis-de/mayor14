@@ -409,14 +409,14 @@ def postprocess(doc,cutoff=0,sw=[]):
     for c in sw:
         del doc[c]
 
-def tag(tag,doc,lang='en'):
+def tag(tag,doc,lang='en',cutoff=0):
     try:
         return tagged[tag]
     except KeyError:
         if lang.startswith('en'):
             tagged[tag]=fulltagger.tag(doc)
         elif lang.startswith('es'):
-            tagged[tag]=fulltagger_es.tag(doc)
+            tagged[tag]=fulltagger_es.tag(doc,cutoff=cutoff)
         return tagged[tag]
 
 

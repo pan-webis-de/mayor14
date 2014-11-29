@@ -52,12 +52,12 @@ class POS_lemma_es():
         self.utf8       = self.String('UTF-8')
 
 
-    def tag(self,text):
+    def tag(self,text,cutoff=0):
         text_ = self.String(text)
         text_ =self.StringReader(text_)
         tokenizer = self.tokenizer.getTokenizer(text_)
         tokens=tokenizer.tokenize()
-        if tokens.size()>1500:
+        if cutoff>0 and tokens.size()>1500:
             tokens=tokens.subList(0,1500)
         sntcs=self.ssplit.process(tokens)
         labels=[]
