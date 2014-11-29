@@ -33,7 +33,8 @@ import os
 import os.path
 import codecs
 from collections import Counter
-from nlpcore import  fulltagger, fulltagger_es
+from nlpcore import  fulltagger, fulltagger_es, Lemma
+lemma=Lemma()
 
 
 
@@ -409,14 +410,14 @@ def postprocess(doc,cutoff=0,sw=[]):
     for c in sw:
         del doc[c]
 
-def tag(tag,doc,lang='en'):
+def tag(tag,doc,lang='en',cutoff=0):
     try:
         return tagged[tag]
     except KeyError:
         if lang.startswith('en'):
             tagged[tag]=fulltagger.tag(doc)
         elif lang.startswith('es'):
-            tagged[tag]=fulltagger_es.tag(doc)
+            tagged[tag]=fulltagger_es.tag(doc,cutoff=cutoff)
         return tagged[tag]
 
 
@@ -507,6 +508,16 @@ def readdoc(filename):
                 return fh.read()
         except UnicodeDecodeError:
             return ""
+    if os.path.exists(filename+"_tag"):
+        tags=[]
+        for line in open(filename+"_tag"):
+            line=line.strip()
+            bits=line.split()
+            if len(bits)==2:
+                tags.append((bits[0],bits[1],lemma.lemma(bits[0])))
+            else:
+                tags.append(tuple(bits))
+        tagged[filename]=tags
 
 
 

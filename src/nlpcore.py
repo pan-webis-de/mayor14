@@ -52,12 +52,12 @@ class POS_lemma_es():
         self.utf8       = self.String('UTF-8')
 
 
-    def tag(self,text):
+    def tag(self,text,cutoff=0):
         text_ = self.String(text)
         text_ =self.StringReader(text_)
         tokenizer = self.tokenizer.getTokenizer(text_)
         tokens=tokenizer.tokenize()
-        if tokens.size()>1500:
+        if cutoff>0 and tokens.size()>1500:
             tokens=tokens.subList(0,1500)
         sntcs=self.ssplit.process(tokens)
         labels=[]
@@ -67,6 +67,13 @@ class POS_lemma_es():
                 lemma=self.stemmer.stem(wt.word())
                 labels.append((unicode(wt.word()).encode('utf-8'),unicode(wt.tag()).encode('utf-8'),unicode(lemma).encode('utf-8')))
         return labels,text.encode('utf-8')
+
+class Lemma():
+    def __init__(self):
+        self.stemmer    = SpanishStemmer("spanish")
+
+    def lemma(self,word):
+        return self.stemmer.stem(word)
 
 class POS_lemma():
     def __init__(self,model="edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"):
