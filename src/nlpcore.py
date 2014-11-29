@@ -68,6 +68,13 @@ class POS_lemma_es():
                 labels.append((unicode(wt.word()).encode('utf-8'),unicode(wt.tag()).encode('utf-8'),unicode(lemma).encode('utf-8')))
         return labels,text.encode('utf-8')
 
+class Lemma():
+    def __init__(self):
+        self.stemmer    = SpanishStemmer("spanish")
+
+    def lemma(self,word):
+        return self.stemmer.stem(word)
+
 class POS_lemma():
     def __init__(self,model="edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger"):
         self.StringReader = jpype.JPackage("java").io.StringReader

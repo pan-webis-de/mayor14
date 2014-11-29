@@ -25,7 +25,6 @@ import argparse
 import sys
 import os
 import os.path
-import jpype
 import numpy as np
 import matplotlib.pyplot as pl
 import random
@@ -77,11 +76,7 @@ def get_master_impostors(id,nimpostors,ndocs,nknown,problems,sw=[],mode="test",c
             for k in range(nknown):
                 master_candidate={}
                 doc=problems[ids_candidates[id_]+k]
-                try:
-                    doc,text=docread.tag(doc[1][0][0][0],doc[1][0][0][1],lang,cutoff=1500)
-                except: 
-                    doc=problems[ids_candidates[0]]
-                    doc,text=docread.tag(doc[1][0][0][0],doc[1][0][0][1],lang,cutoff=1500)
+                doc,text=docread.tag(doc[1][0][0][0],doc[1][0][0][1],lang)
                 for repname in opts.reps:
                     try:
                         exec("f=docread.{0}".format(repname))
