@@ -501,11 +501,11 @@ def readstopwords(filename):
 def readdoc(filename):
     try:
         with codecs.open(filename,'r','utf-8') as fh:
-            return  fh.read()
+            ff=  fh.read()
     except UnicodeDecodeError:
         try:
             with codecs.open(filename,'r','latin') as fh:
-                return fh.read()
+                ff= fh.read()
         except UnicodeDecodeError:
             return ""
     if os.path.exists(filename+"_tag"):
@@ -517,7 +517,8 @@ def readdoc(filename):
                 tags.append((bits[0],bits[1],lemma.lemma(bits[0])))
             else:
                 tags.append(tuple(bits))
-        tagged[filename]=tags
+        tagged[filename]=(tags,ff.encode('utf-8'))
+    return ff
 
 
 
