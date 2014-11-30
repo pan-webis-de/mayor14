@@ -518,6 +518,8 @@ def readdoc(filename):
                     tags.append((bits[0],bits[1],lemmatiser.lemma(bits[0])))
                 except UnicodeError: 
                     tags.append((bits[0],bits[1],"NONE"))
+                except: 
+                    tags.append((bits[0],bits[1],"NONE"))
             else:
                 tags.append(tuple(bits))
         tagged[filename]=(tags,ff.encode('utf-8'))
