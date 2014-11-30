@@ -148,7 +148,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                         for iter in range(opts.iters)]
 
         for id,(ks,uks) in problems:
-            print >> sys.err, "Problem",id
+            print >> sys.stderr, "Problem",id
             master_author={}
             docs_author=[]
             master_unknown={}
@@ -199,7 +199,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
             #print id, master_author
 
             for iter in range(iters):
-                print >> sys.err, "Iter",iter
+                print >> sys.stderr, "Iter",iter
                 #Extracting Examples
                 examples= []
                 lens=[]
