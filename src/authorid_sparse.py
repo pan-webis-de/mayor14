@@ -34,6 +34,7 @@ from oct2py import octave
 from oct2py.utils import Oct2PyError
 octave.addpath('src/octave')
 
+octave.timeout=60
 # Local imports
 import docread
 
