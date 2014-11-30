@@ -139,9 +139,13 @@ codes=docread.codes
 
 def process_corpus(problems,impostor_problems,opts,mode,sw):
 	#Iterating over problems
-
         if opts.nmax>0:
             problems=problems[:opts.nmax]
+
+        dumpfiles=[]
+        if opts.dump:
+            dumpfiles=[open('answers_{0}.dump'.format(iter),'w') 
+                        for iter in range(opts.iters)]
 
         for id,(ks,uks) in problems:
             master_author={}
@@ -172,11 +176,11 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
             for filename,doc in uks:
                  doc,text=docread.tag(filename,doc,opts.language)
                  for repname in opts.reps:
-                    #try:
-                    exec("f=docread.{0}".format(repname))
-                    rep=f(doc,text,sw=sw,cutoff=opts.cutoff)
-                    #except:
-                    #    rep=Counter()
+                    try:
+                        exec("f=docread.{0}".format(repname))
+                        rep=f(doc,text,sw=sw,cutoff=opts.cutoff)
+                    except:
+                        rep=Counter()
                     try:
                         master_unknown[repname].update(rep)
                     except KeyError:
@@ -188,6 +192,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
 
             results=[]
             iters=opts.iters
+
             #print "============"
             #print ">>>", master_unknown
             #print id, master_author
@@ -289,10 +294,15 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                         #pl.show()
                         nanswers+=1
                         answer=True
+                        
                     except Oct2PyError:
                         pass
+                if opts.dump and iter%10==0:
+                    print >> dumpfiles[iter/10], id, sum(results)
             print id, sum(results)/iters
-
+        for f in dumpfiles:
+            f.close()
+    
 
 # MAIN program
 if __name__ == "__main__":
@@ -346,6 +356,9 @@ if __name__ == "__main__":
     p.add_argument("--random",default=True,
             action="store_false", dest="random",
             help="Use random seed [True]")
+    p.add_argument("--dumpfiles",default=False,
+            action="store_true", dest="dump",
+            help="Record dump files [False]")
     p.add_argument("--concatenate",default=False,
             action="store_true", dest="concatenate",
             help="Concatenate [False]")
