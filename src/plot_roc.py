@@ -43,6 +43,7 @@ def read_config_file(config):
     --
     groundtruth_filepath
     """
+
     with open(config,'r') as f:
         text = f.readlines()
         answer_filepaths = []
@@ -62,7 +63,8 @@ def plot_roc(config, showfig, figfile):
     """
     Plot ROC for several answer lists
     """
-    plot_style = ['-', '--', '-.',':']
+
+    plot_style = ['-', '--', '-.', ':']
     answer_filepaths, truth_filepath = read_config_file(config)
     truth =  auceval.read_truth(truth_filepath)
     plots = []
