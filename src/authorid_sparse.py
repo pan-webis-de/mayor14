@@ -145,7 +145,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
         dumpfiles=[]
         if opts.dump:
             dumpfiles=[open('answers_{0}.dump'.format(iter),'w') 
-                        for iter in range(opts.iters)]
+                        for iter in range(opts.iters/10)]
 
         for id,(ks,uks) in problems:
             print >> sys.stderr, "Problem",id
