@@ -301,7 +301,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                     except Oct2PyError:
                         pass
                 if opts.dump and iter%10==0:
-                    print >> dumpfiles[iter/10], id, sum(results)/iters
+                    print >> dumpfiles[iter/10], id, sum(results)/iter
             print id, sum(results)/iters
         for f in dumpfiles:
             f.close()
