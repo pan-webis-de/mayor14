@@ -145,7 +145,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
         dumpfiles=[]
         if opts.dump:
             dumpfiles=[open('answers_{0}.dump'.format(iter),'w') 
-                        for iter in range(opts.iters)]
+                        for iter in range(opts.iters/10)]
 
         for id,(ks,uks) in problems:
             print >> sys.stderr, "Problem",id
@@ -462,8 +462,8 @@ if __name__ == "__main__":
         files  =[(i,x,os.path.join(opts.impostors,x)) for i,x in
                                 enumerate(os.listdir(opts.impostors))
                                 if x.endswith(".txt")]
-        #random.shuffle(files)
-        for i,id,f in files[:1500]:
+        random.shuffle(files)
+        for i,id,f in files[:3000]:
                 impostors.append(
                     (opts.impostors[-2:]+"__"+str(i),
                     ([(f,docread.readdoc(f))],[])))
