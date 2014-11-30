@@ -30,11 +30,12 @@ def polyarea(vertices):
     Computes de area of a polygon given a set of vertices as xy values using
     Shoelace formula
     """
+
     area = 0.0
     vnum = len(vertices)
     for i in range(vnum - 1):
-        area = area + vertices[i][0] * vertices[i+1][1]
-        area = area - vertices[i+1][0] * vertices[i][1]
+        area = area + vertices[i][0] * vertices[i + 1][1]
+        area = area - vertices[i + 1][0] * vertices[i][1]
 
     area = area + vertices[vnum - 1][0] * vertices[0][1]
     area = area - vertices[0][0] * vertices[vnum - 1][1]
@@ -52,6 +53,7 @@ def read_answers(answer_filepath):
     ...
     ProblemIDN ConfidenceN
     """
+
     answers = []
     with open(answer_filepath,'r') as text:
         for line in text:
@@ -70,6 +72,7 @@ def read_truth(truth_filepath):
     ...
     ProblemIDN Y/N
     """
+
     truth = []
     with open(truth_filepath,'r') as text:
         for line in text:
@@ -83,6 +86,7 @@ def read_truth(truth_filepath):
 def compute_auc(answers, truth):
     """
     Computes auc based on given answers and groundtruth.
+    Based on Vlad Magdin MATLAB script. 
     """
 
     answers = np.array(answers)
