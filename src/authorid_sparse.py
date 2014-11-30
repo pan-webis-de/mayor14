@@ -227,41 +227,41 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                 example_vectors,unknown=project_into_vectors(examples,full_voca,sample_unknown,opts.reps)
                 #print unknown
                 #for example in enumerate(example_vectors):
-                #    print len(example),example
-
-
-                # Creating matrix A
-                # First samples represent to author, rest impostors
-                # Normalizing the data
-                A=np.matrix(example_vectors)
-                A_=A.T
-                y=np.matrix(unknown)
-                y_=y.T
-                nu=0.0000001
-                tol=0.0000001
-                
-                #AA=[v for v in example_vectors]
-                #AA.append(unknown)
-                #AAA=np.array(AA)
-                #AAA.shape
-
-                #pl.pcolor(AAA,cmap=pl.cm.Blues)
-                #pl.title("A")
-                #pl.show()
-
-                stopCrit=3
+                #    prin t len(example),example
                 answer=False
                 nanswers=0
+
                 while not answer:
                     if nanswers>4:
                         results=[0.0 for i in range(iters)]
                         break
                     try:
+                        # Creating matrix A
+                        # First samples represent to author, rest impostors
+                        # Normalizing the data
+                        A=np.matrix(example_vectors)
+                        A_=A.T
+                        y=np.matrix(unknown)
+                        y_=y.T
+                        nu=0.0000001
+                        tol=0.0000001
+                        
+                        #AA=[v for v in example_vectors]
+                        #AA.append(unknown)
+                        #AAA=np.array(AA)
+                        #AAA.shape
+
+                        #pl.pcolor(AAA,cmap=pl.cm.Blues)
+                        #pl.title("A")
+                        #pl.show()
+
+                        stopCrit=3
                         x_0, nIter = octave.SolveHomotopy(A_, y_, 'lambda', nu, 'tolerance', tol, 'stoppingcriterion', stopCrit)
                         #ind=np.arange(x_0.shape[0])
                         #pl.bar(ind,[np.float(x) for x in x_0])
                         #pl.title("X_0")
                         #pl.show()
+
                     
                         # Calculating residuals
                         residuals=[]
@@ -299,7 +299,12 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                         answer=True
                         
                     except Oct2PyError:
+                        nanswers+=1
                         pass
+                    except TypeError:
+                        nanswers+=1
+                        pass
+
                 if opts.dump and iter%10==0:
                     print >> dumpfiles[iter/10], id, sum(results)/(iter+1)
             print id, sum(results)/iters
