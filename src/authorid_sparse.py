@@ -447,8 +447,8 @@ if __name__ == "__main__":
         files  =[(i,x,os.path.join(opts.impostors,x)) for i,x in
                                 enumerate(os.listdir(opts.impostors))
                                 if x.endswith(".txt")]
-        random.shuffle(files)
-        for i,id,f in files[:3000]:
+        #random.shuffle(files)
+        for i,id,f in files[:1500]:
                 impostors.append(
                     (opts.impostors[-2:]+"__"+str(i),
                     ([(f,docread.readdoc(f))],[])))
