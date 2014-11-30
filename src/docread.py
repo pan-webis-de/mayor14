@@ -34,7 +34,7 @@ import os.path
 import codecs
 from collections import Counter
 from nlpcore import  fulltagger, fulltagger_es, Lemma
-lemma=Lemma()
+lemmatiser=Lemma()
 
 
 
@@ -514,7 +514,12 @@ def readdoc(filename):
             line=line.strip()
             bits=line.split()
             if len(bits)==2:
-                tags.append((bits[0],bits[1],lemma.lemma(bits[0])))
+                try:
+                    tags.append((bits[0],bits[1],lemmatiser.lemma(bits[0])))
+                except UnicodeError: 
+                    tags.append((bits[0],bits[1],"NONE"))
+                except: 
+                    tags.append((bits[0],bits[1],"NONE"))
             else:
                 tags.append(tuple(bits))
         tagged[filename]=(tags,ff.encode('utf-8'))
