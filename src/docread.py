@@ -515,14 +515,14 @@ def readdoc(filename):
             bits=line.split()
             if len(bits)==2:
                 try:
-                    tags.append((bits[0],bits[1],lemmatiser.lemma(bits[0])))
+                    tags.append((bits[0],bits[1],bits[0][:5]))
                 except UnicodeError: 
                     tags.append((bits[0],bits[1],"NONE"))
                 except: 
                     tags.append((bits[0],bits[1],"NONE"))
             else:
                 tags.append(tuple(bits))
-        tagged[filename]=(tags,ff.encode('utf-8'))
+        tagged[filename]=(tags[:1500],ff.encode('utf-8'))
     return ff
 
 

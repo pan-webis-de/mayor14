@@ -40,7 +40,7 @@ import docread
 def verbose(*args):
     """ Function to print verbose"""
     if opts.verbose:
-        print >> out, "".join(args)
+        print >> sys.stderr, "".join(args)
 
 def info(*args):
     """ Function to print info"""
@@ -145,7 +145,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
         dumpfiles=[]
         if opts.dump:
             dumpfiles=[open('answers_{0}.dump'.format(iter),'w') 
-                        for iter in range(opts.iters/10)]
+                        for iter in range(opts.iters)]
 
         for id,(ks,uks) in problems:
             print >> sys.stderr, "Problem",id
@@ -299,8 +299,8 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                         
                     except Oct2PyError:
                         pass
-                if opts.dump and iter%10==0:
-                    print >> dumpfiles[iter/10], id, sum(results)/(iter+1)
+                if opts.dump:
+                    print >> dumpfiles[iter], id, sum(results)/(iter+1)
             print id, sum(results)/iters
         for f in dumpfiles:
             f.close()
@@ -334,9 +334,9 @@ if __name__ == "__main__":
     p.add_argument("--cutoff",default=5,type=int,
             action="store", dest="cutoff",
             help="Minimum frequency [5]")
-    p.add_argument("--iters",default=100,type=int,
+    p.add_argument("--iters",default=35,type=int,
             action="store", dest="iters",
-            help="Total iterations [100]")
+            help="Total iterations [35]")
     p.add_argument("--impostors",default=None,
             action="store", dest="impostors",
             help="Directory of imposter per auhtor")
@@ -442,6 +442,7 @@ if __name__ == "__main__":
     problems=docread.problems(
              docread.dirproblems(dirname,known_pattern,unknown_pattern,_ignore,
                                  code=codes[opts.language][opts.genre]))
+    verbose('Finish loading files')
 
     if opts.concatenate:
         nproblems=[]
