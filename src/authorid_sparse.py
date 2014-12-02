@@ -105,7 +105,7 @@ def project_into_vectors(examples,full_voca,unknown,reps,nmost=100):
             mass.append(sum(example[rep].values()))
         umass=sum(unknown[rep].values())
         full.update(unknown[rep])
-        idx=[p[0] for p in full.most_common()]
+        idx=[p[0] for p in full.most_common()[:200]]
         idf={}
         t=0
         for id_ in idx:
