@@ -8,10 +8,11 @@
 # If we want to generate 150 imposters of spanish language , we use the next command 
 # python src/imposters_generator.py --lang en --seed training/ --output enimposters --imposters 150
 #
-import os,re, sys, glob, codecs, requests, getopt, justext , shutil, time, ssl, json, string
+import os,re, sys, glob, codecs, requests, getopt, justext , shutil, time, ssl, json, string, random
 import numpy as np
 from collections import Counter
 from os import walk
+from random import randint
 from pprint import pprint
 from BeautifulSoup import BeautifulSoup
 
@@ -33,12 +34,19 @@ from BeautifulSoup import BeautifulSoup
 # lang (string):
 #	Name of the language, used to get the stop word list
 #
-lang = {
-	'spanish': {'imposters': 1500,'langsearch':'es', 'min' : 50, 'max': 300, 'lang':'Spanish'},
-	'english': {'imposters': 1200,'langsearch':'en', 'min' : 50, 'max': 300, 'lang':'English'},
-	'greek'	 : {'imposters': 1300,'langsearch':'el', 'min' : 50, 'max': 240, 'lang':'Greek'},
-	'dutch'	 : {'imposters': 1100,'langsearch':'nl', 'min' : 50, 'max': 200, 'lang':'Dutch'},
+# lang = {
+# 	'spanish': {'imposters': 1500,'langsearch':'es', 'min' : 50, 'max': 300, 'lang':'Spanish'},
+# 	'english': {'imposters': 1200,'langsearch':'en', 'min' : 50, 'max': 300, 'lang':'English'},
+# 	'greek'	 : {'imposters': 1300,'langsearch':'el', 'min' : 50, 'max': 240, 'lang':'Greek'},
+# 	'dutch'	 : {'imposters': 1100,'langsearch':'nl', 'min' : 50, 'max': 200, 'lang':'Dutch'},
+# }
+langs = {
+	'SP': {'langsearch':'es', 'min' : 50, 'max': 300, 'lang':'spanish'},
+	'EN': {'langsearch':'en', 'min' : 50, 'max': 300, 'lang':'english'},
+	'GR': {'langsearch':'el', 'min' : 50, 'max': 240, 'lang':'greek'},
+	'DU': {'langsearch':'nl', 'min' : 50, 'max': 200, 'lang':'dutch'},
 }
+
 
 #
 # Function
@@ -107,7 +115,7 @@ def getCorpus(html, language, lmin, lmax):
 #
 def doSearch(language, query, stopwords, path):	
 	print "Generated query : %s " % query
-	search = 'https://www.google.com/search?q=%s&lr=lang_%s' % (query+" -filetype:pdf", lang[language]['langsearch'] )
+	search = 'https://www.google.com/search?q=%s&lr=lang_%s' % (query+" -filetype:pdf", langs[language]['langsearch'] )
 	imposters_created = 0
 	try:
 		r = requests.get(search,timeout=5, verify = False )
@@ -123,7 +131,7 @@ def doSearch(language, query, stopwords, path):
 					if href[1] == 'url' and any( href[2].upper().endswith(ext) for ext in ('.XLS','.XLSX','.PDF','.DOC')) == False :
 						try:
 							source = requests.get(href[2],timeout=3)
-							corpus = getCorpus(source.text, lang[language]['lang'], lang[language]['min'], lang[language]['max'])
+							corpus = getCorpus(source.text, langs[language]['lang'], langs[language]['min'], langs[language]['max'])
 							if corpus : 
 								size = len(glob.glob(path+"/*.txt")) + 1
 								number = "%04d"% size
@@ -165,56 +173,48 @@ def doSearch(language, query, stopwords, path):
 # imposters(int) : 
 #	Number of impostors that has to be created
 #
-def doImposter(seed, out, imposters ):
-	# We find all the TXT of the LANG directory 
-	# /PATH/LANG/*.TXT
-	#path    = seed+mainlang+"*/*.txt"
-	imposters_limit = 10
-	attempts = 50
-
-	path = seed+"/contents.json"
-	content = open(path)
-	data = json.load(content)
-	
-	genre    = data['genre']
-	language = data['language']
-
+def doImposter(seed, lang, out, imposters ):
+	language = langs[ lang ]['lang']
 	stopwords_path = "data/stopwords_"+language+".txt"
 	stopwords = [line.strip() for line in  codecs.open(stopwords_path,'r','utf-8')]
 
-	problems = data['problems']
-	limit_search = 5
+	# problems = data['problems']
+	# limit_search = 5
+	output = out+"/"+lang
 
-	output = out+"/"+language+"_"+genre
 	if not os.path.exists(output):
 		os.makedirs(output)
-
-	remove_punctuation_map = dict((ord(char), None) for char in ( string.punctuation + "+”¿?-.“") )
-
-	for problem in problems:
-		print "\nAnalizing "+problem + ":\n"
 	
-		known_files = glob.glob( seed+"/"+problem+"/know*.txt")
-		words = []
+	remove_punctuation_map = dict((ord(char), None) for char in ( string.punctuation + "+”¿–?-.“‘’") )
+
+	problems = []
+	for (dirpath, dirnames,filenames) in walk(seed+lang):
+		known_files = glob.glob( dirpath + "/know*.txt")
+		textwords = ''
+
 		for single_file in known_files:
-			textwords = ''.join( [line.translate(remove_punctuation_map).strip() for line in codecs.open(single_file,'r','utf-8')] ).split()
-			most_used =  Counter(x for x in textwords if x not in stopwords)
-			words_to_search = [x for x in most_used.elements()]
-			# words_to_search = set(textwords)-set(stopwords)
-			
-			created = 0
-			attempt = 0
-			while created < imposters_limit and attempt < attempts :
-				query = ' '.join( np.random.choice( (words_to_search), limit_search) )
-				created += doSearch(language, query, stopwords, output)
-				attempt += 1
-				print "Creados %s " % (created)
+			temp = ''.join( [line.translate(remove_punctuation_map).replace(u'\ufeff', '').strip(string.whitespace).lower() for line in codecs.open(single_file,'r','utf-8')] )
+			textwords = textwords + temp
+		textwords = textwords.split(" ")
+		most_used =  Counter(x for x in textwords if x not in stopwords and  x != '' and x not in string.punctuation and len(x)>1 ) 
+		words_to_search = [x[0] for x in most_used.most_common(15)]
+		if( len(words_to_search) ):
+			problems.append(words_to_search)
+
+	imposters_created = 0
+	print "imposters "+str(imposters)
+	while imposters_created <= imposters :
+		problem = random.choice( problems )
+		query = ' '.join( np.random.choice( (problem), randint(3,4) ) )
+		print query
+		imposters_created += doSearch(lang, query, stopwords, output)
+		# imposters_created += 1
 			
 def main(argv):
 	mainlang = ""
 	seed = ""
 	out  = ""
-	imp  = 1000
+	imp  = 10
 	# stopwords_path = "data/stopwords.txt"
 
 	try:
@@ -225,20 +225,20 @@ def main(argv):
 
 	for opt, arg in opts:
 		if opt == '-h':
-			print "imposter.py --seed <directory> --output <directory> --stopwords <path>"
+			print "Usage : imposter.py --seed <directory> --output <directory> --imposters <number>"
 			sys.exit()
 		elif opt in("--s","--seed"):
 			seed = arg
 		elif opt in("--o","--output"):
 			out  = arg
-		elif opt in("--st","--stopwords"):
-			stopwords_path  = arg
+		elif opt in("--i","--imposters"):
+			imp  = arg
 	
 	try:
-		# stopwords = [line.strip() for line in  codecs.open(stopwords_path,'r','utf-8')]
 		for (dirpath, dirnames, filenames) in walk(seed):
 			for dirname in dirnames:
-				doImposter( seed + "/" + dirname , out, imp );
+				# doImposter( seed + "/" + dirname , out, imp );
+				doImposter( seed , dirname ,  out , imp)
 			break
 
 	except ValueError:
