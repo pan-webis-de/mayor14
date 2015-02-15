@@ -113,11 +113,15 @@ def getCorpus(html, language, lmin, lmax):
 # path (string) : 
 #	Path where the file is saved
 #
-def doSearch(language, query, stopwords, path):	
+def doSearch(language, query, stopwords, path, limit):	
+	if len(glob.glob(path+"/*.txt")) > limit:
+			return len(glob.glob(path+"/*.txt"))
+
 	print "Generated query : %s " % query
 	search = 'https://www.google.com/search?q=%s&lr=lang_%s' % (query+" -filetype:pdf", langs[language]['langsearch'] )
 	imposters_created = 0
 	try:
+
 		r = requests.get(search,timeout=5, verify = False )
 		bs = BeautifulSoup(r.text)
 
@@ -150,7 +154,8 @@ def doSearch(language, query, stopwords, path):
 	except IOError as e:
 		time.sleep(1)
 		print "Time Sleep I/O error({0}): {1}".format(e.errno, e.strerror)
-	return imposters_created
+
+	return len(glob.glob(path+"/*.txt"))
 #
 # Function
 # --------
@@ -173,7 +178,7 @@ def doSearch(language, query, stopwords, path):
 # imposters(int) : 
 #	Number of impostors that has to be created
 #
-def doImposter(seed, lang, out, imposters ):
+def doImposter(seed, lang, out, imposters_limit ):
 	language = langs[ lang ]['lang']
 	stopwords_path = "data/stopwords_"+language+".txt"
 	stopwords = [line.strip() for line in  codecs.open(stopwords_path,'r','utf-8')]
@@ -201,15 +206,14 @@ def doImposter(seed, lang, out, imposters ):
 		if( len(words_to_search) ):
 			problems.append(words_to_search)
 
-	imposters_created = 0
-	print "imposters "+str(imposters)
-	while imposters_created <= imposters :
+	imposters_counter = 0
+
+	while imposters_counter <= int(imposters_limit) :
 		problem = random.choice( problems )
 		query = ' '.join( np.random.choice( (problem), randint(3,4) ) )
-		print query
-		imposters_created += doSearch(lang, query, stopwords, output)
-		# imposters_created += 1
-			
+		imposters_counter = doSearch(lang, query, stopwords, output, imposters_limit)
+
+
 def main(argv):
 	mainlang = ""
 	seed = ""
@@ -238,7 +242,7 @@ def main(argv):
 		for (dirpath, dirnames, filenames) in walk(seed):
 			for dirname in dirnames:
 				# doImposter( seed + "/" + dirname , out, imp );
-				doImposter( seed , dirname ,  out , imp)
+				doImposter( seed , dirname ,  out , int(imp))
 			break
 
 	except ValueError:
