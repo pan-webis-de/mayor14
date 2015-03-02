@@ -19,6 +19,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------------
+from __future__ import print_function
 
 # System libraries
 import argparse
@@ -26,7 +27,6 @@ import sys
 import os
 import os.path
 import numpy as np
-import matplotlib.pyplot as pl
 import random
 import itertools
 from collections import Counter
@@ -41,11 +41,11 @@ import docread
 def verbose(*args):
     """ Function to print verbose"""
     if opts.verbose:
-        print >> sys.stderr, "".join(args)
+        print(*args,file=sys.stderr)
 
 def info(*args):
     """ Function to print info"""
-    print >> out, "".join(args)
+    print( "".join(args),file=out)
 
 def muestreo(counter,reps,percentage=.80):
     final_count={}
@@ -69,7 +69,6 @@ def get_master_impostors(id,nimpostors,ndocs,nknown,problems,sw=[],mode="test",c
             ids_candidates.append(i)
     pos=range(len(ids_candidates))
     random.shuffle(pos)
-   
    
     for i in range(nimpostors):
         for j in range(ndocs):
@@ -149,7 +148,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
                         for iter in range(opts.iters)]
 
         for id,(ks,uks) in problems:
-            print >> sys.stderr, "Problem",id
+            print( "Problem",id, file= sys.stderr)
             master_author={}
             docs_author=[]
             master_unknown={}
@@ -200,7 +199,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
             #print id, master_author
 
             for iter in range(iters):
-                print >> sys.stderr, "Iter",iter
+                print("Iter",iter,file=sys.stderr)
                 #Extracting Examples
                 examples= []
                 lens=[]
@@ -307,7 +306,7 @@ def process_corpus(problems,impostor_problems,opts,mode,sw):
 
                 if opts.dump:
                     print >> dumpfiles[iter], id, sum(results)/(iter+1)
-            print id, sum(results)/iters
+            print(id, sum(results)/iters)
         for f in dumpfiles:
             f.close()
     
@@ -449,6 +448,7 @@ if __name__ == "__main__":
              docread.dirproblems(dirname,known_pattern,unknown_pattern,_ignore,
                                  code=codes[opts.language][opts.genre]))
     verbose('Finish loading files')
+    verbose('Total problems',len(problems))
 
     if opts.concatenate:
         nproblems=[]

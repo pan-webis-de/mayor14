@@ -33,9 +33,6 @@ import os
 import os.path
 import codecs
 from collections import Counter
-from nlpcore import  fulltagger, fulltagger_es, Lemma
-lemmatiser=Lemma()
-
 
 
 spaces=re.compile('\W+',re.UNICODE)
@@ -396,7 +393,7 @@ def ngramlemma(doc,text,sw=[],ngram=5,cutoff=0):
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
-def preprocess(wrds,sw):
+def preprocess(wrds,sw=[]):
     wrds_=[]
     for wrd in wrds:
         if not wrd in sw:
