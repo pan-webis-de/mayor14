@@ -38,11 +38,6 @@ octave.timeout=60
 # Local imports
 import docread
 
-def verbose(*args):
-    """ Function to print verbose"""
-    if opts.verbose:
-        print(*args,file=sys.stderr)
-
 def info(*args):
     """ Function to print info"""
     print( "".join(args),file=out)
@@ -388,6 +383,13 @@ if __name__ == "__main__":
 
     if not opts.random:
         random.seed(9111978)
+
+    if opts.verbose:
+        def verbose(*args):
+            print(*args)
+    else:
+        verbose = lambda *a: None
+
 
     # Managing configurations  --------------------------------------------
     # Check the correct mode
