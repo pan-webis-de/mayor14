@@ -64,7 +64,7 @@ if __name__ == "__main__":
     p.add_argument("-r","--rep",default=['bow','bigram'],
             action="append", dest="reps",
             help="adds representation to process")
-    p.add_argument("--cutoff",default=5,type=int,
+    p.add_argument("--cutoff",default=2,type=int,
             action="store", dest="cutoff",
             help="Minimum frequency [5]")
     p.add_argument("--iters",default=35,type=int,

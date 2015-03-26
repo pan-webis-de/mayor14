@@ -125,14 +125,23 @@ def capital(doc,text,sw=[],cutoff=0):
 def bow(doc,text,sw=[],cutoff=0):
     wds = [ x.lower() for x,y,z in doc if z not in sw]
     doc_=Counter([x for x in wds])
+    postprocess(doc_,sw=sw,cutoff=cutoff)
+    return doc_
+
+def hist_bow(doc,text,sw=[],cutoff=0):
+    wds = [ x.lower() for x,y,z in doc if z not in sw]
+    doc__=Counter([x for x in wds])
+    doc_=Counter()
     hist=[]
-    for v in doc_.values():
+    for v in doc__.values():
         hist.append("s_"+str(v))
     sizes=[str(len(w)) for w in wds]
     doc_.update(hist)
     doc_.update(sizes)
     postprocess(doc_,sw=sw,cutoff=cutoff)
     return doc_
+
+
 
 def lemma(doc,text,sw=[],cutoff=0):
     wds = [ z for x,y,z in doc]
@@ -247,7 +256,7 @@ def bigramlemma(doc,text,sw=[],cutoff=0):
     values=["{0} {1}".format(x,
                                     y) for x, y in bigram]
     doc_ = Counter(values)
-    postprocess(doc_,cutoff=cutoff)
+    postprocess(doc_)
     return doc_
 
 

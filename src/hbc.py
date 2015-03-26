@@ -69,8 +69,8 @@ def get_master_impostors(id,nknown,problems,opts=default_opts,sw=[],mode="test")
     for i in range(opts.nimpostors):
         for j in range(opts.ndocs):
             id_=pos[i*opts.nimpostors+j]
+            master_candidate={}
             for k in range(nknown):
-                master_candidate={}
                 doc=problems[ids_candidates[id_]+k]
                 doc,text=docread.tag(doc[1][0][0][0],doc[1][0][0][1],opts.language)
                 for repname in opts.reps:
@@ -84,11 +84,11 @@ def get_master_impostors(id,nknown,problems,opts=default_opts,sw=[],mode="test")
                     except KeyError:
                         master_candidate[repname]=Counter(rep)
 
-                master_impostors.append(master_candidate)
+            master_impostors.append(master_candidate)
     return master_impostors
  
 
-def project_into_vectors(examples,full_voca,unknown,reps,nmost=100):
+def project_into_vectors(examples,full_voca,unknown,nks,reps,nmost=200):
     vectors=[[] for e in examples]
     uvec=[]
     mass=[]
@@ -98,7 +98,6 @@ def project_into_vectors(examples,full_voca,unknown,reps,nmost=100):
         for example in examples:
             full.update(example[rep])
             mass.append(sum(example[rep].values()))
-        umass=sum(unknown[rep].values())
         full.update(unknown[rep])
         idx=[p[0] for p in full.most_common()[:nmost]]
         idf={}
@@ -119,9 +118,10 @@ def project_into_vectors(examples,full_voca,unknown,reps,nmost=100):
             idf[id_]=np.log(1.0*abs(N)/abs(t))
 
         for i,example in enumerate(examples):
-            arr=[1.0*example[rep][k]*idf[k]/sum(example[rep].values()) for k in idx]
+            arr=[1.0*example[rep][k]*idf[k]/sum(example[rep].values())/nks for k in idx]
             vectors[i].append(arr)
-        uvec.append([1.0*unknown[rep][k]*idf[k]/sum(unknown[rep].values()) for k in idx])
+        arr=[1.0*unknown[rep][k]*idf[k]/sum(unknown[rep].values()) for k in idx]
+        uvec.append(arr)
     return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
 
 codes=docread.codes
@@ -145,7 +145,7 @@ def hbc(example_vectors,unknown,nexamples,nks,opts,scith=0.1):
     d_is=[]
     k=nexamples/opts.ndocs
     for i in range(k):
-        n=opts.ndocs*nks
+        n=opts.ndocs
         d_i= np.matrix([[0.0 for x in x_0[:i*n]]+\
              [np.float(x) for x in x_0[i*n:(i+1)*n]]+\
              [0.0 for x in x_0[(i+1)*n:]]]).T
@@ -156,7 +156,8 @@ def hbc(example_vectors,unknown,nexamples,nks,opts,scith=0.1):
    
     sci=(k*np.max(d_is)/np.linalg.norm(x_0,ord=1)-1)/(k-1)
     identity=np.argmin(residuals)
-    if sci<scith:
+    print(identity,k)
+    if sci < scith:
         return 0.0
     else:
         if identity==(k-1):
@@ -240,18 +241,20 @@ def process_corpus(problems,impostor_problems,opts=default_opts,mode="test",sw=[
 
         results=[]
 
-        verbose("Master unknown",id,master_unknown)
-        verbose('Total documents',len(ks))
+        verbose("Master unknown",id,[(k,len(v)) for k,v in
+                master_unknown.iteritems()])
+        verbose("Master known",id,[(k,len(v)) for k,v in
+                master_author.iteritems()])
+ 
+        verbose('Total impostors ',opts.nimpostors*opts.ndocs)
         sample_unknown=muestreo(master_unknown,reps=opts.reps)
 
         examples_=[]
         for j in range(opts.ndocs):
             examples_.append(muestreo(master_author,opts.reps,percentage=opts.percentage))
         verbose('Total known information',len(examples_))
-        verbose('Total impostors ',opts.nimpostors*opts.ndocs)
 
         for iter in range(opts.iters):
-            verbose('.',end="")
             #Extracting Examples
             examples= []
 
@@ -265,8 +268,9 @@ def process_corpus(problems,impostor_problems,opts=default_opts,mode="test",sw=[
             for e_ in examples_:
                 examples.append(e_)
 
+        
             # Sparce algorithm
-            example_vectors,unknown=project_into_vectors(examples,full_voca,sample_unknown,opts.reps)
+            example_vectors,unknown=project_into_vectors(examples,full_voca,sample_unknown,len(ks),opts.reps)
 
             result=try_hbc(example_vectors,unknown,len(examples),len(ks),opts)
             results.append(result)
