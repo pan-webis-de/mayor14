@@ -25,12 +25,10 @@ import random
 import docread
 import numpy as np
 import itertools
-from collections import Counter
-from oct2py import octave
 from oct2py.utils import Oct2PyError
-octave.addpath('src/octave')
+from oct2py import octave
+from collections import Counter
 
-octave.timeout=60
 
 class dotdict(dict):
     def __getattr__(self,attr):
@@ -38,7 +36,7 @@ class dotdict(dict):
     __setattr__= dict.__setitem__
     __delattr__= dict.__delitem__
 
-def muestreo(counter,reps,percentage=.80):
+def muestreo(counter,reps,percentage=1.0):
     final_count={}
     for rep in reps:
         list_counter=list(counter[rep].elements())
@@ -74,11 +72,11 @@ def get_master_impostors(id,nknown,problems,opts=default_opts,sw=[],mode="test")
             for k in range(nknown):
                 master_candidate={}
                 doc=problems[ids_candidates[id_]+k]
-                doc,text=docread.tag(doc[1][0][0][0],doc[1][0][0][1],opts.langugage)
+                doc,text=docread.tag(doc[1][0][0][0],doc[1][0][0][1],opts.language)
                 for repname in opts.reps:
                     try:
                         exec("f=docread.{0}".format(repname))
-                        rep=f(doc,text,cutoff=cutoff,sw=sw)
+                        rep=f(doc,text,cutoff=opts.cutoff,sw=sw)
                     except:
                         rep=Counter()
                     try:
@@ -102,7 +100,7 @@ def project_into_vectors(examples,full_voca,unknown,reps,nmost=100):
             mass.append(sum(example[rep].values()))
         umass=sum(unknown[rep].values())
         full.update(unknown[rep])
-        idx=[p[0] for p in full.most_common()[:200]]
+        idx=[p[0] for p in full.most_common()[:nmost]]
         idf={}
         t=0
         for id_ in idx:
@@ -121,20 +119,14 @@ def project_into_vectors(examples,full_voca,unknown,reps,nmost=100):
             idf[id_]=np.log(1.0*abs(N)/abs(t))
 
         for i,example in enumerate(examples):
-            if mass[i]>0:
-                arr=[1.0*example[rep][k]*idf[k] for k in idx]
-            else:
-                arr=[1.0*example[rep][k]*idf[k] for k in idx]
+            arr=[1.0*example[rep][k]*idf[k]/sum(example[rep].values()) for k in idx]
             vectors[i].append(arr)
-        if umass>0:
-           uvec.append([1.0*unknown[rep][k]*idf[k] for k in idx])
-        else:
-           uvec.append([1.0*unknown[rep][k]*idf[k] for k in idx])
+        uvec.append([1.0*unknown[rep][k]*idf[k]/sum(unknown[rep].values()) for k in idx])
     return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
 
 codes=docread.codes
 
-def hbc(example_vectors,unknown,nexamples,nks,opts):
+def hbc(example_vectors,unknown,nexamples,nks,opts,scith=0.1):
     # Creating matrix A
     # First samples represent to author, rest impostors
     # Normalizing the data
@@ -151,9 +143,9 @@ def hbc(example_vectors,unknown,nexamples,nks,opts):
     # Calculating residuals
     residuals=[]
     d_is=[]
-    k=nexamples/nks*opts.ndocuments
+    k=nexamples/opts.ndocs
     for i in range(k):
-        n=opts.documents*nks
+        n=opts.ndocs*nks
         d_i= np.matrix([[0.0 for x in x_0[:i*n]]+\
              [np.float(x) for x in x_0[i*n:(i+1)*n]]+\
              [0.0 for x in x_0[(i+1)*n:]]]).T
@@ -161,10 +153,9 @@ def hbc(example_vectors,unknown,nexamples,nks,opts):
         r_is=y_-A_*d_i
         r_i=np.linalg.norm(r_is,ord=2)
         residuals.append(r_i)
-    
+   
     sci=(k*np.max(d_is)/np.linalg.norm(x_0,ord=1)-1)/(k-1)
     identity=np.argmin(residuals)
-    scith=0.1
     if sci<scith:
         return 0.0
     else:
@@ -173,122 +164,117 @@ def hbc(example_vectors,unknown,nexamples,nks,opts):
         else:
             return 0.0
 
-def iterative_hbc(iters,example_vectors,unknown,nexamples,nks,opts):
+def try_hbc(example_vectors,unknown,nexamples,nks,opts):
     answer=False
+    result=0.0
     nanswers=0
-    results=[]
 
     while not answer:
         if nanswers>4:
-            results=[0.0 for i in range(iters)]
+            result=0.0
             break
         try:
             result=hbc(example_vectors,unknown,nexamples,nks,opts)
-            results.append(result)
-            nanswers+=1
+            answer=True
         except Oct2PyError:
             nanswers+=1
             pass
         except TypeError:
             nanswers+=1
             pass
+    return result
 
 def process_corpus(problems,impostor_problems,opts=default_opts,mode="test",sw=[],verbose=lambda *a: None ):
-	#Iterating over problems
-        if opts.nmax>0:
-            problems=problems[:opts.nmax]
+    #Iterating over problems
+    if opts.nmax>0:
+        problems=problems[:opts.nmax]
 
-        dumpfiles=[]
-        if opts.dump:
-            dumpfiles=[open('answers_{0}.dump'.format(iter),'w') 
-                        for iter in range(opts.iters)]
+    dumpfiles=[]
+    if opts.dump:
+        dumpfiles=[open('answers_{0}.dump'.format(iter),'w') 
+                    for iter in range(opts.iters)]
 
-        for id,(ks,uks) in problems:
-            verbose( "Problem",id)
-            master_author={}
-            docs_author=[]
-            master_unknown={}
-            full_voca={}
-            ks_=ks
-            for filename,doc in ks:
-                doc,text=docread.tag(filename,doc,opts.language)
-                doc_author={}
-                for repname in opts.reps:
-                    #try:
+    for id,(ks,uks) in problems:
+        verbose("Problem",id)
+        master_author={}
+        docs_author=[]
+        master_unknown={}
+        full_voca={}
+        ks_=ks
+        for filename,doc in ks:
+            doc,text=docread.tag(filename,doc,opts.language)
+            doc_author={}
+            for repname in opts.reps:
+                try:
                     exec("f=docread.{0}".format(repname))
                     rep=f(doc,text,cutoff=opts.cutoff,sw=sw)
-                    #except:
-                    #    rep=Counter()
-                    doc_author[repname]=rep
-                    try:
-                        master_author[repname].update(rep)
-                    except KeyError:
-                        master_author[repname]=Counter(rep)
-                    try:
-                        full_voca[repname].update(rep)
-                    except KeyError:
-                        full_voca[repname]=Counter(rep)
-                docs_author.append(doc_author)
+                except:
+                    rep=Counter()
+                doc_author[repname]=rep
+                try:
+                    master_author[repname].update(rep)
+                except KeyError:
+                    master_author[repname]=Counter(rep)
+                try:
+                    full_voca[repname].update(rep)
+                except KeyError:
+                    full_voca[repname]=Counter(rep)
+            docs_author.append(doc_author)
 
-            for filename,doc in uks:
-                 doc,text=docread.tag(filename,doc,opts.language)
-                 for repname in opts.reps:
-                    try:
-                        exec("f=docread.{0}".format(repname))
-                        rep=f(doc,text,sw=sw,cutoff=opts.cutoff)
-                    except:
-                        rep=Counter()
-                    try:
-                        master_unknown[repname].update(rep)
-                    except KeyError:
-                        master_unknown[repname]=Counter(rep)
-                    try:
-                        full_voca[repname].update(rep)
-                    except KeyError:
-                        full_voca[repname]=Counter(rep)
+        for filename,doc in uks:
+             doc,text=docread.tag(filename,doc,opts.language)
+             for repname in opts.reps:
+                try:
+                    exec("f=docread.{0}".format(repname))
+                    rep=f(doc,text,sw=sw,cutoff=opts.cutoff)
+                except:
+                    rep=Counter()
+                try:
+                    master_unknown[repname].update(rep)
+                except KeyError:
+                    master_unknown[repname]=Counter(rep)
+                try:
+                    full_voca[repname].update(rep)
+                except KeyError:
+                    full_voca[repname]=Counter(rep)
 
-            results=[]
-            iters=opts.iters
+        results=[]
 
-            verbose("Master unknown",id,master_unknown)
+        verbose("Master unknown",id,master_unknown)
+        verbose('Total documents',len(ks))
+        sample_unknown=muestreo(master_unknown,reps=opts.reps)
 
-            for iter in range(iters):
-                verbose("Iter",iter)
-                #Extracting Examples
-                examples= []
-                lens=[]
+        examples_=[]
+        for j in range(opts.ndocs):
+            examples_.append(muestreo(master_author,opts.reps,percentage=opts.percentage))
+        verbose('Total known information',len(examples_))
+        verbose('Total impostors ',opts.nimpostors*opts.ndocs)
 
-                # Getting impostors
-                verbose('Total documents ',len(ks))
-                master_impostors=get_master_impostors(id,len(ks),impostor_problems,opts,mode=mode,sw=sw)
-                verbose('Total impostors ',len(master_impostors))
+        for iter in range(opts.iters):
+            verbose('.',end="")
+            #Extracting Examples
+            examples= []
 
-                # Sample impostors
-                verbose("Sampling")
-                for j,master_impostor in enumerate(master_impostors):
-                     examples.append(muestreo(master_impostor,opts.reps,percentage=opts.percentag))
+            # Getting impostors
+            master_impostors=get_master_impostors(id,len(ks),impostor_problems,opts=opts,mode=mode,sw=sw)
 
-                for j in range(opts.documents):
-                    for i in range(len(ks)):
-                        doc_author=docs_author[i]
-                        examples.append(muestreo(doc_author,opts.reps,percentage=opts.percentage))
-                        lens.append(len(ks_))
+            # Sample impostors
+            for i,master_impostor in enumerate(master_impostors):
+                    examples.append(muestreo(master_impostor,opts.reps,percentage=opts.percentage))
 
-                sample_unknown=muestreo(master_unknown,opts.reps,percentage=1.0)
+            for e_ in examples_:
+                examples.append(e_)
 
-                # Sparce algorithm
-                # Proyecting examples into a vector
-                verbose("Projectiong into vector")
-                example_vectors,unknown=project_into_vectors(examples,full_voca,sample_unknown,opts.reps)
-               
+            # Sparce algorithm
+            example_vectors,unknown=project_into_vectors(examples,full_voca,sample_unknown,opts.reps)
 
+            result=try_hbc(example_vectors,unknown,len(examples),len(ks),opts)
+            results.append(result)
 
+            if opts.dump:
+                print >> dumpfiles[iter], id, sum(results)/(iter+1)
+        print(id, sum(results)/opts.iters)
+    for f in dumpfiles:
+        f.close()
 
-              
-                if opts.dump:
-                    print >> dumpfiles[iter], id, sum(results)/(iter+1)
-            print(id, sum(results)/iters)
-        for f in dumpfiles:
-            f.close()
-    
 

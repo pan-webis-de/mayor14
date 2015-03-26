@@ -30,6 +30,11 @@ import random
 # Local imports
 import docread
 import hbc
+from oct2py import octave
+
+octave.addpath('src/octave')
+octave.timeout=60
+
 
 out=sys.stdout
 
@@ -50,16 +55,13 @@ if __name__ == "__main__":
     p.add_argument("-o", "--output",default=None,
             action="store", dest="output",
             help="Output [STDOUT]")
-    p.add_argument("-m", "--mode",default='test',
+    p.add_argument("-m", "--mode",default='devel',
             action="store", dest="mode",
             help="test|train|devel [test]")
     p.add_argument("--language",default='en',
             action="store", dest="language",
             help="Language to process [all]")
-    p.add_argument("--genre",default='all',
-            action="store", dest="genre",
-            help="Genre to process [all]")
-    p.add_argument("-r","--rep",default=[],
+    p.add_argument("-r","--rep",default=['bow','bigram'],
             action="append", dest="reps",
             help="adds representation to process")
     p.add_argument("--cutoff",default=5,type=int,
@@ -78,9 +80,9 @@ if __name__ == "__main__":
             action="store", dest="nimpostors",
             help="Total of imposter per auhtor [8]")
     p.add_argument("--documents",default=1,type=int,
-            action="store", dest="ndocuments",
+            action="store", dest="ndocs",
             help="Documents per author [1]")
-    p.add_argument("--percentage",default=.60,type=float,
+    p.add_argument("--percentage",default=.80,type=float,
             action="store", dest="percentage",
             help="Sampling percentage [.60]")
     p.add_argument("--model",default=".",
@@ -92,18 +94,15 @@ if __name__ == "__main__":
     p.add_argument("--dumpfiles",default=False,
             action="store_true", dest="dump",
             help="Record dump files [False]")
-    p.add_argument("--cvs",default=False,
-            action="store_true", dest="csv",
-            help="Save matrices into a .csv file [False]")
-    p.add_argument("--method",default="lp",
-            action="store", dest="method",
-            help="lp|avp|svm|ann [lp]")
     p.add_argument("--stopwords", default=None,
             action="store", dest="stopwords",
             help="List of stop words [None, uses default]")
     p.add_argument("--answers", default="answers.txt",
             action="store", dest="answers",
             help="Answers file [answers.txt]")
+    p.add_argument("--processors",default=1,type=int,
+            action="store", dest="nprocessors",
+            help="Number of processors [1]")
     p.add_argument("-v", "--verbose",
             action="store_true", dest="verbose",
             help="Verbose mode [Off]")
@@ -112,13 +111,16 @@ if __name__ == "__main__":
     # Managing configuration ----------------------------------------------
     if not opts.random:
         random.seed(9111978)
+    opts.reps=list(set(opts.reps))
+    opts.genre='all'
 
-   # prepara función de verbose
+    # prepara función de verbose
     if opts.verbose:
-        def verbose(*args):
-            print(*args)
+        def verbose(*args,**kargs):
+            print(*args,**kargs)
     else:   
         verbose = lambda *a: None 
+
 
     # Defines output
     if opts.output:
@@ -189,6 +191,7 @@ if __name__ == "__main__":
     else:
         verbose('Using problems as impostors')
         impostors=problems
+    verbose('Total impostors',len(impostors))
 
     # Loading answers file only for DEVELOPMENT OR TRAINNING MODE
     if opts.mode.startswith("train") or opts.mode.startswith('devel'):
@@ -208,7 +211,7 @@ if __name__ == "__main__":
     # Development model 
     if opts.mode.startswith("devel"):
         verbose('Starting the process')
-        hbc.process_corpus(problems,impostors,opts,"devel",sw=stopwords)
+        hbc.process_corpus(problems,impostors,opts,"devel",sw=stopwords,verbose=verbose)
       
     # TRAINING - Save examples
     elif opts.mode.startswith("train"):
@@ -224,4 +227,4 @@ if __name__ == "__main__":
         
         impostors = pickle.load(open(opts.model))
         verbose("Reading model",opts.model)
-        hbc.process_corpus(problems,impostors,opts,"test",sw=stopwords)
+        hbc.process_corpus(problems,impostors,opts,"test",sw=stopwords,verbose=verbose)

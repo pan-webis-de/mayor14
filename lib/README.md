@@ -19,8 +19,6 @@ Instalar las librerias de CoreNLP de Stanford
 
 En el directorio de `authorid` ejecutar para conseguir las librerias
 
-:: 
-
     wget http://nlp.stanford.edu/software/stanford-corenlp-full-2015-01-29.zip
     unzip stanford-corenlp-full-2015-01-29.zip
     cp stanford-corenlp-full-2015-01-29/stanford-corenlp-3.5.1.jar lib/
@@ -32,13 +30,13 @@ Compilación
 -----------
 
 Opcionalmente se puede borrar las librerias
+    
+    rm -r stanford-corenlp-full-2015-01-29
+    rm -r stanford-corenlp-full-2015-01-29.zip
 
-::
-    rm -rf stanford-corenlp-full-2015-01-29
+Para compilar nuestró código se hace lo siguiente en el directorio 
+`authorid/src/java`
 
-Para compilar nuestró código se hace lo siguiente en el directorio `authorid/src/java`
-
-::
     javac -classpath ../../lib/*:* SpanishTagger.java
     javac -classpath ../../lib/*:* EnlgishTagger.java
 
@@ -47,7 +45,6 @@ Ejecutar/etiquetar
 
 Para etiquetar por ejemplo un directorio con textos en español hacer lo siguiente:
 
-::
     java -classpath ../../lib/*:. SpanishTagger ../../data/pan15_train/spanish
 
 Al finalizar debe haber archivos extra con la extensión `_tag`.

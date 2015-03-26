@@ -257,7 +257,7 @@ def bigram(doc,text,sw=[],cutoff=0):
     values=["{0} {1}".format(x,
                                     y) for x, y in bigram]
     doc_ = Counter(values)
-    postprocess(doc_,cutoff=cutoff)
+    postprocess(doc_,cutoff=2)
     return doc_
 
 def bigrampref(doc,text,sw=[],cutoff=0):
