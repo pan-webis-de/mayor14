@@ -19,6 +19,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------------
+from __future__ import print_function
 
 # System libraries
 import argparse
@@ -26,21 +27,19 @@ import sys
 import os
 import os.path
 import cmd
+import random
 from oct2py import octave
 octave.addpath('src/octave')
 
 # Local imports
 import docread
+import hbc
 
-def verbose(*args):
-    """ Function to print verbose"""
-    if opts.verbose:
-        print "".join(args)
+out=sys.stdout
 
 def info(*args):
     """ Function to print info"""
-    print >> out, "".join(args)
-
+    print(*args,file=out)
 
 class AuthorIdCLI(cmd.Cmd):
     def __init__(self):
@@ -56,13 +55,13 @@ class AuthorIdCLI(cmd.Cmd):
         self.doc+=1
         if self.doc > len(problems):
             self.doc=0
-        print "In problem:", problems[self.doc][0]
+        print("In problem:", problems[self.doc][0])
 
     def do_next_error(self,args):
         "Move to tne next document"
         error=False
-        if not sys:
-            print "Error: No systemp predictions loaded"
+        if not sy:
+            print("Error: No system predictions loaded")
             return
         while not error and self.doc<len(problems):
             self.doc+=1
@@ -76,50 +75,53 @@ class AuthorIdCLI(cmd.Cmd):
 
         if self.doc == len(problems):
             self.doc=0
-            print "error: reached last problem"
+            print("error: reached last problem")
             return 
-        print "In problem:", problems[self.doc][0]
+        print("In problem:", problems[self.doc][0])
 
 
-    def do_answer(self,args):
-        "Shows the answer of the problem"
-        print "Answer          : ", gs[problems[self.doc][0]]
+    def do_gs_answer(self,args):
+        "Shows the goldstandard answer of the problem"
+        print("Answer          : ", gs[problems[self.doc][0]])
 
-    def do_reload(self,args):
+    def do_reloadfeats(self,args):
         "Reload representations"
         import docread
         docread = reload(docread)
 
 
-    def do_pred(self,args):
-        "Shows the prediction of the problem"
+    def do_sys_answer(self,args):
+        "Shows the answer of the problem"
         if sy:
-            print "Predction       : ", sy[problems[self.doc][0]]
+            print("Predction       : ", sy[problems[self.doc][0]])
         else:
-            print "No error prediction loadded"
+            print("No prediction loadded error")
 
-
-
+    def do_pred(self,args):
+        "Predicts the answer"
+        args=self.parse(args)
+        if len(args)==0:
+            reps=['bow','bigram']
+        else:
+            reps=args
+        opts.reps=reps
+        hbc.process_corpus([problems[self.doc]],
+                impostors,opts=opts,sw=stopwords,verbose=verbose)
+        
     def do_info(self,args):
         "Shows info of the problem"
-        print "Problem Id      : ", problems[self.doc][0]
-        print "Known documents : ", len(problems[self.doc][1][0])
-        print "Answer          : ", gs[problems[self.doc][0]]
+        print("Problem Id      : ", problems[self.doc][0])
+        print("Known documents : ", len(problems[self.doc][1][0]))
+        print("Answer          : ", gs[problems[self.doc][0]])
         if sy:
-            print "Predction       : ", sy[problems[self.doc][0]]
-        print "Known files     : "
-        for i,doc in enumerate(problems[self.doc][1][0]):
-            bow=docread.bow(doc[1])
-            print "    [{0}]".format(i), doc[0], "({0})".format(len(bow))
-        print "Unknown file   : "
-        for doc in problems[self.doc][1][1]:
-            i+=1
-            bow=docread.bow(doc[1])
-            print  "    [{0}]".format(i),doc[0],"({0})".format(len(bow))
+            print("Predction       : ", sy[problems[self.doc][0]])
+        print("Known files     : ",len(problems[self.doc][1][0]))
+        print("Unknown file    : ",len(problems[self.doc][1][1]))
+
             
     def do_current(self,args):
         "Shows the id of the current problem"
-        print "Problem Id      : ", problems[self.doc][0]
+        print("Problem Id      : ", problems[self.doc][0])
 
     def do_dump(self,args):
         "Prints document by its index (use info to print indexes)"
@@ -132,30 +134,30 @@ class AuthorIdCLI(cmd.Cmd):
             try:
                 i=int(i)
             except ValueError:
-                print "error: invalid index has to be number",i
+                print("error: invalid index has to be number",i)
                 return
         
             if i+1 > lks:
-                print "===> Unknown document ({0})".format(i)
+                print("===> Unknown document ({0})".format(i))
                 try:
                     for line in open("{1}".format(
                                     opts.GS,
                                     problems[self.doc][1][1][i-lks][0])):
                         line = line.strip()
-                        print line
+                        print(line)
                 except IndexError:
-                    print "error: no document with that index",i
+                    print("error: no document with that index",i)
                     return
             else:
-                print "===> known document ({0})".format(i)
+                print("===> known document ({0})".format(i))
                 for line in open("{1}".format(
                                     opts.GS,problems[self.doc][1][0][i][0])):
-                    print line
-        print "Done."
+                    print(line)
+        print("Done.")
 
 
 
-    def do_print(self,args):
+    def __do_print(self,args):
         "Prints document by its index (use info to print indexes)"
         
         lks= len(problems[self.doc][1][0])
@@ -166,20 +168,22 @@ class AuthorIdCLI(cmd.Cmd):
             try:
                 i=int(i)
             except ValueError:
-                print "error: invalid index has to be number",i
+                print("error: invalid index has to be number",i)
                 return
         
             if i+1 > lks:
-                print "===> Unknown document ({0})".format(i)
+                print("===> Unknown document ({0})".format(i-lks))
                 try:
-                    print u" ".join([x[0] for x in problems[self.doc][1][1][i-lks][1]])
+                    print(u"".join([x[0] for x in
+                        problems[self.doc][1][1][i-lks][1]]))
                 except IndexError:
-                    print "error: no document with that index",i
+                    print("error: no document with that index",i)
                     return
             else:
-                print "===> known document ({0})".format(i)
-                print u" ".join([x[0] for x in problems[self.doc][1][0][i][1]])
-        print "Done."
+                print("===> known document ({0})".format(i))
+                print(u"".join([x[0] for x in
+                            problems[self.doc][1][0][i][1]]))
+        print("Done.")
 
     def do_show(self,args):
         """Shows document in some representation
@@ -189,14 +193,13 @@ class AuthorIdCLI(cmd.Cmd):
         
         lks= len(problems[self.doc][1][0])
         args=self.parse(args)
-        print args
         if not len(args)>=1:
-            print "error: enough arguments"
+            print("error: enough arguments")
             return
         try:
             exec("f=docread.{0}".format(args[0]))
         except:
-            print "error: not representation available"
+            print("error: not representation available")
             return
         if len(args)==1:
             args=range(lks+1)
@@ -208,26 +211,26 @@ class AuthorIdCLI(cmd.Cmd):
             try:
                 i=int(i)
             except ValueError:
-                print "error: invalid index has to be number",i
+                print("error: invalid index has to be number",i)
                 return
         
             if i+1 > lks:
-                print "===> Unknown document ({0})".format(i)
+                print("===> Unknown document ({0})".format(i))
                 try:
-                    text=problems[self.doc][1][1][i-lks][1][1]
-                    doc=problems[self.doc][1][1][i-lks][1][0]
+                    doc=problems[self.doc]
+                    doc,text=docread.tag(doc[1][1][i-lks][0],doc[1][1][i-lks][1],opts.language)
                     rep=f(doc,text,sw=stopwords)
                     printrep(rep,self.max)
                 except IndexError:
-                    print "error: no document with that index",i
+                    print("error: no document with that index",i)
                     return
             else:
-                print "===> known document ({0})".format(i)
-                text=problems[self.doc][1][0][i][1][1]
-                doc=problems[self.doc][1][0][i][1][0]
+                print("===> known document ({0})".format(i))
+                doc=problems[self.doc]
+                doc,text=docread.tag(doc[1][0][i][0],doc[1][0][i][1],opts.language)
                 rep=f(doc,text,sw=stopwords)
                 printrep(rep,self.max)
-        print "Done."
+        print("Done.")
 
 
 
@@ -240,18 +243,18 @@ class AuthorIdCLI(cmd.Cmd):
         if len(args)==1:
             try:
                 self.doc=self.id2doc[args[0]]
-                print "Problem Id      : ", problems[self.doc][0]
-                print "Done"
+                print("Problem Id      : ", problems[self.doc][0])
+                print("Done")
             except KeyError:
-                print "error: id does not exists"
+                print("error: id does not exists")
         else:
-            print "error: too many ids"
+            print("error: too many ids")
 
     def do_reps(self, arg):
         'List availablre representations'
         for rep in docread.representations:
-            print rep[0]
-        print "Done."
+            print(rep[0])
+        print("Done.")
 
 
 
@@ -267,10 +270,11 @@ class AuthorIdCLI(cmd.Cmd):
 
 def printrep(c,nmost=1000):
     vals=c.most_common()[:nmost]
-    print "Total classes:", len(c)
-    print "Total mass   :", sum(c.values())
+    print("Total classes:", len(c))
+    print("Total mass   :", sum(c.values()))
     for i in range(len(vals)/5+1):
-        print " | ".join(["{0:<10}:{1:>3}".format(x[:10],v) for x,v in vals[(i*5):(i*5)+5]])
+        print(" | ".join(["{0:<10}:{1:>3}".format(x[:10],v) for x,v in
+            vals[(i*5):(i*5)+5]]))
 
 
 codes=docread.codes
@@ -286,9 +290,30 @@ if __name__ == "__main__":
             action="store", help="File with the truth answers")
     p.add_argument("SYS",default=None,nargs='?',
             action="store", help="File with the predicted answers")
-    p.add_argument("--stopwords", default="data/stopwords.txt",
+    p.add_argument("--cutoff",default=2,type=int,
+            action="store", dest="cutoff",
+            help="Minimum frequency [5]")
+    p.add_argument("--iters",default=35,type=int,
+            action="store", dest="iters",
+            help="Total iterations [35]")
+    p.add_argument("--impostors",default=None,
+            action="store", dest="impostors",
+            help="Directory of imposter per auhtor")
+    p.add_argument("--max",default=0,type=int,
+            action="store", dest="nmax",
+            help="Maximum number of problems to solve [All]")
+    p.add_argument("--nimpostors",default=8,type=int,
+            action="store", dest="nimpostors",
+            help="Total of imposter per auhtor [8]")
+    p.add_argument("--documents",default=1,type=int,
+            action="store", dest="ndocs",
+            help="Documents per author [1]")
+    p.add_argument("--percentage",default=.80,type=float,
+            action="store", dest="percentage",
+            help="Sampling percentage [.80]")
+    p.add_argument("--stopwords", default=None,
             action="store", dest="stopwords",
-            help="List of stop words [data/stopwords.txt]")
+            help="List of stop words [None, uses default]")
     p.add_argument("--language",default='all',
             action="store", dest="language",
             help="Language to process [all]")
@@ -301,14 +326,20 @@ if __name__ == "__main__":
             help="Verbose mode [Off]")
     opts = p.parse_args()
 
-    #if not opts.random:
-    #    random.seed(9111978)
+    # prepara función de verbose
+    if opts.verbose:
+        def verbose(*args,**kargs):
+            print(*args,**kargs)
+    else:   
+        verbose = lambda *a: None 
+    opts.dump=False
 
     # Managing configurations  --------------------------------------------
     # Parameters
     # Patterns for files
-    known_pattern=r'known.*\.txt'
-    unknown_pattern=r'unknown*.txt'
+    #
+    known_pattern=r'known.*\.txt$'
+    unknown_pattern=r'unknown*.txt$'
 
     dirname = opts.DIR
 
@@ -326,20 +357,50 @@ if __name__ == "__main__":
 
 
     # Loading stopwords if exits
+    #
+    # Loading stopwords if exits
+    stopwordspat="data/stopwords_{0}.txt"
     stopwords=[]
-    if os.path.exists(opts.stopwords):
-        verbose('Loading stopwords: ',opts.stopwords)
-        stopwords=docread.readstopwords(opts.stopwords)
+    if not opts.stopwords:
+        fstopwords=stopwordspat.format(docread.codes[opts.language]['stopwords'])
     else:
-        info('Stopwords file not found assuming, emtpy',opts.stopwords)
+        fstopwords.append(opts.stopwords)
+    if os.path.exists(fstopwords):
+        verbose('Loading stopwords: ',fstopwords)
+        stopwords=docread.readstopwords(fstopwords)
+    else:
+        info('Stopwords file not found assuming emtpy',opts.stopwords)
+
+  
+
 
     # Loading main files -------------------------------------------------
     # load problems or problem
     verbose('Loading files')
     problems=docread.problems(
-             docread.dirproblems(dirname,known_pattern,unknown_pattern,_ignore,
-                                 code=codes[opts.language][opts.genre]))
-        
+             docread.dirproblems(opts.DIR,known_pattern,unknown_pattern,_ignore,
+                                 code=docread.codes[opts.language][opts.genre]))
+    verbose('Finish loading files')
+    verbose('Total problems',len(problems))
+
+    # load impostors from directory
+    impostors=None
+    if opts.impostors:
+        impostors=[]
+        verbose('Loading impostors')
+        files  =[(i,x,os.path.join(opts.impostors,x)) for i,x in
+                                enumerate(os.listdir(opts.impostors))
+                                if x.endswith(".txt")]
+        random.shuffle(files)
+        for i,id,f in files:
+                impostors.append(
+                    (opts.impostors[-2:]+"__"+str(i),
+                    ([(f,docread.readdoc(f))],[])))
+    else:
+        verbose('Using problems as impostors')
+        impostors=problems
+    verbose('Total impostors',len(impostors))
+
     gs = docread.loadanswers(opts.GS,code=codes[opts.language][opts.genre])
     sy=None
     if opts.SYS:

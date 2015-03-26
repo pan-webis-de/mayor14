@@ -156,7 +156,6 @@ def hbc(example_vectors,unknown,nexamples,nks,opts,scith=0.1):
    
     sci=(k*np.max(d_is)/np.linalg.norm(x_0,ord=1)-1)/(k-1)
     identity=np.argmin(residuals)
-    print(identity,k)
     if sci < scith:
         return 0.0
     else:
@@ -201,7 +200,6 @@ def process_corpus(problems,impostor_problems,opts=default_opts,mode="test",sw=[
         docs_author=[]
         master_unknown={}
         full_voca={}
-        ks_=ks
         for filename,doc in ks:
             doc,text=docread.tag(filename,doc,opts.language)
             doc_author={}

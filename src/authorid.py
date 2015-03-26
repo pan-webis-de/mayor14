@@ -159,7 +159,7 @@ if __name__ == "__main__":
     if not opts.stopwords:
         fstopwords=stopwordspat.format(docread.codes[opts.language]['stopwords'])
     else:
-        stopwords.append(opts.stopwords)
+        fstopwords.append(opts.stopwords)
     if os.path.exists(fstopwords):
         verbose('Loading stopwords: ',fstopwords)
         stopwords=docread.readstopwords(fstopwords)
