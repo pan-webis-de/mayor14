@@ -151,15 +151,15 @@ if __name__ == "__main__":
                 _ignore.append(line.strip())
 
     # Loading language
-    with open("{0}/{1}".format(opts.DIR,'content.json')) as data_file:    
+    with open("{0}/{1}".format(opts.DIR,'contents.json')) as data_file:    
         jinfo = json.load(data_file)
-    if jinfo.language.startswith('Dutch'):
+    if jinfo['language'].startswith('Dutch'):
         opts.language="nl"
-    if jinfo.language.startswith('Espanish'):
+    if jinfo['language'].startswith('Spanish'):
         opts.language="es"
-    if jinfo.language.startswith('English'):
+    if jinfo['language'].startswith('English'):
         opts.language="en"
-    if jinfo.language.startswith('Greek'):
+    if jinfo['language'].startswith('Greek'):
         opts.language="gr"
 
     # Loading stopwords if exits
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     if not opts.stopwords:
         fstopwords=stopwordspat.format(docread.codes[opts.language]['stopwords'])
     else:
-        fstopwords.append(opts.stopwords)
+        fstopwords=opts.stopwords
     if os.path.exists(fstopwords):
         verbose('Loading stopwords: ',fstopwords)
         stopwords=docread.readstopwords(fstopwords)

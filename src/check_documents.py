@@ -28,6 +28,7 @@ import os
 import os.path
 import cmd
 import random
+import json
 from oct2py import octave
 octave.addpath('src/octave')
 
@@ -360,9 +361,6 @@ if __name__ == "__main__":
     p.add_argument("--stopwords", default=None,
             action="store", dest="stopwords",
             help="List of stop words [None, uses default]")
-    p.add_argument("--language",default='all',
-            action="store", dest="language",
-            help="Language to process [all]")
     p.add_argument("--genre",default='all',
             action="store", dest="genre",
             help="Genre to process [all]")
@@ -401,9 +399,19 @@ if __name__ == "__main__":
             for line in file:
                 _ignore.append(line.strip())
 
+    # Loading language
+    with open("{0}/{1}".format(opts.DIR,'contents.json')) as data_file:    
+        jinfo = json.load(data_file)
+    print(jinfo)
+    if jinfo.language.startswith('Dutch'):
+        opts.language="nl"
+    if jinfo.language.startswith('Espanish'):
+        opts.language="es"
+    if jinfo.language.startswith('English'):
+        opts.language="en"
+    if jinfo.language.startswith('Greek'):
+        opts.language="gr"
 
-    # Loading stopwords if exits
-    #
     # Loading stopwords if exits
     stopwordspat="data/stopwords_{0}.txt"
     stopwords=[]
@@ -416,9 +424,6 @@ if __name__ == "__main__":
         stopwords=docread.readstopwords(fstopwords)
     else:
         info('Stopwords file',fstopwords,' not found assuming emtpy',opts.stopwords)
-
-  
-
 
     # Loading main files -------------------------------------------------
     # load problems or problem
