@@ -51,11 +51,20 @@ class AuthorIdCLI(cmd.Cmd):
         self.id2doc = dict([(problem[0],i) for i,problem in enumerate(problems)])
 
     def do_next(self,args):
-        "Move to tne next document"
+        "Move to the next document"
         self.doc+=1
         if self.doc > len(problems):
             self.doc=0
         print("In problem:", problems[self.doc][0])
+
+    def do_prev(self,args):
+        "Move to the previous document"
+        self.doc-=1
+        if self.doc < 0:
+            self.doc=0
+        print("In problem:", problems[self.doc][0])
+
+
 
     def do_next_error(self,args):
         "Move to tne next document"
@@ -154,6 +163,43 @@ class AuthorIdCLI(cmd.Cmd):
                                     opts.GS,problems[self.doc][1][0][i][0])):
                     print(line)
         print("Done.")
+
+    def do_tag(self,args):
+        "Prints tags for document by its index (use info to print indexes)"
+        
+        lks= len(problems[self.doc][1][0])
+        args=self.parse(args)
+        if len(args)==0:
+            args=range(lks+1)
+        for i in args:
+            try:
+                i=int(i)
+            except ValueError:
+                print("error: invalid index has to be number",i)
+                return
+        
+            if i+1 > lks:
+                print("===> Unknown document ({0})".format(i))
+                try:
+                    doc=problems[self.doc]
+                    doc,text=docread.tag(doc[1][1][i-lks][0],doc[1][1][i-lks][1],opts.language)
+                    data = [ u"{0}/{1}".format(x,y) for x,y,z in 
+                                    doc]
+                    line = " ".join(data)
+                    print(line)
+                except IndexError:
+                    print("error: no document with that index",i)
+                    return
+            else:
+                print("===> known document ({0})".format(i))
+                doc=problems[self.doc]
+                doc,text=docread.tag(doc[1][0][i-lks][0],doc[1][0][i-lks][1],opts.language)
+                data = [ u"{0}/{1}".format(x,y) for x,y,z in 
+                                    doc]
+                line = " ".join(data)
+                print(line)
+            
+            print("Done.")
 
 
 
@@ -273,7 +319,7 @@ def printrep(c,nmost=1000):
     print("Total classes:", len(c))
     print("Total mass   :", sum(c.values()))
     for i in range(len(vals)/5+1):
-        print(" | ".join(["{0:<10}:{1:>3}".format(x[:10],v) for x,v in
+        print(u" | ".join([u"{0:<10}:{1:>3}".format(x[:10],v) for x,v in
             vals[(i*5):(i*5)+5]]))
 
 
@@ -364,12 +410,12 @@ if __name__ == "__main__":
     if not opts.stopwords:
         fstopwords=stopwordspat.format(docread.codes[opts.language]['stopwords'])
     else:
-        fstopwords.append(opts.stopwords)
+        fstopwords=opts.stopwords
     if os.path.exists(fstopwords):
         verbose('Loading stopwords: ',fstopwords)
         stopwords=docread.readstopwords(fstopwords)
     else:
-        info('Stopwords file not found assuming emtpy',opts.stopwords)
+        info('Stopwords file',fstopwords,' not found assuming emtpy',opts.stopwords)
 
   
 

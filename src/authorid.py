@@ -27,6 +27,7 @@ import sys
 import os
 import os.path
 import random
+import json
 # Local imports
 import docread
 import hbc
@@ -58,9 +59,6 @@ if __name__ == "__main__":
     p.add_argument("-m", "--mode",default='devel',
             action="store", dest="mode",
             help="test|train|devel [test]")
-    p.add_argument("--language",default='en',
-            action="store", dest="language",
-            help="Language to process [all]")
     p.add_argument("-r","--rep",default=['bow','bigram'],
             action="append", dest="reps",
             help="adds representation to process")
@@ -152,6 +150,17 @@ if __name__ == "__main__":
             for line in file:
                 _ignore.append(line.strip())
 
+    # Loading language
+    with open("{0}/{1}".format(opts.DIR,'content.json')) as data_file:    
+        jinfo = json.load(data_file)
+    if jinfo.language.startswith('Dutch'):
+        opts.language="nl"
+    if jinfo.language.startswith('Espanish'):
+        opts.language="es"
+    if jinfo.language.startswith('English'):
+        opts.language="en"
+    if jinfo.language.startswith('Greek'):
+        opts.language="gr"
 
     # Loading stopwords if exits
     stopwordspat="data/stopwords_{0}.txt"

@@ -118,9 +118,17 @@ def project_into_vectors(examples,full_voca,unknown,nks,reps,nmost=200):
             idf[id_]=np.log(1.0*abs(N)/abs(t))
 
         for i,example in enumerate(examples):
-            arr=[1.0*example[rep][k]*idf[k]/sum(example[rep].values())/nks for k in idx]
+            if sum(example[rep].values()) > 0:
+                arr=[1.0*example[rep][k]*idf[k]/sum(example[rep].values())/nks for k in idx]
+            else:
+                arr=[1.0*example[rep][k]*idf[k]/nks for k in idx]
             vectors[i].append(arr)
-        arr=[1.0*unknown[rep][k]*idf[k]/sum(unknown[rep].values()) for k in idx]
+
+        if sum(example[rep].values()) > 0:
+            arr=[1.0*unknown[rep][k]*idf[k]/sum(unknown[rep].values()) for k in idx]
+        else:
+            arr=[1.0*unknown[rep][k]*idf[k] for k in idx]
+
         uvec.append(arr)
     return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
 

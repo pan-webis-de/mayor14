@@ -253,7 +253,7 @@ def bigramlemma(doc,text,sw=[],cutoff=0):
     wds = [ z for x,y,z in doc]
     wds = preprocess(wds)
     bigram = zip(wds, wds[1:])
-    values=["{0} {1}".format(x,
+    values=[u"{0} {1}".format(x,
                                     y) for x, y in bigram]
     doc_ = Counter(values)
     postprocess(doc_)
@@ -263,7 +263,7 @@ def bigramlemma(doc,text,sw=[],cutoff=0):
 def bigram(doc,text,sw=[],cutoff=0):
     wds = [ x.lower() for x,y,z in doc]
     bigram = zip(wds, wds[1:])
-    values=["{0} {1}".format(x,
+    values=[u"{0} {1}".format(x,
                                     y) for x, y in bigram]
     doc_ = Counter(values)
     postprocess(doc_,cutoff=2)
@@ -273,7 +273,7 @@ def bigrampref(doc,text,sw=[],cutoff=0):
     wds = [ z[:5] for x,y,z in doc if x in sw]
     wds = preprocess(wds)
     bigram = zip(wds, wds[1:])
-    values=["{0} {1}".format(x[:5],
+    values=[u"{0} {1}".format(x[:5],
                                     y[:3]) for x, y in bigram]
     doc_ = Counter(values)
     postprocess(doc_,cutoff=cutoff)
@@ -283,7 +283,7 @@ def bigramsuf(doc,text,sw=[],cutoff=0):
     wds = [ z[5:] for x,y,z in doc if x in sw]
     wds = preprocess(wds)
     bigram = zip(wds, wds[1:])
-    values=["{0} {1}".format(x[-5:],
+    values=[u"{0} {1}".format(x[-5:],
                                     y[:3]) for x, y in bigram]
     doc_ = Counter(values)
     postprocess(doc_,cutoff=cutoff)
@@ -295,7 +295,7 @@ def trigram(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc]
     wds = preprocess(wds)
     tri = zip(wds, wds[1:], wds[2:])
-    values = ["{0} {1} {2}".format(x,
+    values = [u"{0} {1} {2}".format(x,
                                     y,
                                     z) for x, y,z in tri]
     doc_ = Counter(values)
@@ -308,7 +308,7 @@ def skipgram(doc,text,sw=[],skip=5,cutoff=0):
     doc_=Counter()
     for s in range(2,skip):
         skip_ = zip(wds, wds[s:])
-        values=["{0} {1}".format(x,
+        values=[u"{0} {1}".format(x,
                                     y) for x, y in skip_]
         doc_.update(values)
     postprocess(doc_,cutoff=cutoff)
@@ -320,7 +320,7 @@ def skipposgram(doc,text,sw=[],skip=5,cutoff=0):
     doc_=Counter()
     for s in range(2,skip):
         skip_ = zip(wds, pos[s:])
-        values=["{0} {1}".format(x,
+        values=[u"{0} {1}".format(x,
                                     y) for x, y in skip_]
         doc_.update(values)
     postprocess(doc_,cutoff=cutoff)
@@ -333,7 +333,7 @@ def gram3letter(doc,text,sw=[],ngram=5,cutoff=0):
     args=[]
     for n in range(3):
         args.append(text[n:])
-        pat.append('{{{0}}}'.format(n))
+        pat.append(u'{{{0}}}'.format(n))
     val= zip(*args)
     values = ["".join(pat).format(*v) for v in val]
     doc_.update(values)
@@ -346,7 +346,7 @@ def gram8letter(doc,text,sw=[],ngram=5,cutoff=0):
     args=[]
     for n in range(8):
         args.append(text[n:])
-        pat.append('{{{0}}}'.format(n))
+        pat.append(u'{{{0}}}'.format(n))
     val= zip(*args)
     values = ["".join(pat).format(*v) for v in val]
     doc_.update(values)
@@ -362,7 +362,7 @@ def ngramword(doc,text,sw=[],ngram=5,cutoff=0):
         pat=[]
         for j in range(n+1):
             args.append(pos[j:])
-            pat.append('{{{0}}}'.format(j))
+            pat.append('u{{{0}}}'.format(j))
         val= zip(*args)
         values = [" ".join(pat).format(*v) for v in val]
         doc_.update(values)
@@ -378,7 +378,7 @@ def ngrampos(doc,text,sw=[],ngram=5,cutoff=0):
         pat=[]
         for j in range(n+1):
             args.append(pos[j:])
-            pat.append('{{{0}}}'.format(j))
+            pat.append('u{{{0}}}'.format(j))
         val= zip(*args)
         values = [" ".join(pat).format(*v) for v in val]
         doc_.update(values)
@@ -394,7 +394,7 @@ def ngramlemma(doc,text,sw=[],ngram=5,cutoff=0):
         pat=[]
         for j in range(n+1):
             args.append(pos[j:])
-            pat.append('{{{0}}}'.format(j))
+            pat.append('u{{{0}}}'.format(j))
         val= zip(*args)
         values = [" ".join(pat).format(*v) for v in val]
         doc_.update(values)
@@ -420,11 +420,7 @@ def tag(tag,doc,lang='en',cutoff=0):
     try:
         return tagged[tag]
     except KeyError:
-        if lang.startswith('en'):
-            tagged[tag]=fulltagger.tag(doc)
-        elif lang.startswith('es'):
-            tagged[tag]=fulltagger_es.tag(doc,cutoff=cutoff)
-        return tagged[tag]
+        return None,
 
 
 
@@ -528,7 +524,12 @@ def readdoc(filename):
                     tags.append((bits[0],bits[1],"NONE"))
             else:
                 tags.append(tuple(bits))
-        tagged[filename]=(tags[:1500],ff.encode('utf-8'))
+        tagged[filename]=(tags,ff.encode('utf-8'))
+    else:
+        tags=[]
+        for w in ff.split():
+            tags.append((w,None,None))
+        tagged[filename]=(tags,ff.encode('utf-8'))
     return ff
 
 
