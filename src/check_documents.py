@@ -403,13 +403,13 @@ if __name__ == "__main__":
     with open("{0}/{1}".format(opts.DIR,'contents.json')) as data_file:    
         jinfo = json.load(data_file)
     print(jinfo)
-    if jinfo.language.startswith('Dutch'):
+    if jinfo['language'].startswith('Dutch'):
         opts.language="nl"
-    if jinfo.language.startswith('Espanish'):
+    if jinfo['language'].startswith('Espanish'):
         opts.language="es"
-    if jinfo.language.startswith('English'):
+    if jinfo['language'].startswith('English'):
         opts.language="en"
-    if jinfo.language.startswith('Greek'):
+    if jinfo['language'].startswith('Greek'):
         opts.language="gr"
 
     # Loading stopwords if exits
