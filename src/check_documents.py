@@ -111,9 +111,9 @@ class AuthorIdCLI(cmd.Cmd):
         "Predicts the answer"
         args=self.parse(args)
         if len(args)==0:
-            reps=['bow','bigram']
+            reps=list(set(opts.reps))
         else:
-            reps=args
+            reps=list(set(opts.reps+args))
         opts.reps=reps
         hbc.process_corpus([problems[self.doc]],
                 impostors,opts=opts,sw=stopwords,verbose=verbose)
@@ -340,6 +340,9 @@ if __name__ == "__main__":
     p.add_argument("--cutoff",default=2,type=int,
             action="store", dest="cutoff",
             help="Minimum frequency [5]")
+    p.add_argument("-r","--rep",default=['bow','bigram'],
+            action="append", dest="reps",
+            help="adds representation to process")
     p.add_argument("--iters",default=35,type=int,
             action="store", dest="iters",
             help="Total iterations [35]")
@@ -402,7 +405,6 @@ if __name__ == "__main__":
     # Loading language
     with open("{0}/{1}".format(opts.DIR,'contents.json')) as data_file:    
         jinfo = json.load(data_file)
-    print(jinfo)
     if jinfo['language'].startswith('Dutch'):
         opts.language="nl"
     if jinfo['language'].startswith('Espanish'):
