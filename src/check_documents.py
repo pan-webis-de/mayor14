@@ -266,7 +266,7 @@ class AuthorIdCLI(cmd.Cmd):
                 try:
                     doc=problems[self.doc]
                     doc,text=docread.tag(doc[1][1][i-lks][0],doc[1][1][i-lks][1],opts.language)
-                    rep=f(doc,text,sw=stopwords)
+                    rep=f(doc,text,sw=stopwords,cutoff=opts.cutoff)
                     printrep(rep,self.max)
                 except IndexError:
                     print("error: no document with that index",i)

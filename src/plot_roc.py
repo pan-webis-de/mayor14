@@ -25,9 +25,11 @@ Plots several ROCs given a configuration file
 
 import sys
 import argparse
-import matplotlib.pyplot as plt
 import numpy as np
 import auceval
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 
 def read_config_file(config):
     """
@@ -35,11 +37,11 @@ def read_config_file(config):
     configuration file.
 
     Format: 
-    answer_filepath1;plot_label1
-    answer_filepath2;plot_label2
-    answer_filepath3;plot_label3
+    answer_filepath1:plot_label1
+    answer_filepath2:plot_label2
+    answer_filepath3:plot_label3
     ..
-    answer_filepathN;plot_labelN
+    answer_filepathN:plot_labelN
     --
     groundtruth_filepath
     """
