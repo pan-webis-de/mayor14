@@ -275,7 +275,7 @@ class AuthorIdCLI(cmd.Cmd):
                 print("===> known document ({0})".format(i))
                 doc=problems[self.doc]
                 doc,text=docread.tag(doc[1][0][i][0],doc[1][0][i][1],opts.language)
-                rep=f(doc,text,sw=stopwords)
+                rep=f(doc,text,sw=stopwords,cutoff=opts.cutoff)
                 printrep(rep,self.max)
         print("Done.")
 
