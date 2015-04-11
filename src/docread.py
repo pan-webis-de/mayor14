@@ -62,35 +62,6 @@ rdecimal=re.compile(r'\d+(\.|,)\d+$',re.UNICODE)
 
 tagged={}
 
-# Codes for problems
-codes={
-    'en': {
-        'essays': re.compile('^[^\w]*EE'),
-        'novels': re.compile('^[^\w]*EN'),
-        'all': re.compile('^[^\w]*E'),
-        'stopwords': 'english'
-        },
-    'nl': {
-        'essays': re.compile('^[^\w]*DE'),
-        'reviews': re.compile('^[^\w]*DR'),
-        'all': re.compile('^[^\w]*D'),
-        'stopwords': 'dutch'
-        },
-    'gr': {
-        'news': re.compile('^[^\w]*GR'),
-        'all': re.compile('^[^\w]*GR'),
-        'stopwords': 'greek'
-        },
-    'es': {
-        'news': re.compile('^[^\w]*SP'),
-        'all': re.compile('^[^\w]*SP'),
-        'stopwords': 'spanish'
-        },
-    'all': {
-        'all': re.compile('.*'),
-        'stopwords': 'all'
-    }
-}
 
 def check(exp,doc,doc_,pref):
     wds = [ pref+x for x,y,z in doc if exp.match(x)]

@@ -28,10 +28,11 @@ import os
 import os.path
 import random
 import json
+from oct2py import octave
 # Local imports
 import docread
 import hbc
-from oct2py import octave
+import config
 
 octave.addpath('src/octave')
 octave.timeout=60
@@ -68,6 +69,9 @@ if __name__ == "__main__":
     p.add_argument("--iters",default=35,type=int,
             action="store", dest="iters",
             help="Total iterations [35]")
+    p.add_argument("--lang",default=None,
+            action="store", dest="lang",
+            help="Language to process")
     p.add_argument("--impostors",default=None,
             action="store", dest="impostors",
             help="Directory of imposter per auhtor")
@@ -151,22 +155,23 @@ if __name__ == "__main__":
                 _ignore.append(line.strip())
 
     # Loading language
-    with open("{0}/{1}".format(opts.DIR,'contents.json')) as data_file:    
-        jinfo = json.load(data_file)
-    if jinfo['language'].startswith('Dutch'):
-        opts.language="nl"
-    if jinfo['language'].startswith('Spanish'):
-        opts.language="es"
-    if jinfo['language'].startswith('English'):
-        opts.language="en"
-    if jinfo['language'].startswith('Greek'):
-        opts.language="gr"
+    if not opts.lang:
+        with open("{0}/{1}".format(opts.DIR,'contents.json')) as data_file:    
+            jinfo = json.load(data_file)
+        if jinfo['language'].startswith('Dutch'):
+            opts.language="nl"
+        if jinfo['language'].startswith('Spanish'):
+            opts.language="es"
+        if jinfo['language'].startswith('English'):
+            opts.language="en"
+        if jinfo['language'].startswith('Greek'):
+            opts.language="gr"
 
     # Loading stopwords if exits
     stopwordspat="data/stopwords_{0}.txt"
     stopwords=[]
     if not opts.stopwords:
-        fstopwords=stopwordspat.format(docread.codes[opts.language]['stopwords'])
+        fstopwords=stopwordspat.format(config.codes[opts.language]['stopwords'])
     else:
         fstopwords=opts.stopwords
     if os.path.exists(fstopwords):
@@ -180,7 +185,7 @@ if __name__ == "__main__":
     verbose('Loading files')
     problems=docread.problems(
              docread.dirproblems(opts.DIR,known_pattern,unknown_pattern,_ignore,
-                                 code=docread.codes[opts.language][opts.genre]))
+                                 code=config.codes[opts.language][opts.genre]))
     verbose('Finish loading files')
     verbose('Total problems',len(problems))
 
@@ -210,7 +215,7 @@ if __name__ == "__main__":
             answers_file="{0}/{1}".format(opts.DIR,opts.answers)
         verbose('Loading answer file: {0}'.format(answers_file))
         answers = docread.loadanswers(answers_file,_ignore,
-                code=docread.codes[opts.language][opts.genre])
+                code=config.codes[opts.language][opts.genre])
 
         # Checking for consistency
         if not len(problems) == len(answers):
