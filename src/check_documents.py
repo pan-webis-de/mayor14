@@ -29,6 +29,7 @@ import os.path
 import cmd
 import random
 import json
+import config
 from oct2py import octave
 octave.addpath('src/octave')
 
@@ -324,7 +325,6 @@ def printrep(c,nmost=1000):
             vals[(i*5):(i*5)+5]]))
 
 
-codes=docread.codes
 
 # MAIN program
 if __name__ == "__main__":
@@ -418,7 +418,7 @@ if __name__ == "__main__":
     stopwordspat="data/stopwords_{0}.txt"
     stopwords=[]
     if not opts.stopwords:
-        fstopwords=stopwordspat.format(docread.codes[opts.language]['stopwords'])
+        fstopwords=stopwordspat.format(config.codes[opts.language]['stopwords'])
     else:
         fstopwords=opts.stopwords
     if os.path.exists(fstopwords):
@@ -432,7 +432,7 @@ if __name__ == "__main__":
     verbose('Loading files')
     problems=docread.problems(
              docread.dirproblems(opts.DIR,known_pattern,unknown_pattern,_ignore,
-                                 code=docread.codes[opts.language][opts.genre]))
+                                 code=config.codes[opts.language][opts.genre]))
     verbose('Finish loading files')
     verbose('Total problems',len(problems))
 
@@ -454,10 +454,10 @@ if __name__ == "__main__":
         impostors=problems
     verbose('Total impostors',len(impostors))
 
-    gs = docread.loadanswers(opts.GS,code=codes[opts.language][opts.genre])
+    gs = docread.loadanswers(opts.GS,code=config.codes[opts.language][opts.genre])
     sy=None
     if opts.SYS:
-        sy = docread.loadanswers(opts.SYS,code=codes[opts.language][opts.genre])
+        sy = docread.loadanswers(opts.SYS,code=config.codes[opts.language][opts.genre])
   
 
     console=AuthorIdCLI()
