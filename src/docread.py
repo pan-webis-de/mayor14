@@ -481,7 +481,7 @@ def readdoc(filename):
                 ff= fh.read()
         except UnicodeDecodeError:
             return ""
-    if os.path.exists(filename+"_tag"):
+    if os.path.exists(filename+"txt_tag"):
         tags=[]
         for line in codecs.open(filename+"_tag",'r','utf-8'):
             line=line.strip()
