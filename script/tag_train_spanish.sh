@@ -1,1 +1,1 @@
-java -classpath lib/*:src/java/ EnglishTagger $1
+java -classpath lib/*:src/java/ SpanishTagger $1

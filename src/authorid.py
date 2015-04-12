@@ -51,7 +51,7 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser("Author identification")
     p.add_argument("DIR",default=None,
             action="store", help="Directory with examples")
-    p.add_argument("Answers",default=None,
+    p.add_argument("Answers",default=None, nargs='?',
             action="store", help="File with the key answers")
     p.add_argument('--version', action='version', version='%(prog)s 0.2')
     p.add_argument("-o", "--output",default=None,
@@ -229,16 +229,8 @@ if __name__ == "__main__":
       
     # TRAINING - Save examples
     elif opts.mode.startswith("train"):
-        import pickle
-        
-        stream_model = pickle.dumps(impostors)
-        verbose("Saving model into ",opts.model)
-        with open(opts.model,"w") as modelf:
-            modelf.write(stream_model)
+        verbose("Nothing to do ",opts.model)
 
     elif opts.mode.startswith("test"):
-        import pickle
-        
-        impostors = pickle.load(open(opts.model))
-        verbose("Reading model",opts.model)
+        verbose("Labeling corpus ",opts.model)
         hbc.process_corpus(problems,impostors,opts,"test",sw=stopwords,verbose=verbose)
