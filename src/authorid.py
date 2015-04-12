@@ -70,7 +70,7 @@ if __name__ == "__main__":
             action="store", dest="iters",
             help="Total iterations [35]")
     p.add_argument("--lang",default=None,
-            action="store", dest="lang",
+            action="store", dest="language",
             help="Language to process")
     p.add_argument("--impostors",default=None,
             action="store", dest="impostors",
@@ -155,7 +155,7 @@ if __name__ == "__main__":
                 _ignore.append(line.strip())
 
     # Loading language
-    if not opts.lang:
+    if not opts.language:
         with open("{0}/{1}".format(opts.DIR,'contents.json')) as data_file:    
             jinfo = json.load(data_file)
         if jinfo['language'].startswith('Dutch'):
