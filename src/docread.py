@@ -50,7 +50,7 @@ renterer =re.compile('\r?\n',re.UNICODE)
 wordpunct=re.compile(u'\W+$',re.UNICODE)
 rcomposed=re.compile(u'.+\W+.+',re.UNICODE)
 rwordcomposed=re.compile(u'\w+\W+\w+',re.UNICODE)
-rcomma=re.compile(r',',re.UNICODE)
+rcoma=re.compile(r',',re.UNICODE)
 rdot=re.compile(r'\.',re.UNICODE)
 rdeli=re.compile(r'[.?!]',re.UNICODE)
 rspc=re.compile(r'[/]',re.UNICODE)
@@ -62,6 +62,35 @@ rdecimal=re.compile(r'\d+(\.|,)\d+$',re.UNICODE)
 
 tagged={}
 
+# Codes for problems
+codes={
+    'en': {
+        'essays': re.compile('^[^\w]*EE'),
+        'novels': re.compile('^[^\w]*EN'),
+        'all': re.compile('^[^\w]*E'),
+        'stopwords': 'english'
+        },
+    'nl': {
+        'essays': re.compile('^[^\w]*DE'),
+        'reviews': re.compile('^[^\w]*DR'),
+        'all': re.compile('^[^\w]*D'),
+        'stopwords': 'dutch'
+        },
+    'gr': {
+        'news': re.compile('^[^\w]*GR'),
+        'all': re.compile('^[^\w]*GR'),
+        'stopwords': 'greek'
+        },
+    'es': {
+        'news': re.compile('^[^\w]*SP'),
+        'all': re.compile('^[^\w]*SP'),
+        'stopwords': 'spanish'
+        },
+    'all': {
+        'all': re.compile('.*'),
+        'stopwords': 'all'
+    }
+}
 
 def check(exp,doc,doc_,pref):
     wds = [ pref+x for x,y,z in doc if exp.match(x)]
@@ -127,7 +156,7 @@ def pos(doc,text,sw=[],cutoff=0):
     return doc
 
 def poslemma(doc,text,sw=[],cutoff=0):
-    wds = [ u"{0}_{1}".format(y,z) for x,y,z in doc if z not in sw]
+    wds = [ "{0}_{1}".format(y,z) for x,y,z in doc if z not in sw]
     doc_=Counter([x for x in wds])
     postprocess(doc_,cutoff=cutoff)
     return doc_
@@ -154,13 +183,13 @@ def sufix(doc,text,sw=[],cutoff=0):
 
 
 def letters(doc,text,sw=[],cutoff=0):
-    wds = u"".join([ x.lower() for x,y,z in doc if x in sw])
+    wds = "".join([ x.lower() for x,y,z in doc if x in sw])
     doc_=Counter(wds)
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
-def comma(doc,text,sw=[],cutoff=0):
-    wds = [ x for x,y,z in doc if rcomma.search(x)]
+def coma(doc,text,sw=[],cutoff=0):
+    wds = [ x for x,y,z in doc if rcoma.search(x)]
     values=[x[:-1] for x in wds]
     doc_=Counter(values)
     postprocess(doc_,sw=sw,cutoff=cutoff)
@@ -306,7 +335,7 @@ def gram3letter(doc,text,sw=[],ngram=5,cutoff=0):
         args.append(text[n:])
         pat.append(u'{{{0}}}'.format(n))
     val= zip(*args)
-    values = [u"".join(pat).format(*v) for v in val]
+    values = ["".join(pat).format(*v) for v in val]
     doc_.update(values)
     postprocess(doc_,cutoff=cutoff)
     return doc_
@@ -319,7 +348,7 @@ def gram8letter(doc,text,sw=[],ngram=5,cutoff=0):
         args.append(text[n:])
         pat.append(u'{{{0}}}'.format(n))
     val= zip(*args)
-    values = [u"".join(pat).format(*v) for v in val]
+    values = ["".join(pat).format(*v) for v in val]
     doc_.update(values)
     postprocess(doc_,cutoff=cutoff)
     return doc_
@@ -335,7 +364,7 @@ def ngramword(doc,text,sw=[],ngram=5,cutoff=0):
             args.append(pos[j:])
             pat.append('u{{{0}}}'.format(j))
         val= zip(*args)
-        values = [u" ".join(pat).format(*v) for v in val]
+        values = [" ".join(pat).format(*v) for v in val]
         doc_.update(values)
     postprocess(doc_,cutoff=cutoff)
     return doc_
@@ -351,7 +380,7 @@ def ngrampos(doc,text,sw=[],ngram=5,cutoff=0):
             args.append(pos[j:])
             pat.append('u{{{0}}}'.format(j))
         val= zip(*args)
-        values = [u" ".join(pat).format(*v) for v in val]
+        values = [" ".join(pat).format(*v) for v in val]
         doc_.update(values)
 
     postprocess(doc_,cutoff=cutoff)
@@ -367,7 +396,7 @@ def ngramlemma(doc,text,sw=[],ngram=5,cutoff=0):
             args.append(pos[j:])
             pat.append('u{{{0}}}'.format(j))
         val= zip(*args)
-        values = [u" ".join(pat).format(*v) for v in val]
+        values = [" ".join(pat).format(*v) for v in val]
         doc_.update(values)
 
     postprocess(doc_,cutoff=cutoff)
@@ -399,12 +428,12 @@ representations=[
     ('letters',letters),   #X
     ('bigram',bigram),
     ('bigrampref',bigrampref),
-    ('bigramsuf',bigramsuf),
+    ('bigramsug',bigramsuf),
     ('trigram',trigram), 
     ('punct',punct), 
     ('stopwords',stopwords), 
     ('numbers',numbers),
-    ('comma',comma),
+    ('coma',coma),
     ('skipgram',skipgram),
     ('skipposgram',skipposgram),
     ('dot',dot),           
@@ -481,9 +510,9 @@ def readdoc(filename):
                 ff= fh.read()
         except UnicodeDecodeError:
             return ""
-    if os.path.exists(filename+"txt_tag"):
+    if os.path.exists(filename+"_tag"):
         tags=[]
-        for line in codecs.open(filename+"_tag",'r','utf-8'):
+        for line in open(filename+"_tag"):
             line=line.strip()
             bits=line.split()
             if len(bits)==2:
@@ -495,12 +524,12 @@ def readdoc(filename):
                     tags.append((bits[0],bits[1],"NONE"))
             else:
                 tags.append(tuple(bits))
-        tagged[filename]=(tags,ff)
+        tagged[filename]=(tags,ff.encode('utf-8'))
     else:
         tags=[]
         for w in ff.split():
             tags.append((w,None,None))
-        tagged[filename]=(tags,ff)
+        tagged[filename]=(tags,ff.encode('utf-8'))
     return ff
 
 
