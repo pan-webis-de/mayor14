@@ -107,18 +107,16 @@ def project_into_vectors(examples,full_voca,unknown,nks,reps,nmost=200):
             if sum(example[rep].values()) > 0:
                 arr=[1.0*example[rep][k]*idf[k]/sum(example[rep].values())/nks for k in idx]
             else:
-                arr=[0.0 for k in idx]
+                arr=[1.0*example[rep][k]*idf[k]/nks for k in idx]
             vectors[i].append(arr)
 
         if sum(unknown[rep].values()) > 0:
             arr=[1.0*unknown[rep][k]*idf[k]/sum(unknown[rep].values()) for k in idx]
         else:
-            arr=[0.0 for k in idx]
+            arr=[1.0*unknown[rep][k]*idf[k] for k in idx]
 
         uvec.append(arr)
     return [list(itertools.chain(*vec)) for vec in vectors], list(itertools.chain(*uvec))
-
-codes=docread.codes
 
 def hbc(example_vectors,unknown,nexamples,nks,opts,scith=0.1):
     # Creating matrix A

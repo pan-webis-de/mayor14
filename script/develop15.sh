@@ -1,7 +1,6 @@
 #!/bin/bash
 
 traindir=
-lang=all
 genre=all
 model=.
 
@@ -14,12 +13,9 @@ while getopts i:l:g:o: opt; do
 	o)
 		outdir=$OPTARG
 		;;
-	l)
-		lang=$OPTARG
-		;;
 	esac
 done
 
 echo "Developing"
-python src/authorid.py -m devel --language ${lang} -v -r bigrampref -r bigramsuf -r bigram -r bow -r trigram -r prefix -r sufix -r punct   ${traindir} ${traindir}/truth.txt > ${traindir}/answers.txt
+python src/authorid.py -m devel -v -r bigrampref -r bigramsuf -r bigram -r bow -r trigram -r prefix -r sufix -r punct   ${traindir} ${traindir}/truth.txt > ${traindir}/answers.txt
 

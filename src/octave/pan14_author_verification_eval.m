@@ -52,7 +52,6 @@ if size(C,1)>0
 else disp(['The given input file (',IN,') does not exist'])
     return;
 end
-
 % Extracting Problem IDs, True answers, and Given answers
 % All unanswered problems are assigned the value 0.5
 PROBLEMS=[];
@@ -64,7 +63,7 @@ for i=1:size(CODES,1)
         PATTERN=CODES{i,:};
         I=strfind(GTR,PATTERN);
         for j=1:size(I,2)
-            ProblemID=GTR(I(j):I(j)+4);
+            ProblemID=GTR(I(j):I(j)+5);
             TrueAnswer=GTR(I(j)+6);
             PROBLEMS=[PROBLEMS;ProblemID];
             if TrueAnswer=='Y'
@@ -75,10 +74,10 @@ for i=1:size(CODES,1)
             if size(IA,2)>0
                 IE=find(ANS(IA(1):end)==10);
                 if size(IE,2)>0
-                    GivenAnswer=ANS(IA(1)+6:IA(1)+IE(1)-1)';
+                    GivenAnswer=ANS(IA(1)+6:IA(1)+IE(1)-1);
                 end
                 if size(IE,2)==0
-                    GivenAnswer=ANS(IA(1)+6:end)';
+                    GivenAnswer=ANS(IA(1)+6:end);
                 end
             else GivenAnswer='0.5';
             end
