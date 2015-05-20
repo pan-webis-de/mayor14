@@ -59,7 +59,7 @@ if __name__ == "__main__":
     p.add_argument("-m", "--mode",default='devel',
             action="store", dest="mode",
             help="test|train|devel [test]")
-    p.add_argument("-r","--rep",default=['bow','bigram'],
+    p.add_argument("-r","--rep",default=['bow'],
             action="append", dest="reps",
             help="adds representation to process")
     p.add_argument("--cutoff",default=2,type=int,

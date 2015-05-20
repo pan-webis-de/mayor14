@@ -65,26 +65,12 @@ def get_master_impostors(id,nknown,problems,opts=default_opts,sw=[],mode="test")
             ids_candidates.append(i)
     pos=range(len(ids_candidates))
     random.shuffle(pos)
+
    
+    master_impostors=[]
     for i in range(opts.nimpostors):
         for j in range(opts.ndocs):
-            id_=pos[i*opts.nimpostors+j]
-            master_candidate={}
-            for k in range(nknown):
-                doc=problems[ids_candidates[id_]+k]
-                doc,text=docread.tag(doc[1][0][0][0],doc[1][0][0][1],opts.language)
-                for repname in opts.reps:
-                    try:
-                        exec("f=docread.{0}".format(repname))
-                        rep=f(doc,text,cutoff=opts.cutoff,sw=sw)
-                    except:
-                        rep=Counter()
-                    try:
-                        master_candidate[repname].update(rep)
-                    except KeyError:
-                        master_candidate[repname]=Counter(rep)
-
-            master_impostors.append(master_candidate)
+            master_impostors.append(pos[i*opts.nimpostors+j])
     return master_impostors
  
 
@@ -208,73 +194,33 @@ def process_corpus(problems,impostor_problems,opts=default_opts,mode="test",sw=[
         docs_author=[]
         master_unknown={}
         full_voca={}
-        for filename,doc in ks:
-            doc,text=docread.tag(filename,doc,opts.language)
-            doc_author={}
-            for repname in opts.reps:
-                try:
-                    exec("f=docread.{0}".format(repname))
-                    rep=f(doc,text,cutoff=opts.cutoff,sw=sw)
-                except:
-                    rep=Counter()
-                doc_author[repname]=rep
-                try:
-                    master_author[repname].update(rep)
-                except KeyError:
-                    master_author[repname]=Counter(rep)
-                try:
-                    full_voca[repname].update(rep)
-                except KeyError:
-                    full_voca[repname]=Counter(rep)
-            docs_author.append(doc_author)
 
+        masters=[]
+    
         for filename,doc in uks:
-             doc,text=docread.tag(filename,doc,opts.language)
-             for repname in opts.reps:
-                try:
-                    exec("f=docread.{0}".format(repname))
-                    rep=f(doc,text,sw=sw,cutoff=opts.cutoff)
-                except:
-                    rep=Counter()
-                try:
-                    master_unknown[repname].update(rep)
-                except KeyError:
-                    master_unknown[repname]=Counter(rep)
-                try:
-                    full_voca[repname].update(rep)
-                except KeyError:
-                    full_voca[repname]=Counter(rep)
-
-        results=[]
-
+            masters.append(docread.tag(filename,doc,opts.language))
         verbose("Master unknown",id,[(k,len(v)) for k,v in
-                master_unknown.iteritems()])
-        verbose("Master known",id,[(k,len(v)) for k,v in
-                master_author.iteritems()])
- 
-        verbose('Total impostors ',opts.nimpostors*opts.ndocs)
-        sample_unknown=muestreo(master_unknown,reps=opts.reps)
+                masters])
+     
+        for filename,doc in ks:
+            masters.append(docread.tag(filename,doc,opts.language))
 
-        examples_=[]
-        for j in range(opts.ndocs):
-            examples_.append(muestreo(master_author,opts.reps,percentage=opts.percentage))
-        verbose('Total known information',len(examples_))
+        verbose("Master known",id,[(k,len(v)) for k,v in
+            masters[:1]])
 
         for iter in range(opts.iters):
             #Extracting Examples
-            examples= []
+            masters_=[x for x in masters]
 
             # Getting impostors
             master_impostors=get_master_impostors(id,len(ks),impostor_problems,opts=opts,mode=mode,sw=sw)
+            masters_=masters_.extend(masters)
 
-            # Sample impostors
-            for i,master_impostor in enumerate(master_impostors):
-                    examples.append(muestreo(master_impostor,opts.reps,percentage=opts.percentage))
 
-            for e_ in examples_:
-                examples.append(e_)
+            for repname in opts.reps:
+                exec("f=docread.{0}".format(repname))
+                rep=f(masters,cutoff=opts.cutoff,sw=sw)
 
-        
             # Sparce algorithm
             example_vectors,unknown=project_into_vectors(examples,full_voca,sample_unknown,len(ks),opts.reps)
 

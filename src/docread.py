@@ -122,11 +122,9 @@ def capital(doc,text,sw=[],cutoff=0):
     postprocess(doc_)
     return doc_
 
-def bow(doc,text,sw=[],cutoff=0):
-    wds = [ x.lower() for x,y,z in doc if z not in sw]
-    doc_=Counter([x for x in wds])
-    postprocess(doc_,sw=sw,cutoff=cutoff)
-    return doc_
+def bow(docs,sw=[],cutoff=0):
+    print(docs)
+    return None
 
 def hist_bow(doc,text,sw=[],cutoff=0):
     wds = [ x.lower() for x,y,z in doc if z not in sw]
