@@ -22,6 +22,7 @@
 from __future__ import print_function
 
 import random
+import scipy
 import docread
 import numpy as np
 import itertools
@@ -70,7 +71,9 @@ def get_master_impostors(id,nknown,problems,opts=default_opts,sw=[],mode="test")
     master_impostors=[]
     for i in range(opts.nimpostors):
         for j in range(opts.ndocs):
-            master_impostors.append(pos[i*opts.nimpostors+j])
+            filename,doc=problems[pos[i*opts.nimpostors+j]][1][0][0]
+            master_impostors.append(docread.tag(filename,doc,opts.language))
+            
     return master_impostors
  
 
@@ -145,7 +148,7 @@ def hbc(example_vectors,unknown,nexamples,nks,opts,scith=0.1):
         r_is=y_-A_*d_i
         r_i=np.linalg.norm(r_is,ord=2)
         residuals.append(r_i)
-   
+
     sci=(k*np.max(d_is)/np.linalg.norm(x_0,ord=1)-1)/(k-1)
     identity=np.argmin(residuals)
     if sci < scith:
@@ -197,32 +200,31 @@ def process_corpus(problems,impostor_problems,opts=default_opts,mode="test",sw=[
     
         for filename,doc in uks:
             masters.append(docread.tag(filename,doc,opts.language))
-        verbose("Master unknown",id,[(k,len(v)) for k,v in
-                masters])
-     
+        
         for filename,doc in ks:
             masters.append(docread.tag(filename,doc,opts.language))
 
-        verbose("Master known",id,[(k,len(v)) for k,v in
-            masters[:1]])
-
+        results=[]
         for iter in range(opts.iters):
             #Extracting Examples
             masters_=[x for x in masters]
 
             # Getting impostors
-            master_impostors=get_master_impostors(id,len(ks),impostor_problems,opts=opts,mode=mode,sw=sw)
-            masters_=masters_.extend(masters)
+            master_impostors=get_master_impostors(id,opts.ndocs,impostor_problems,opts=opts,mode=mode,sw=sw)
+            masters_.extend(master_impostors)
 
-
+            reps=[]
             for repname in opts.reps:
                 exec("f=docread.{0}".format(repname))
-                rep=f(masters,cutoff=opts.cutoff,sw=sw)
+                rep=f(masters_,cutoff=opts.cutoff,sw=sw)
+                if type(rep) is scipy.sparse.csr.csr_matrix:
+                    rep = rep.toarray()
+                reps.append(rep)
+            data=np.hstack(reps)
+            unknown=data[0,:]
+            data=data[1:,:]
 
-            # Sparce algorithm
-            example_vectors,unknown=project_into_vectors(examples,full_voca,sample_unknown,len(ks),opts.reps)
-
-            result=try_hbc(example_vectors,unknown,len(examples),len(ks),opts)
+            result=try_hbc(data,unknown,len(masters_)-1,opts.ndocs,opts)
             results.append(result)
 
             if opts.dump:

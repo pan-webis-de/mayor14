@@ -60,7 +60,7 @@ if __name__ == "__main__":
     p.add_argument("-m", "--mode",default='devel',
             action="store", dest="mode",
             help="test|train|devel [test]")
-    p.add_argument("-r","--rep",default=['bow'],
+    p.add_argument("-r","--rep",default=['bow','bigram'],
             action="append", dest="reps",
             help="adds representation to process")
     p.add_argument("--cutoff",default=2,type=int,
@@ -86,7 +86,7 @@ if __name__ == "__main__":
             help="Documents per author [1]")
     p.add_argument("--percentage",default=.80,type=float,
             action="store", dest="percentage",
-            help="Sampling percentage [.60]")
+            help="Sampling percentage [.80]")
     p.add_argument("--model",default=".",
             action="store", dest="model",
             help="Model to save training or to test with [None]")

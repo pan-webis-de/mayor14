@@ -34,6 +34,8 @@ import os.path
 import codecs
 from collections import Counter
 
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 spaces=re.compile('\W+',re.UNICODE)
 spaces_=re.compile('[ \t]+',re.UNICODE)
@@ -92,15 +94,26 @@ codes={
     }
 }
 
+def bow(docs,sw=None,cutoff=None):
+    docs_=[x[1] for x in docs]
+    tfidf_vect = TfidfVectorizer(min_df=cutoff,
+                stop_words=set(sw))
+    feats =tfidf_vect.fit_transform(np.asarray(docs_))
+    return feats
+
+def bigram(docs,sw=None,cutoff=None):
+    docs_=[x[1] for x in docs]
+    tfidf_vect = TfidfVectorizer(min_df=cutoff,
+                stop_words=set(sw),ngram_range=(2,2))
+    feats =tfidf_vect.fit_transform(np.asarray(docs_))
+    return feats
+
 def check(exp,doc,doc_,pref):
     wds = [ pref+x for x,y,z in doc if exp.match(x)]
     wds_ = Counter(wds)
     doc_.update(wds_)
     doc_[pref+"T"]=len(wds_)
     doc_[pref+"M"]=len(wds)
-
-
-    
 
 def none(docs,filename):
     return None
@@ -122,9 +135,6 @@ def capital(doc,text,sw=[],cutoff=0):
     postprocess(doc_)
     return doc_
 
-def bow(docs,sw=[],cutoff=0):
-    print(docs)
-    return None
 
 def hist_bow(doc,text,sw=[],cutoff=0):
     wds = [ x.lower() for x,y,z in doc if z not in sw]
@@ -138,8 +148,6 @@ def hist_bow(doc,text,sw=[],cutoff=0):
     doc_.update(sizes)
     postprocess(doc_,sw=sw,cutoff=cutoff)
     return doc_
-
-
 
 def lemma(doc,text,sw=[],cutoff=0):
     wds = [ z for x,y,z in doc]
@@ -232,8 +240,6 @@ def nstcs(doc,text,sw=[],cutoff=0):
     postprocess(doc_)
     return doc_
 
-
-
 def sqrbrackets(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc if rspc.search(x)]
     doc_=Counter([x for x in wds])
@@ -257,15 +263,6 @@ def bigramlemma(doc,text,sw=[],cutoff=0):
     postprocess(doc_)
     return doc_
 
-
-def bigram(doc,text,sw=[],cutoff=0):
-    wds = [ x.lower() for x,y,z in doc]
-    bigram = zip(wds, wds[1:])
-    values=[u"{0} {1}".format(x,
-                                    y) for x, y in bigram]
-    doc_ = Counter(values)
-    postprocess(doc_,cutoff=2)
-    return doc_
 
 def bigrampref(doc,text,sw=[],cutoff=0):
     wds = [ z[:5] for x,y,z in doc if x in sw]
