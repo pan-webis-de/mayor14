@@ -56,7 +56,7 @@ default_opts= dotdict({
     'ndocs':5
 })
 
-def get_master_impostors(id,nknown,problems,opts=default_opts,sw=[],mode="test"):
+def get_master_impostors(id,nknown,problems,avg_len,opts=default_opts,sw=[],mode="test"):
     if mode.startswith("test"):
         id=id+"___"
     master_impostors=[]
@@ -67,13 +67,12 @@ def get_master_impostors(id,nknown,problems,opts=default_opts,sw=[],mode="test")
     pos=range(len(ids_candidates))
     random.shuffle(pos)
 
-   
     master_impostors=[]
     for i in range(opts.nimpostors):
         for j in range(opts.ndocs):
             filename,doc=problems[pos[i*opts.nimpostors+j]][1][0][0]
-            master_impostors.append(docread.tag(filename,doc,opts.language))
-            
+            doc,text=docread.tag(filename,doc,opts.language)
+            master_impostors.append((doc[:avg_len[1]],text[:avg_len[0]]))
     return master_impostors
  
 
@@ -129,8 +128,8 @@ def hbc(example_vectors,unknown,nexamples,nks,opts,scith=0.1):
     A_=A.T
     y=np.matrix(unknown)
     y_=y.T
-    nu=0.0000001
-    tol=0.0000001
+    nu=0.001
+    tol=0.001
 
     stopCrit=3
     x_0, nIter = octave.SolveHomotopy(A_, y_, 'lambda', nu, 'tolerance', tol, 'stoppingcriterion', stopCrit)
@@ -138,9 +137,9 @@ def hbc(example_vectors,unknown,nexamples,nks,opts,scith=0.1):
     # Calculating residuals
     residuals=[]
     d_is=[]
-    k=nexamples/opts.ndocs
+    k=nexamples/nks
     for i in range(k):
-        n=opts.ndocs
+        n=nks
         d_i= np.matrix([[0.0 for x in x_0[:i*n]]+\
              [np.float(x) for x in x_0[i*n:(i+1)*n]]+\
              [0.0 for x in x_0[(i+1)*n:]]]).T
@@ -154,7 +153,7 @@ def hbc(example_vectors,unknown,nexamples,nks,opts,scith=0.1):
     if sci < scith:
         return 0.0
     else:
-        if identity==(k-1):
+        if identity==0.0:
             return 1.0
         else:
             return 0.0
@@ -204,13 +203,17 @@ def process_corpus(problems,impostor_problems,opts=default_opts,mode="test",sw=[
         for filename,doc in ks:
             masters.append(docread.tag(filename,doc,opts.language))
 
+        avg_char_len=[len(x[1]) for x in masters[1:]]
+        avg_word_len=[len(x[1].split()) for x in masters[:1]]
+        avg_len=sum(avg_char_len)/(len(masters)-1),sum(avg_word_len)/(len(masters)-1)
+
         results=[]
         for iter in range(opts.iters):
             #Extracting Examples
             masters_=[x for x in masters]
 
             # Getting impostors
-            master_impostors=get_master_impostors(id,opts.ndocs,impostor_problems,opts=opts,mode=mode,sw=sw)
+            master_impostors=get_master_impostors(id,len(masters)-1,impostor_problems,avg_len,opts=opts,mode=mode,sw=sw)
             masters_.extend(master_impostors)
 
             reps=[]
@@ -224,12 +227,18 @@ def process_corpus(problems,impostor_problems,opts=default_opts,mode="test",sw=[
             unknown=data[0,:]
             data=data[1:,:]
 
-            result=try_hbc(data,unknown,len(masters_)-1,opts.ndocs,opts)
+            result=try_hbc(data,unknown,len(masters_)-1,len(masters)-1,opts)
             results.append(result)
 
             if opts.dump:
-                print >> dumpfiles[iter], id, sum(results)/(iter+1)
-        print(id, sum(results)/opts.iters)
+                prob=sum(results)/(iter+1)
+                if prob > 0.45 and prob < 0.55:
+                    prob=0.5
+                print >> dumpfiles[iter], id, prob
+        prob=sum(results)/opts.iters
+        if prob > 0.45 and prob < 0.55:
+            prob=0.5
+        print(id, prob)
     for f in dumpfiles:
         f.close()
 

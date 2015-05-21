@@ -36,6 +36,7 @@ from collections import Counter
 
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction import DictVectorizer
 
 spaces=re.compile('\W+',re.UNICODE)
 spaces_=re.compile('[ \t]+',re.UNICODE)
@@ -94,7 +95,7 @@ codes={
     }
 }
 
-def bow(docs,sw=None,cutoff=None):
+def bow(docs,sw=None,cutoff=1):
     docs_=[x[1] for x in docs]
     tfidf_vect = TfidfVectorizer(min_df=cutoff,
                 stop_words=set(sw))
@@ -105,8 +106,96 @@ def bigram(docs,sw=None,cutoff=None):
     docs_=[x[1] for x in docs]
     tfidf_vect = TfidfVectorizer(min_df=cutoff,
                 stop_words=set(sw),ngram_range=(2,2))
-    feats =tfidf_vect.fit_transform(np.asarray(docs_))
+    try:
+        feats =tfidf_vect.fit_transform(np.asarray(docs_))
+    except ValueError:
+        feats=[[0] for x in docs_]
     return feats
+
+def gram3letter(docs,sw=[],cutoff=1):
+    dict_vect=DictVectorizer()
+    docsC=[]
+    for doc,text in docs:
+        args=[]
+        for n in range(3):
+            args.append(text[n:])
+        values= ["".join(x) for x in zip(*args)]
+        docsC.append(Counter(values))
+        postprocess(docsC[-1],cutoff=cutoff)
+    feats=dict_vect.fit_transform(docsC)
+    return feats
+
+def gram8letter(docs,sw=[],cutoff=1):
+    dict_vect=DictVectorizer()
+    docsC=[]
+    for doc,text in docs:
+        args=[]
+        text=text.encode('utf-8')
+        for n in range(8):
+            args.append(text[n:])
+        values= ["".join(x) for x in zip(*args)]
+        docsC.append(Counter(values))
+        postprocess(docsC[-1],cutoff=cutoff)
+    feats= dict_vect.fit_transform(docsC)
+    return feats
+
+def pos(docs,sw=[],cutoff=0):
+    dict_vect=DictVectorizer()
+    docsC=[]
+    for doc,text in docs:
+        wds = [ y for x,y,z in doc if z not in sw]
+        values=[x for x in wds]
+        docsC.append(Counter(values))
+        postprocess(docsC[-1],cutoff=cutoff)
+    feats= dict_vect.fit_transform(docsC)
+    return feats
+
+def poslemma(docs,sw=[],cutoff=0):
+    dict_vect=DictVectorizer()
+    docsC=[]
+    for doc,text in docs:
+        values = [ "{0}_{1}".format(y,z) for x,y,z in doc if z not in sw]
+        docsC.append(Counter(values))
+        postprocess(docsC[-1],cutoff=cutoff)
+    feats= dict_vect.fit_transform(docsC)
+    return feats
+
+def ngrampos(docs,sw=[],ngram=5,cutoff=0):
+    dict_vect=DictVectorizer()
+    docsC=[]
+    for doc,text in docs:
+        pos = [ y for x,y,z in doc]
+        values=[]
+        for n in range(ngram):
+            args=[]
+            for j in range(n+1):
+                args.append(pos[j:])
+            val= zip(*args)
+            values.extend(val)
+        docsC.append(Counter(values))
+        postprocess(docsC[-1],cutoff=cutoff)
+    feats= dict_vect.fit_transform(docsC)
+    return feats
+
+
+def ngramlemma(docs,sw=[],ngram=5,cutoff=0):
+    dict_vect=DictVectorizer()
+    docsC=[]
+    for doc,text in docs:
+        pos = [ z for x,y,z in doc]
+        values=[]
+        for n in range(ngram):
+            args=[]
+            for j in range(n+1):
+                args.append(pos[j:])
+            val= zip(*args)
+            values.extend(val)
+        docsC.append(Counter(values))
+        postprocess(docsC[-1],cutoff=cutoff)
+    feats= dict_vect.fit_transform(docsC)
+    return feats
+
+
 
 def check(exp,doc,doc_,pref):
     wds = [ pref+x for x,y,z in doc if exp.match(x)]
@@ -154,19 +243,6 @@ def lemma(doc,text,sw=[],cutoff=0):
     doc_=Counter([x for x in wds])
     postprocess(doc_,sw=sw,cutoff=cutoff)
     return doc_
-
-def pos(doc,text,sw=[],cutoff=0):
-    wds = [ y for x,y,z in doc if z not in sw]
-    doc=Counter([x for x in wds])
-    postprocess(doc,cutoff=cutoff)
-    return doc
-
-def poslemma(doc,text,sw=[],cutoff=0):
-    wds = [ "{0}_{1}".format(y,z) for x,y,z in doc if z not in sw]
-    doc_=Counter([x for x in wds])
-    postprocess(doc_,cutoff=cutoff)
-    return doc_
-
 
 def stopwords(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc if x in sw]
@@ -322,32 +398,6 @@ def skipposgram(doc,text,sw=[],skip=5,cutoff=0):
     return doc_
 
 
-def gram3letter(doc,text,sw=[],ngram=5,cutoff=0):
-    doc_=Counter()
-    pat=[]
-    args=[]
-    for n in range(3):
-        args.append(text[n:])
-        pat.append(u'{{{0}}}'.format(n))
-    val= zip(*args)
-    values = ["".join(pat).format(*v) for v in val]
-    doc_.update(values)
-    postprocess(doc_,cutoff=cutoff)
-    return doc_
-
-def gram8letter(doc,text,sw=[],ngram=5,cutoff=0):
-    doc_=Counter()
-    pat=[]
-    args=[]
-    for n in range(8):
-        args.append(text[n:])
-        pat.append(u'{{{0}}}'.format(n))
-    val= zip(*args)
-    values = ["".join(pat).format(*v) for v in val]
-    doc_.update(values)
-    postprocess(doc_,cutoff=cutoff)
-    return doc_
-
 
 def ngramword(doc,text,sw=[],ngram=5,cutoff=0):
     pos = [ x.lower() for x,y,z in doc]
@@ -364,38 +414,6 @@ def ngramword(doc,text,sw=[],ngram=5,cutoff=0):
     postprocess(doc_,cutoff=cutoff)
     return doc_
 
-
-def ngrampos(doc,text,sw=[],ngram=5,cutoff=0):
-    pos = [ y for x,y,z in doc]
-    doc_=Counter()
-    for n in range(ngram):
-        args=[]
-        pat=[]
-        for j in range(n+1):
-            args.append(pos[j:])
-            pat.append('u{{{0}}}'.format(j))
-        val= zip(*args)
-        values = [" ".join(pat).format(*v) for v in val]
-        doc_.update(values)
-
-    postprocess(doc_,cutoff=cutoff)
-    return doc_
-
-def ngramlemma(doc,text,sw=[],ngram=5,cutoff=0):
-    pos = [z for x,y,z in doc]
-    doc_=Counter()
-    for n in range(ngram):
-        args=[]
-        pat=[]
-        for j in range(n+1):
-            args.append(pos[j:])
-            pat.append('u{{{0}}}'.format(j))
-        val= zip(*args)
-        values = [" ".join(pat).format(*v) for v in val]
-        doc_.update(values)
-
-    postprocess(doc_,cutoff=cutoff)
-    return doc_
 
 def preprocess(wrds,sw=[]):
     wrds_=[]
@@ -517,14 +535,16 @@ def readdoc(filename):
                     tags.append((bits[0],bits[1],"NONE"))
                 except: 
                     tags.append((bits[0],bits[1],"NONE"))
+            elif len(bits)>3:
+                    tags.append((bits[0],bits[2],bits[0]))
             else:
                 tags.append(tuple(bits))
-        tagged[filename]=(tags,ff.encode('utf-8'))
+        tagged[filename]=(tags,ff)
     else:
         tags=[]
         for w in ff.split():
             tags.append((w,None,None))
-        tagged[filename]=(tags,ff.encode('utf-8'))
+        tagged[filename]=(tags,ff)
     return ff
 
 
