@@ -7,7 +7,7 @@ if nargin~=6
 end
 
 PARAMS=['-i';'-t';'-o'];
-CODES={'DE','Dutch','Essays';'DR','Dutch','Reviews';'EE','English','Essays';'EN','English','Novels';'GR','Greek','Articles';'SP','Spanish','Articles'};
+CODES={'DU','Dutch','Essays';'DR','Dutch','Reviews';'EE','English','Essays';'EN','English','Novels';'GR','Greek','Articles';'SP','Spanish','Articles'};
 
 for i=1:2:nargin
     for j=1:size(PARAMS,1)

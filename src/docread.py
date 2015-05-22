@@ -102,6 +102,16 @@ def bow(docs,sw=None,cutoff=1):
     feats =tfidf_vect.fit_transform(np.asarray(docs_))
     return feats
 
+def hist_bow(docs,sw=[],cutoff=0):
+    dict_vect=DictVectorizer()
+    docsC=[]
+    for doc,text in docs:
+        wds = [ len(x) for x,y,z in doc if z not in sw]
+        hist=np.histogram(wds,range=(2,40))
+        docsC.append(dict([(y,x) for x,y in zip(*hist)]))
+    feats= dict_vect.fit_transform(docsC)
+    return feats
+
 def bigram(docs,sw=None,cutoff=None):
     docs_=[x[1] for x in docs]
     tfidf_vect = TfidfVectorizer(min_df=cutoff,
@@ -195,6 +205,18 @@ def ngramlemma(docs,sw=[],ngram=5,cutoff=0):
     feats= dict_vect.fit_transform(docsC)
     return feats
 
+def punct(docs,sw=[],cutoff=0):
+    dict_vect=DictVectorizer()
+    docsC=[]
+    for doc,text in docs:
+        doc_=Counter()
+        check(wordpunct,doc,doc_,"")
+        check(rcomposed,doc,doc_,"comp_")
+        check(rwordcomposed,doc,doc_,"wcomp_")
+        docsC.append(doc_)
+        postprocess(docsC[-1],cutoff=cutoff)
+    feats= dict_vect.fit_transform(docsC)
+    return feats
 
 
 def check(exp,doc,doc_,pref):
@@ -224,19 +246,6 @@ def capital(doc,text,sw=[],cutoff=0):
     postprocess(doc_)
     return doc_
 
-
-def hist_bow(doc,text,sw=[],cutoff=0):
-    wds = [ x.lower() for x,y,z in doc if z not in sw]
-    doc__=Counter([x for x in wds])
-    doc_=Counter()
-    hist=[]
-    for v in doc__.values():
-        hist.append("s_"+str(v))
-    sizes=[str(len(w)) for w in wds]
-    doc_.update(hist)
-    doc_.update(sizes)
-    postprocess(doc_,sw=sw,cutoff=cutoff)
-    return doc_
 
 def lemma(doc,text,sw=[],cutoff=0):
     wds = [ z for x,y,z in doc]
@@ -278,14 +287,6 @@ def coma(doc,text,sw=[],cutoff=0):
     return doc_
 
 
-def punct(doc,text,sw=[],cutoff=0):
-    doc_=Counter([])
-    check(wordpunct,doc,doc_,"")
-    check(rcomposed,doc,doc_,"comp_")
-    check(rwordcomposed,doc,doc_,"wcomp_")
-    postprocess(doc_)
-    return doc_
-
 def dot(doc,text,sw=[],cutoff=0):
     doc_=Counter()
     check(rdot,doc,doc_,"")
@@ -320,7 +321,6 @@ def sqrbrackets(doc,text,sw=[],cutoff=0):
     wds = [ x for x,y,z in doc if rspc.search(x)]
     doc_=Counter([x for x in wds])
     postprocess(doc_,cutoff=cutoff)
-    print doc_
     return doc_
 
 def whitespc(doc,text,sw=[],cutoff=0):
@@ -535,6 +535,13 @@ def readdoc(filename):
                     tags.append((bits[0],bits[1],"NONE"))
                 except: 
                     tags.append((bits[0],bits[1],"NONE"))
+            elif len(bits)==1:
+                try:
+                    tags.append((bits[0],"NONE","NONE"))
+                except UnicodeError: 
+                    tags.append((bits[0],"NONE","NONE"))
+                except: 
+                    tags.append((bits[0],"NONE","NONE"))
             elif len(bits)>3:
                     tags.append((bits[0],bits[2],bits[0]))
             else:
